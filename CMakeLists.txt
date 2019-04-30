@@ -116,6 +116,26 @@ if(NOT OPT_NATIVE_LIBRARIES)
     install(FILES ${LIBRESSL_STATIC_LIBRARIES} ${LIBRESSL_OPENSSL_EXECUTABLE}
 		DESTINATION bin)
     #install(TARGETS libressl DESTINATION lib)
+
+    install(TARGETS libressl
+        EXPORT libresslConfig
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin
+        PUBLIC_HEADER DESTINATION include/libressl
+    )
+    export(TARGETS libressl
+        NAMESPACE pluscontrol::
+        FILE "libresslConfig.cmake"
+    )
+    export(PACKAGE libressl)
+    install(EXPORT libresslConfig
+        #DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/${libName}"
+        DESTINATION "libressl/cmake"
+        NAMESPACE pluscontrol::
+    )
+
+    
 else()
     find_package(OpenSSL REQUIRED) 
     message(${OPENSSL_LIBRARIES})
