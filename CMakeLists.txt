@@ -22,14 +22,22 @@ set(LIBRESSL_URL https://code.siemens.com/PLUSCONTROL/thirdparty_libressl.git)
 set(LIBRESSL_TAG v2.8.2)
 
 if(WIN32)
-  set(LIBRESSL_STATIC_LIBRARIES
+
+  if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/libcrypto-44.dll.a
+        CACHE string "")
+    set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/libssl-46.dll.a
+        CACHE string "")    
+    set(LIBRESSL_DLLS ${LIBRESSL_INSTALL_DIR}/bin/libcrypto-44.dll ${LIBRESSL_INSTALL_DIR}/bin/libssl-46.dll ${LIBRESSL_INSTALL_DIR}/bin/libtls-18.dll  CACHE            string "")
+  else()
+    set(LIBRESSL_STATIC_LIBRARIES
     ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib ${LIBRESSL_INSTALL_DIR}lib/tls-18.lib ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
     CACHE string "")
-  set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib
-    CACHE string "")
-  set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
-    CACHE string "")
-    
+    set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib
+        CACHE string "")
+    set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
+        CACHE string "")  
+  endif()
   # This section is to make sure CONFIGURE_COMMAND use the same generator settings
   set(LIBRESSL_GENERATOR_PLATFORM)
   if (CMAKE_GENERATOR_PLATFORM)
@@ -78,6 +86,7 @@ if(NOT OPT_NATIVE_LIBRARIES)
             #-DCMAKE_C_FLAGS_RELEASE=/MT 
             #-DCMAKE_C_FLAGS_DEBUG=/MTd
             -DLIBRESSL_TESTS:BOOL=OFF
+            -DCMAKE_TOOLCHAIN_FILE:STRING=${CMAKE_TOOLCHAIN_FILE}
             ${LIBRESSL_ADDITIONAL_CMAKE_OPTIONS}
         INSTALL_DIR ${LIBRESSL_INSTALL_DIR}
         CMAKE_CACHE_ARGS
@@ -113,9 +122,9 @@ if(NOT OPT_NATIVE_LIBRARIES)
     )
     add_library(libressl STATIC libressl_dummy.cpp)
     target_link_libraries(libressl libressl_ssl libressl_crypto)
-    install(FILES ${LIBRESSL_STATIC_LIBRARIES} ${LIBRESSL_OPENSSL_EXECUTABLE}
+    install(FILES ${LIBRESSL_STATIC_LIBRARIES} ${LIBRESSL_OPENSSL_EXECUTABLE} ${LIBRESSL_DLLS}
 		DESTINATION bin)
-    #install(TARGETS libressl DESTINATION lib)
+    install(TARGETS libressl DESTINATION lib)
 
     install(TARGETS libressl
         EXPORT libresslConfig
@@ -142,7 +151,7 @@ else()
     include_directories(${OPENSSL_INCLUDE_DIRS})
     link_directories(${OPENSSL_LIBRARIES})
 
-    file(WRITE libressl_dummy.cpp
+    file(TOUCH libressl_dummy.cpp
         "//This is a dummy"
     )
     add_library(libressl STATIC libressl_dummy.cpp)
