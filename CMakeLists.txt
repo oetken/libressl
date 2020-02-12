@@ -16,44 +16,50 @@ include (ExternalProject)
 include_guard(GLOBAL)
 
 set(LIBRESSL_ROOT ${CMAKE_BINARY_DIR}/thirdparty/libressl)
-set(LIBRESSL_INSTALL_DIR ${LIBRESSL_ROOT}/bin/ CACHE string "")
-set(LIBRESSL_INCLUDE_DIRS ${LIBRESSL_INSTALL_DIR}/include CACHE string "")
+set(LIBRESSL_INSTALL_DIR ${LIBRESSL_ROOT}/bin/ CACHE STRING "")
+set(LIBRESSL_INCLUDE_DIRS ${LIBRESSL_INSTALL_DIR}/include CACHE STRING "")
 set(LIBRESSL_URL https://code.siemens.com/PLUSCONTROL/thirdparty_libressl.git)
 set(LIBRESSL_TAG v2.8.2)
 
 if(WIN32)
   set(LIBRESSL_STATIC_LIBRARIES
     ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib ${LIBRESSL_INSTALL_DIR}lib/tls-18.lib ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
-    CACHE string "")
+    CACHE STRING "")
   set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib
-    CACHE string "")
+    CACHE STRING "")
   set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
-    CACHE string "")
+    CACHE STRING "")
     
   # This section is to make sure CONFIGURE_COMMAND use the same generator settings
   set(LIBRESSL_GENERATOR_PLATFORM)
+
   if (CMAKE_GENERATOR_PLATFORM)
     set(LIBRESSL_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
   endif()
+  
   set(LIBRESSL_GENERATOR_TOOLSET)
+
   if (CMAKE_GENERATOR_TOOLSET)
-  set(LIBRESSL_GENERATOR_TOOLSET -T ${CMAKE_GENERATOR_TOOLSET})
+    set(LIBRESSL_GENERATOR_TOOLSET -T ${CMAKE_GENERATOR_TOOLSET})
   endif()
+
   set(LIBRESSL_ADDITIONAL_CMAKE_OPTIONS	
     -G${CMAKE_GENERATOR} ${LIBRESSL_GENERATOR_PLATFORM} ${LIBRESSL_GENERATOR_TOOLSET})
-  # End of section
-  set(LIBRESSL_DLLS ${LIBRESSL_INSTALL_DIR}/bin/crypto-44.dll ${LIBRESSL_INSTALL_DIR}/bin/ssl-46.dll ${LIBRESSL_INSTALL_DIR}/bin/tls-18.dll  CACHE string "")
-  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl.exe CACHE string "")
+
+    # End of section
+  set(LIBRESSL_DLLS ${LIBRESSL_INSTALL_DIR}/bin/crypto-44.dll ${LIBRESSL_INSTALL_DIR}/bin/ssl-46.dll ${LIBRESSL_INSTALL_DIR}/bin/tls-18.dll  CACHE STRING "")
+  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl.exe CACHE STRING "")
 else()
   file(GLOB LIBRESSL_STATIC_LIBRARIES "${LIBRESSL_INSTALL_DIR}lib/*.so.*" )
   #set(LIBRESSL_STATIC_LIBRARIES ${LIBRESSL_INSTALL_DIR}lib/libcrypto.so ${LIBRESSL_INSTALL_DIR}lib/libtls.so ${LIBRESSL_INSTALL_DIR}lib/libssl.so
-    #CACHE string "")
+    #CACHE STRING "")
   set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/libcrypto.so
-    CACHE string "")
+    CACHE STRING "")
   set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/libssl.so
-    CACHE string "")    
-  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl CACHE string "")
+    CACHE STRING "")    
+  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl CACHE STRING "")
 endif()
+
 if(NOT OPT_NATIVE_LIBRARIES)
     ExternalProject_Add(thirdparty_libressl
         PREFIX libressl
@@ -82,7 +88,6 @@ if(NOT OPT_NATIVE_LIBRARIES)
         INSTALL_DIR ${LIBRESSL_INSTALL_DIR}
         CMAKE_CACHE_ARGS
             -DCMAKE_BUILD_TYPE:STRING=Release
-
     )
 
     set_target_properties(thirdparty_libressl PROPERTIES FOLDER "thirdparty")
@@ -134,8 +139,6 @@ if(NOT OPT_NATIVE_LIBRARIES)
         DESTINATION "libressl/cmake"
         NAMESPACE pluscontrol::
     )
-
-    
 else()
     find_package(OpenSSL REQUIRED) 
     message(${OPENSSL_LIBRARIES})
@@ -148,9 +151,3 @@ else()
     add_library(libressl STATIC libressl_dummy.cpp)
     target_link_libraries(libressl ${OPENSSL_LIBRARIES})
 endif()
-
-#message("asdasdojao doiawjd oiawjd ${LIBRESSL_STATIC_LIBRARIES}")
-#set_target_properties(libressl PROPERTIES
-#        "IMPORTED_LOCATION" ${LIBRESSL_STATIC_LIBRARIES}
-#        "INTERFACE_INCLUDE_DIRECTORIES" "${LIBRESSL_INCLUDE_DIRS}"
-#)
