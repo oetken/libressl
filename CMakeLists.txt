@@ -18,7 +18,7 @@ include_guard(GLOBAL)
 set(LIBRESSL_ROOT ${CMAKE_BINARY_DIR}/thirdparty/libressl)
 set(LIBRESSL_INSTALL_DIR ${LIBRESSL_ROOT}/bin/ CACHE string "")
 set(LIBRESSL_INCLUDE_DIRS ${LIBRESSL_INSTALL_DIR}/include CACHE string "")
-set(LIBRESSL_URL https://code.siemens.com/PLUSCONTROL/thirdparty_libressl.git)
+set(LIBRESSL_URL git@code.siemens.com:PLUSCONTROL/thirdparty_libressl.git)
 set(LIBRESSL_TAG v2.8.2)
 
 if(WIN32)
