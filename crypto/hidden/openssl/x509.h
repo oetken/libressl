@@ -1,4 +1,4 @@
-/* $OpenBSD: x509.h,v 1.1 2022/11/14 17:48:49 beck Exp $ */
+/* $OpenBSD: x509.h,v 1.2 2023/02/23 18:12:32 job Exp $ */
 /*
  * Copyright (c) 2022 Bob Beck <beck@openbsd.org>
  *
@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_X509_H
 #define _LIBCRYPTO_X509_H
 
+#ifdef _MSC_VER
+#include <../include/openssl/x509.h>
+#else
 #include_next <openssl/x509.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(X509_CRL_up_ref);
@@ -105,6 +109,7 @@ LCRYPTO_USED(X509_TRUST_set);
 LCRYPTO_USED(X509_NAME_oneline);
 LCRYPTO_USED(X509_get0_extensions);
 LCRYPTO_USED(X509_get0_tbs_sigalg);
+LCRYPTO_USED(X509_get0_uids);
 LCRYPTO_USED(X509_set_version);
 LCRYPTO_USED(X509_get_version);
 LCRYPTO_USED(X509_set_serialNumber);

@@ -1,7 +1,6 @@
 include $(top_srcdir)/Makefile.am.common
 
 AM_CPPFLAGS += -DLIBRESSL_CRYPTO_INTERNAL
-
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/bio
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/bn
@@ -32,6 +31,7 @@ endif
 EXTRA_DIST = VERSION
 EXTRA_DIST += CMakeLists.txt
 EXTRA_DIST += crypto.sym
+EXTRA_DIST += empty.c
 
 # needed for a CMake target
 EXTRA_DIST += compat/strcasecmp.c
@@ -133,7 +133,7 @@ libcrypto_la_LIBADD = libcompat.la
 if !HAVE_EXPLICIT_BZERO
 libcrypto_la_LIBADD += libcompatnoopt.la
 endif
-libcrypto_la_CPPFLAGS = $(AM_CPPFLAGS)
+libcrypto_la_CPPFLAGS = -I$(top_srcdir)/crypto/hidden ${AM_CPPFLAGS}
 libcrypto_la_CPPFLAGS += -DLIBRESSL_INTERNAL
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_HW_PADLOCK
 if OPENSSL_NO_ASM
@@ -410,16 +410,13 @@ noinst_HEADERS += bio/bio_local.h
 
 # bn
 libcrypto_la_SOURCES += bn/bn_add.c
-libcrypto_la_SOURCES += bn/bn_asm.c
 libcrypto_la_SOURCES += bn/bn_blind.c
 libcrypto_la_SOURCES += bn/bn_bpsw.c
 libcrypto_la_SOURCES += bn/bn_const.c
 libcrypto_la_SOURCES += bn/bn_ctx.c
-libcrypto_la_SOURCES += bn/bn_depr.c
 libcrypto_la_SOURCES += bn/bn_div.c
 libcrypto_la_SOURCES += bn/bn_err.c
 libcrypto_la_SOURCES += bn/bn_exp.c
-libcrypto_la_SOURCES += bn/bn_exp2.c
 libcrypto_la_SOURCES += bn/bn_gcd.c
 libcrypto_la_SOURCES += bn/bn_gf2m.c
 libcrypto_la_SOURCES += bn/bn_isqrt.c
@@ -440,8 +437,57 @@ libcrypto_la_SOURCES += bn/bn_sqr.c
 libcrypto_la_SOURCES += bn/bn_sqrt.c
 libcrypto_la_SOURCES += bn/bn_word.c
 libcrypto_la_SOURCES += bn/bn_x931p.c
+noinst_HEADERS += bn/bn_internal.h
 noinst_HEADERS += bn/bn_local.h
 noinst_HEADERS += bn/bn_prime.h
+noinst_HEADERS += bn/s2n_bignum.h
+noinst_HEADERS += bn/s2n_bignum_internal.h
+
+# bn/arch
+if HOST_AARCH64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/aarch64/
+endif
+noinst_HEADERS += bn/arch/aarch64/bn_arch.h
+
+if HOST_ARM
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/arm/
+endif
+noinst_HEADERS += bn/arch/arm/bn_arch.h
+
+if HOST_I386
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/i386/
+endif
+noinst_HEADERS += bn/arch/i386/bn_arch.h
+
+if HOST_MIPS64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/mips64/
+endif
+noinst_HEADERS += bn/arch/mips64/bn_arch.h
+
+if HOST_POWERPC
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/powerpc/
+endif
+noinst_HEADERS += bn/arch/powerpc/bn_arch.h
+
+if HOST_POWERPC64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/powerpc64/
+endif
+noinst_HEADERS += bn/arch/powerpc64/bn_arch.h
+
+if HOST_RISCV64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/riscv64/
+endif
+noinst_HEADERS += bn/arch/riscv64/bn_arch.h
+
+if HOST_SPARC64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/sparc64/
+endif
+noinst_HEADERS += bn/arch/sparc64/bn_arch.h
+
+if HOST_X86_64
+libcrypto_la_CPPFLAGS += -I$(top_srcdir)/crypto/bn/arch/amd64/
+endif
+noinst_HEADERS += bn/arch/amd64/bn_arch.h
 
 # buffer
 libcrypto_la_SOURCES += buffer/buf_err.c
@@ -586,8 +632,6 @@ libcrypto_la_SOURCES += dsa/dsa_meth.c
 libcrypto_la_SOURCES += dsa/dsa_ossl.c
 libcrypto_la_SOURCES += dsa/dsa_pmeth.c
 libcrypto_la_SOURCES += dsa/dsa_prn.c
-libcrypto_la_SOURCES += dsa/dsa_sign.c
-libcrypto_la_SOURCES += dsa/dsa_vrf.c
 noinst_HEADERS += dsa/dsa_local.h
 
 # dso
@@ -675,6 +719,7 @@ libcrypto_la_SOURCES += evp/bio_b64.c
 libcrypto_la_SOURCES += evp/bio_enc.c
 libcrypto_la_SOURCES += evp/bio_md.c
 libcrypto_la_SOURCES += evp/c_all.c
+libcrypto_la_SOURCES += evp/cipher_method_lib.c
 libcrypto_la_SOURCES += evp/digest.c
 libcrypto_la_SOURCES += evp/e_aes.c
 libcrypto_la_SOURCES += evp/e_aes_cbc_hmac_sha1.c
@@ -952,6 +997,7 @@ libcrypto_la_SOURCES += txt_db/txt_db.c
 # ui
 libcrypto_la_SOURCES += ui/ui_err.c
 libcrypto_la_SOURCES += ui/ui_lib.c
+libcrypto_la_SOURCES += ui/ui_null.c
 if !HOST_WIN
 libcrypto_la_SOURCES += ui/ui_openssl.c
 endif
@@ -1035,3 +1081,4 @@ noinst_HEADERS += x509/vpm_int.h
 noinst_HEADERS += x509/x509_internal.h
 noinst_HEADERS += x509/x509_issuer_cache.h
 noinst_HEADERS += x509/x509_local.h
+noinst_HEADERS += x509/x509_verify.h

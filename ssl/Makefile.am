@@ -15,6 +15,7 @@ noinst_DATA = remove_bs_objects
 EXTRA_DIST = VERSION
 EXTRA_DIST += CMakeLists.txt
 EXTRA_DIST += ssl.sym
+EXTRA_DIST += empty.c
 
 CLEANFILES = libssl_la_objects.mk
 
@@ -30,6 +31,7 @@ remove_bs_objects: libssl.la
 	-$(AR) dv $(abs_top_builddir)/ssl/.libs/libssl.a \
 	    bs_ber.o bs_cbb.o bs_cbs.o
 
+libssl_la_CPPFLAGS = -I$(top_srcdir)/ssl/hidden ${AM_CPPFLAGS}
 libssl_la_LDFLAGS = -version-info @LIBSSL_VERSION@ -no-undefined -export-symbols $(top_srcdir)/ssl/ssl.sym
 libssl_la_LIBADD = $(abs_top_builddir)/crypto/libcrypto.la $(PLATFORM_LDADD)
 libssl_la_LIBADD += libbs.la

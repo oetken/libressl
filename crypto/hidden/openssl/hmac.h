@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_HMAC_H_
 #define _LIBCRYPTO_HMAC_H_
 
+#ifdef _MSC_VER
+#include <../include/openssl/hmac.h>
+#else
 #include_next <openssl/hmac.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(HMAC_CTX_new);
