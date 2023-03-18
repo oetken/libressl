@@ -1,153 +1,350 @@
- # Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ==============================================================================
-include (ExternalProject)
-include_guard(GLOBAL)
+cmake_minimum_required (VERSION 2.8.8)
+include(CheckFunctionExists)
+include(CheckLibraryExists)
+include(CheckIncludeFiles)
+include(CheckTypeSize)
 
-set(LIBRESSL_ROOT ${CMAKE_BINARY_DIR}/thirdparty/libressl)
-set(LIBRESSL_INSTALL_DIR ${LIBRESSL_ROOT}/bin/ CACHE STRING "")
-set(LIBRESSL_INCLUDE_DIRS ${LIBRESSL_INSTALL_DIR}/include CACHE STRING "")
-set(LIBRESSL_URL https://code.siemens.com/PLUSCONTROL/thirdparty_libressl.git)
-set(LIBRESSL_TAG v2.8.2)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" ${CMAKE_MODULE_PATH})
+include(cmake_export_symbol)
+include(GNUInstallDirs)
+
+project (LibreSSL C)
+
+enable_testing()
+
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/ssl/VERSION SSL_VERSION)
+string(STRIP ${SSL_VERSION} SSL_VERSION)
+string(REPLACE ":" "." SSL_VERSION ${SSL_VERSION})
+string(REGEX REPLACE "\\..*" "" SSL_MAJOR_VERSION ${SSL_VERSION})
+
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/crypto/VERSION CRYPTO_VERSION)
+string(STRIP ${CRYPTO_VERSION} CRYPTO_VERSION)
+string(REPLACE ":" "." CRYPTO_VERSION ${CRYPTO_VERSION})
+string(REGEX REPLACE "\\..*" "" CRYPTO_MAJOR_VERSION ${CRYPTO_VERSION})
+
+file(READ ${CMAKE_CURRENT_SOURCE_DIR}/tls/VERSION TLS_VERSION)
+string(STRIP ${TLS_VERSION} TLS_VERSION)
+string(REPLACE ":" "." TLS_VERSION ${TLS_VERSION})
+string(REGEX REPLACE "\\..*" "" TLS_MAJOR_VERSION ${TLS_VERSION})
+
+option(LIBRESSL_SKIP_INSTALL "Skip installation" ${LIBRESSL_SKIP_INSTALL})
+option(ENABLE_ASM "Enable assembly" ON)
+option(ENABLE_EXTRATESTS "Enable extra tests that may be unreliable on some platforms" OFF)
+option(ENABLE_NC "Enable installing TLS-enabled nc(1)" OFF)
+option(ENABLE_VSTEST "Enable test on Visual Studio" OFF)
+set(OPENSSLDIR ${OPENSSLDIR} CACHE PATH "Set the default openssl directory" FORCE)
+
+if(NOT LIBRESSL_SKIP_INSTALL)
+	set( ENABLE_LIBRESSL_INSTALL ON )
+endif(NOT LIBRESSL_SKIP_INSTALL)
+
+
+set(BUILD_NC true)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
+	add_definitions(-fno-common)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+	add_definitions(-DHAVE_ATTRIBUTE__BOUNDED__)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_definitions(-D_DEFAULT_SOURCE)
+	add_definitions(-D_BSD_SOURCE)
+	add_definitions(-D_POSIX_SOURCE)
+	add_definitions(-D_GNU_SOURCE)
+endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "MINGW")
+	set(BUILD_NC false)
+endif()
 
 if(WIN32)
-  set(LIBRESSL_STATIC_LIBRARIES
-    ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib ${LIBRESSL_INSTALL_DIR}lib/tls-18.lib ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
-    CACHE STRING "")
-  set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib
-    CACHE STRING "")
-  set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib 
-    CACHE STRING "")
-    
-  # This section is to make sure CONFIGURE_COMMAND use the same generator settings
-  set(LIBRESSL_GENERATOR_PLATFORM)
-
-  if (CMAKE_GENERATOR_PLATFORM)
-    set(LIBRESSL_GENERATOR_PLATFORM -A ${CMAKE_GENERATOR_PLATFORM})
-  endif()
-  
-  set(LIBRESSL_GENERATOR_TOOLSET)
-
-  if (CMAKE_GENERATOR_TOOLSET)
-    set(LIBRESSL_GENERATOR_TOOLSET -T ${CMAKE_GENERATOR_TOOLSET})
-  endif()
-
-  set(LIBRESSL_ADDITIONAL_CMAKE_OPTIONS	
-    -G${CMAKE_GENERATOR} ${LIBRESSL_GENERATOR_PLATFORM} ${LIBRESSL_GENERATOR_TOOLSET})
-
-    # End of section
-  set(LIBRESSL_DLLS ${LIBRESSL_INSTALL_DIR}/bin/crypto-44.dll ${LIBRESSL_INSTALL_DIR}/bin/ssl-46.dll ${LIBRESSL_INSTALL_DIR}/bin/tls-18.dll  CACHE STRING "")
-  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl.exe CACHE STRING "")
-else()
-  file(GLOB LIBRESSL_STATIC_LIBRARIES "${LIBRESSL_INSTALL_DIR}lib/*.so.*" )
-  #set(LIBRESSL_STATIC_LIBRARIES ${LIBRESSL_INSTALL_DIR}lib/libcrypto.so ${LIBRESSL_INSTALL_DIR}lib/libtls.so ${LIBRESSL_INSTALL_DIR}lib/libssl.so
-    #CACHE STRING "")
-  set(LIBRESSL_LIB_CRYPTO ${LIBRESSL_INSTALL_DIR}lib/libcrypto.so
-    CACHE STRING "")
-  set(LIBRESSL_LIB_SSL ${LIBRESSL_INSTALL_DIR}lib/libssl.so
-    CACHE STRING "")    
-  set(LIBRESSL_OPENSSL_EXECUTABLE ${LIBRESSL_INSTALL_DIR}/bin/openssl CACHE STRING "")
+	set(BUILD_NC false)
 endif()
 
-if(NOT OPT_NATIVE_LIBRARIES)
-    ExternalProject_Add(thirdparty_libressl
-        PREFIX libressl
-        TLS_VERIFY ON
-        GIT_REPOSITORY ${LIBRESSL_URL}
-        GIT_TAG ${LIBRESSL_TAG}
-        GIT_SUBMODULES "" #We don't need the submodules here as we dont' need to build the tests
-        GIT_PROGRESS ON #Just print a little bit the progress, otherwise you are sometimes stuck with waiting 
-                        #and in the end the proxy setup is wrong
-        DOWNLOAD_DIR "${DOWNLOAD_LOCATION}"
-        BUILD_IN_SOURCE 1
-        BUILD_BYPRODUCTS ${LIBRESSL_PROTOC_EXECUTABLE} ${LIBRESSL_STATIC_LIBRARIES}
-        SOURCE_DIR ${LIBRESSL_ROOT}/src/libressl
-        # SOURCE_SUBDIR cmake/ # Requires CMake 3.7, this will allow removal of CONFIGURE_COMMAND
-        # CONFIGURE_COMMAND resets some settings made in CMAKE_CACHE_ARGS and the generator used
-        CONFIGURE_COMMAND ${CMAKE_COMMAND} .
-            -DCMAKE_INSTALL_PREFIX=${LIBRESSL_INSTALL_DIR}
-            -DBUILD_SHARED_LIBS:BOOL=ON
-            -DCMAKE_BUILD_TYPE:STRING=Release
-            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=${CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG}
-            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=${CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE}
-            #-DCMAKE_C_FLAGS_RELEASE=/MT 
-            #-DCMAKE_C_FLAGS_DEBUG=/MTd
-            -DLIBRESSL_TESTS:BOOL=OFF
-            ${LIBRESSL_ADDITIONAL_CMAKE_OPTIONS}
-        INSTALL_DIR ${LIBRESSL_INSTALL_DIR}
-        CMAKE_CACHE_ARGS
-            -DCMAKE_BUILD_TYPE:STRING=Release
-    )
-
-    set_target_properties(thirdparty_libressl PROPERTIES FOLDER "thirdparty")
-    #TARGET_INCLUDE_DIRECTORIES(thirdparty_libressl PUBLIC ${LIBRESSL_INCLUDE_DIRS})
-    #target_link_libraries(thirdparty_libressl PUBLIC ${LIBRESSL_DLLS})
-
-    # Hack to make it works, otherwise INTERFACE_INCLUDE_DIRECTORIES will not be propagated
-    file(MAKE_DIRECTORY ${LIBRESSL_INCLUDE_DIRS})
-
-    #${LIBRESSL_INSTALL_DIR}lib/crypto-44.lib ${LIBRESSL_INSTALL_DIR}lib/tls-18.lib ${LIBRESSL_INSTALL_DIR}lib/ssl-46.lib
-
-    add_library(libressl_crypto IMPORTED STATIC GLOBAL)
-    add_dependencies(libressl_crypto thirdparty_libressl)
-    set_target_properties(libressl_crypto PROPERTIES
-            "IMPORTED_LOCATION" ${LIBRESSL_LIB_CRYPTO}
-            "INTERFACE_INCLUDE_DIRECTORIES" "${LIBRESSL_INCLUDE_DIRS}"
-    )
-
-    add_library(libressl_ssl IMPORTED STATIC GLOBAL)
-    add_dependencies(libressl_ssl thirdparty_libressl)
-    set_target_properties(libressl_ssl PROPERTIES
-            "IMPORTED_LOCATION" ${LIBRESSL_LIB_SSL}
-            "INTERFACE_INCLUDE_DIRECTORIES" "${LIBRESSL_INCLUDE_DIRS}"
-    )
-
-    file(WRITE libressl_dummy.cpp
-        "//This is a dummy"
-    )
-    add_library(libressl STATIC libressl_dummy.cpp)
-    target_link_libraries(libressl libressl_ssl libressl_crypto)
-    install(FILES ${LIBRESSL_STATIC_LIBRARIES} ${LIBRESSL_OPENSSL_EXECUTABLE}
-		DESTINATION bin)
-    #install(TARGETS libressl DESTINATION lib)
-
-    install(TARGETS libressl
-        EXPORT libresslConfig
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include/libressl
-    )
-    export(TARGETS libressl
-        NAMESPACE pluscontrol::
-        FILE "libresslConfig.cmake"
-    )
-    export(PACKAGE libressl)
-    install(EXPORT libresslConfig
-        #DESTINATION "${CMAKE_INSTALL_DATADIR}/cmake/${libName}"
-        DESTINATION "libressl/cmake"
-        NAMESPACE pluscontrol::
-    )
-else()
-    find_package(OpenSSL REQUIRED) 
-    message(${OPENSSL_LIBRARIES})
-    include_directories(${OPENSSL_INCLUDE_DIRS})
-    link_directories(${OPENSSL_LIBRARIES})
-
-    file(WRITE libressl_dummy.cpp
-        "//This is a dummy"
-    )
-    add_library(libressl STATIC libressl_dummy.cpp)
-    target_link_libraries(libressl ${OPENSSL_LIBRARIES})
+if(CMAKE_SYSTEM_NAME MATCHES "HP-UX")
+	if(CMAKE_C_COMPILER MATCHES "gcc")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99 -fno-strict-aliasing")
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mlp64")
+	else()
+		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O2 +DD64 +Otype_safety=off")
+	endif()
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_XOPEN_SOURCE=600 -D__STRICT_ALIGNMENT")
 endif()
+
+if(CMAKE_SYSTEM_NAME MATCHES "SunOS")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -std=gnu99 -fno-strict-aliasing")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__EXTENSIONS__")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_XOPEN_SOURCE=600")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DBSD_COMP")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fpic -m64")
+endif()
+
+add_definitions(-DLIBRESSL_INTERNAL)
+add_definitions(-DOPENSSL_NO_HW_PADLOCK)
+add_definitions(-D__BEGIN_HIDDEN_DECLS=)
+add_definitions(-D__END_HIDDEN_DECLS=)
+
+set(CMAKE_POSITION_INDEPENDENT_CODE true)
+
+if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+	add_definitions(-Wno-pointer-sign)
+endif()
+
+if(WIN32)
+	add_definitions(-Drestrict)
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+	add_definitions(-D_CRT_DEPRECATED_NO_WARNINGS)
+	add_definitions(-D_REENTRANT -D_POSIX_THREAD_SAFE_FUNCTIONS)
+	add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0501)
+	add_definitions(-DCPPFLAGS -DOPENSSL_NO_SPEED -DNO_SYSLOG -DNO_CRYPT)
+endif()
+
+if(MSVC)
+	add_definitions(-Dinline=__inline)
+	message(STATUS "Using [${CMAKE_C_COMPILER_ID}] compiler")
+	if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+		set(MSVC_DISABLED_WARNINGS_LIST
+			"C4057" # C4057: 'initializing' : 'unsigned char *' differs in
+		        	# indirection to slightly different base types from 'char [2]'
+			"C4018" # '>=': signed/unsigned mismatch
+			"C4100" # 'exarg' : unreferenced formal parameter
+			"C4127" # conditional expression is constant
+			"C4146" # unary minus operator applied to unsigned
+			        # type, result still unsigned
+			"C4242" # 'function' : conversion from 'int' to 'uint8_t',
+			        # possible loss of data
+			"C4244" # 'function' : conversion from 'int' to 'uint8_t',
+			        # possible loss of data
+			"C4245" # 'initializing': conversion from 'long' to
+			        # 'unsigned long', signed/unsigned mismatch
+			"C4267" # conversion from 'size_t' to 'some type that is almost
+				# certainly safe to convert a size_t to'.
+			"C4389" # '!=': signed/unsigned mismatch
+			"C4706" # assignment within conditional expression
+			"C4820" # 'bytes' bytes padding added after construct 'member_name'
+			"C4996" # 'read': The POSIX name for this item is deprecated. Instead,
+			        # use the ISO C++ conformant name: _read.
+		)
+	elseif(CMAKE_C_COMPILER_ID MATCHES "Intel")
+		add_definitions(-D_CRT_SUPPRESS_RESTRICT)
+		set(MSVC_DISABLED_WARNINGS_LIST
+			"C111"  # Unreachable statement
+			"C128"  # Unreachable loop
+			"C167"  # Unexplict casting unsigned to signed
+			"C186"  # Pointless comparison of unsigned int with zero
+			"C188"  # Enumerated type mixed with another type
+			"C344"  # Redeclared type
+			"C556"  # Unexplict casting signed to unsigned
+			"C869"  # Unreferenced parameters
+			"C1786" # Deprecated functions
+			"C2545" # Empty else statement
+			"C2557" # Comparing signed to unsigned
+			"C2722" # List init syntax is c++11 feature
+			"C3280" # Declaration hides variable
+		)
+	endif()
+	string(REPLACE "C" " -wd" MSVC_DISABLED_WARNINGS_STR
+		${MSVC_DISABLED_WARNINGS_LIST})
+	string(REGEX REPLACE "[/-]W[1234][ ]?" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -MP -W4 ${MSVC_DISABLED_WARNINGS_STR}")
+endif()
+
+check_function_exists(asprintf HAVE_ASPRINTF)
+if(HAVE_ASPRINTF)
+	add_definitions(-DHAVE_ASPRINTF)
+endif()
+
+check_function_exists(inet_pton HAVE_INET_PTON)
+if(HAVE_INET_PTON)
+	add_definitions(-DHAVE_INET_PTON)
+endif()
+
+check_function_exists(reallocarray HAVE_REALLOCARRAY)
+if(HAVE_REALLOCARRAY)
+	add_definitions(-DHAVE_REALLOCARRAY)
+endif()
+
+check_function_exists(strcasecmp HAVE_STRCASECMP)
+if(HAVE_STRCASECMP)
+	add_definitions(-DHAVE_STRCASECMP)
+endif()
+
+check_function_exists(strlcat HAVE_STRLCAT)
+if(HAVE_STRLCAT)
+	add_definitions(-DHAVE_STRLCAT)
+endif()
+
+check_function_exists(strlcpy HAVE_STRLCPY)
+if(HAVE_STRLCPY)
+	add_definitions(-DHAVE_STRLCPY)
+endif()
+
+check_function_exists(strndup HAVE_STRNDUP)
+if(HAVE_STRNDUP)
+	add_definitions(-DHAVE_STRNDUP)
+endif()
+
+if(WIN32)
+	set(HAVE_STRNLEN true)
+	add_definitions(-DHAVE_STRNLEN)
+else()
+	check_function_exists(strnlen HAVE_STRNLEN)
+	if(HAVE_STRNLEN)
+		add_definitions(-DHAVE_STRNLEN)
+	endif()
+endif()
+
+check_function_exists(strsep HAVE_STRSEP)
+if(HAVE_STRSEP)
+	add_definitions(-DHAVE_STRSEP)
+endif()
+
+check_function_exists(timegm HAVE_TIMEGM)
+if(HAVE_TIMEGM)
+	add_definitions(-DHAVE_TIMEGM)
+endif()
+
+check_function_exists(arc4random_buf HAVE_ARC4RANDOM_BUF)
+if(HAVE_ARC4RANDOM_BUF)
+	add_definitions(-DHAVE_ARC4RANDOM_BUF)
+endif()
+
+check_function_exists(arc4random_uniform HAVE_ARC4RANDOM_UNIFORM)
+if(HAVE_ARC4RANDOM_UNIFORM)
+	add_definitions(-DHAVE_ARC4RANDOM_UNIFORM)
+endif()
+
+check_function_exists(explicit_bzero HAVE_EXPLICIT_BZERO)
+if(HAVE_EXPLICIT_BZERO)
+	add_definitions(-DHAVE_EXPLICIT_BZERO)
+endif()
+
+check_function_exists(getauxval HAVE_GETAUXVAL)
+if(HAVE_GETAUXVAL)
+	add_definitions(-DHAVE_GETAUXVAL)
+endif()
+
+check_function_exists(getentropy HAVE_GETENTROPY)
+if(HAVE_GETENTROPY)
+	add_definitions(-DHAVE_GETENTROPY)
+endif()
+
+check_function_exists(getpagesize HAVE_GETPAGESIZE)
+if(HAVE_GETPAGESIZE)
+	add_definitions(-DHAVE_GETPAGESIZE)
+endif()
+
+check_function_exists(timingsafe_bcmp HAVE_TIMINGSAFE_BCMP)
+if(HAVE_TIMINGSAFE_BCMP)
+	add_definitions(-DHAVE_TIMINGSAFE_BCMP)
+endif()
+
+check_function_exists(timingsafe_memcmp HAVE_TIMINGSAFE_MEMCMP)
+if(HAVE_MEMCMP)
+	add_definitions(-DHAVE_MEMCMP)
+endif()
+
+check_function_exists(memmem HAVE_MEMMEM)
+if(HAVE_MEMMEM)
+	add_definitions(-DHAVE_MEMMEM)
+endif()
+
+check_include_files(err.h HAVE_ERR_H)
+if(HAVE_ERR_H)
+	add_definitions(-DHAVE_ERR_H)
+endif()
+
+if(ENABLE_ASM)
+	if("${CMAKE_C_COMPILER_ABI}" STREQUAL "ELF")
+		if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "(x86_64|amd64)")
+			set(HOST_ASM_ELF_X86_64 true)
+		elseif(CMAKE_SYSTEM_NAME STREQUAL "SunOS" AND "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "i386")
+			set(HOST_ASM_ELF_X86_64 true)
+		endif()
+	elseif(APPLE AND "${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+		set(HOST_ASM_MACOSX_X86_64 true)
+	endif()
+endif()
+
+if(NOT (CMAKE_SYSTEM_NAME MATCHES "(Darwin|CYGWIN)"))
+	set(BUILD_SHARED true)
+endif()
+
+# USE_SHARED builds applications (e.g. openssl) using shared LibreSSL.
+# By default, applications use LibreSSL static library to avoid dependencies.
+# USE_SHARED isn't set by default; use -DUSE_SHARED=ON with CMake to enable.
+# Can be helpful for debugging; don't use for public releases.
+if(NOT BUILD_SHARED)
+	set(USE_SHARED off)
+endif()
+
+if(USE_SHARED)
+	set(OPENSSL_LIBS tls-shared ssl-shared crypto-shared)
+else()
+	set(OPENSSL_LIBS tls ssl crypto)
+endif()
+
+if(CMAKE_HOST_WIN32)
+	set(OPENSSL_LIBS ${OPENSSL_LIBS} ws2_32)
+endif()
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	check_library_exists(rt clock_gettime "time.h" HAVE_CLOCK_GETTIME)
+	if (HAVE_CLOCK_GETTIME)
+		set(OPENSSL_LIBS ${OPENSSL_LIBS} rt)
+	endif()
+endif()
+if(CMAKE_SYSTEM_NAME MATCHES "HP-UX")
+	set(OPENSSL_LIBS ${OPENSSL_LIBS} pthread)
+endif()
+if(CMAKE_SYSTEM_NAME MATCHES "SunOS")
+	set(OPENSSL_LIBS ${OPENSSL_LIBS} nsl socket)
+endif()
+
+check_type_size(time_t SIZEOF_TIME_T)
+if(SIZEOF_TIME_T STREQUAL "4")
+	set(SMALL_TIME_T true)
+	add_definitions(-DSMALL_TIME_T)
+	message(WARNING " ** Warning, this system is unable to represent times past 2038\n"
+	                " ** It will behave incorrectly when handling valid RFC5280 dates")
+endif()
+add_definitions(-DSIZEOF_TIME_T=${SIZEOF_TIME_T})
+
+add_subdirectory(crypto)
+add_subdirectory(ssl)
+add_subdirectory(apps)
+add_subdirectory(tls)
+add_subdirectory(include)
+if(NOT MSVC)
+	add_subdirectory(man)
+endif()
+if(NOT MSVC OR ENABLE_VSTEST)
+	add_subdirectory(tests)
+endif()
+
+if(NOT MSVC)
+	# Create pkgconfig files.
+	set(prefix      ${CMAKE_INSTALL_PREFIX})
+	set(exec_prefix \${prefix})
+	set(libdir      \${exec_prefix}/${CMAKE_INSTALL_LIBDIR})
+	set(includedir  \${prefix}/include)
+	file(STRINGS    "VERSION" VERSION LIMIT_COUNT 1)
+	file(GLOB       OPENSSL_PKGCONFIGS "*.pc.in")
+	foreach(file ${OPENSSL_PKGCONFIGS})
+		get_filename_component(filename ${file} NAME)
+		string(REPLACE ".in" "" new_file "${filename}")
+		configure_file(${filename} pkgconfig/${new_file} @ONLY)
+	endforeach()
+	install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/pkgconfig
+		DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+
+configure_file(
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+	IMMEDIATE @ONLY)
+
+add_custom_target(uninstall
+	COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
