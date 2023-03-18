@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_internal.h,v 1.86.4.1 2021/02/03 07:06:14 tb Exp $ */
+/* $OpenBSD: tls13_internal.h,v 1.87 2020/11/16 18:55:15 jsing Exp $ */
 /*
  * Copyright (c) 2018 Bob Beck <beck@openbsd.org>
  * Copyright (c) 2018 Theo Buehler <tb@openbsd.org>
