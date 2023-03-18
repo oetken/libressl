@@ -39,6 +39,9 @@ libbs_la_SOURCES += bs_cbb.c
 libbs_la_SOURCES += bs_cbs.c
 noinst_HEADERS = bytestring.h
 
+noinst_HEADERS += hidden/ssl_namespace.h
+noinst_HEADERS += hidden/openssl/ssl.h
+
 libssl_la_SOURCES = bio_ssl.c
 libssl_la_SOURCES += d1_both.c
 libssl_la_SOURCES += d1_lib.c
@@ -93,12 +96,13 @@ libssl_la_SOURCES += tls13_record_layer.c
 libssl_la_SOURCES += tls13_server.c
 
 noinst_HEADERS += srtp.h
-noinst_HEADERS += dtls_locl.h
-noinst_HEADERS += ssl_locl.h
+noinst_HEADERS += dtls_local.h
+noinst_HEADERS += ssl_local.h
 noinst_HEADERS += ssl_sigalgs.h
 noinst_HEADERS += ssl_tlsext.h
 noinst_HEADERS += tls_content.h
 noinst_HEADERS += tls_internal.h
+noinst_HEADERS += tls12_internal.h
 noinst_HEADERS += tls13_internal.h
 noinst_HEADERS += tls13_handshake.h
 noinst_HEADERS += tls13_record.h
