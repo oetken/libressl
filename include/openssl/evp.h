@@ -1,4 +1,4 @@
-/* $OpenBSD: evp.h,v 1.58 2018/02/20 18:05:28 tb Exp $ */
+/* $OpenBSD: evp.h,v 1.64 2018/05/30 15:40:50 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -617,7 +617,8 @@ int EVP_DigestSignFinal(EVP_MD_CTX *ctx, unsigned char *sigret, size_t *siglen);
 
 int EVP_DigestVerifyInit(EVP_MD_CTX *ctx, EVP_PKEY_CTX **pctx,
     const EVP_MD *type, ENGINE *e, EVP_PKEY *pkey);
-int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, unsigned char *sig, size_t siglen);
+int EVP_DigestVerifyFinal(EVP_MD_CTX *ctx, const unsigned char *sig,
+    size_t siglen);
 
 int EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
     const unsigned char *ek, int ekl, const unsigned char *iv, EVP_PKEY *priv);
@@ -651,9 +652,9 @@ int EVP_CIPHER_CTX_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr);
 int EVP_CIPHER_CTX_rand_key(EVP_CIPHER_CTX *ctx, unsigned char *key);
 
 #ifndef OPENSSL_NO_BIO
-BIO_METHOD *BIO_f_md(void);
-BIO_METHOD *BIO_f_base64(void);
-BIO_METHOD *BIO_f_cipher(void);
+const BIO_METHOD *BIO_f_md(void);
+const BIO_METHOD *BIO_f_base64(void);
+const BIO_METHOD *BIO_f_cipher(void);
 void BIO_set_cipher(BIO *b, const EVP_CIPHER *c, const unsigned char *k,
     const unsigned char *i, int enc);
 #endif
@@ -866,12 +867,12 @@ int EVP_PKEY_encrypt_old(unsigned char *enc_key, const unsigned char *key,
 int EVP_PKEY_type(int type);
 int EVP_PKEY_id(const EVP_PKEY *pkey);
 int EVP_PKEY_base_id(const EVP_PKEY *pkey);
-int EVP_PKEY_bits(EVP_PKEY *pkey);
-int EVP_PKEY_size(EVP_PKEY *pkey);
+int EVP_PKEY_bits(const EVP_PKEY *pkey);
+int EVP_PKEY_size(const EVP_PKEY *pkey);
 int EVP_PKEY_set_type(EVP_PKEY *pkey, int type);
 int EVP_PKEY_set_type_str(EVP_PKEY *pkey, const char *str, int len);
 int EVP_PKEY_assign(EVP_PKEY *pkey, int type, void *key);
-void *EVP_PKEY_get0(EVP_PKEY *pkey);
+void *EVP_PKEY_get0(const EVP_PKEY *pkey);
 
 #ifndef OPENSSL_NO_RSA
 struct rsa_st;
@@ -995,7 +996,7 @@ int EVP_PKEY_asn1_get0_info(int *ppkey_id, int *pkey_base_id, int *ppkey_flags,
     const char **pinfo, const char **ppem_str,
     const EVP_PKEY_ASN1_METHOD *ameth);
 
-const EVP_PKEY_ASN1_METHOD* EVP_PKEY_get0_asn1(EVP_PKEY *pkey);
+const EVP_PKEY_ASN1_METHOD* EVP_PKEY_get0_asn1(const EVP_PKEY *pkey);
 EVP_PKEY_ASN1_METHOD* EVP_PKEY_asn1_new(int id, int flags, const char *pem_str,
     const char *info);
 void EVP_PKEY_asn1_copy(EVP_PKEY_ASN1_METHOD *dst,
