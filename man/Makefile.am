@@ -1,4 +1,5 @@
 EXTRA_DIST = CMakeLists.txt
+if !ENABLE_LIBTLS_ONLY
 dist_man3_MANS =
 dist_man5_MANS =
 dist_man3_MANS += BIO_f_ssl.3
@@ -83,6 +84,7 @@ dist_man3_MANS += SSL_get_error.3
 dist_man3_MANS += SSL_get_ex_data_X509_STORE_CTX_idx.3
 dist_man3_MANS += SSL_get_ex_new_index.3
 dist_man3_MANS += SSL_get_fd.3
+dist_man3_MANS += SSL_get_finished.3
 dist_man3_MANS += SSL_get_peer_cert_chain.3
 dist_man3_MANS += SSL_get_peer_certificate.3
 dist_man3_MANS += SSL_get_rbio.3
@@ -1494,6 +1496,7 @@ install-data-hook:
 	ln -sf "EVP_PKEY_meth_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_meth_set_verify_recover.3"
 	ln -sf "EVP_PKEY_meth_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_meth_set_verifyctx.3"
 	ln -sf "EVP_PKEY_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_free.3"
+	ln -sf "EVP_PKEY_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_new_CMAC_key.3"
 	ln -sf "EVP_PKEY_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_new_mac_key.3"
 	ln -sf "EVP_PKEY_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_up_ref.3"
 	ln -sf "EVP_PKEY_print_private.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_print_params.3"
@@ -2230,6 +2233,7 @@ install-data-hook:
 	ln -sf "SSL_CTX_use_certificate.3" "$(DESTDIR)$(mandir)/man3/SSL_use_RSAPrivateKey_file.3"
 	ln -sf "SSL_CTX_use_certificate.3" "$(DESTDIR)$(mandir)/man3/SSL_use_certificate.3"
 	ln -sf "SSL_CTX_use_certificate.3" "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_ASN1.3"
+	ln -sf "SSL_CTX_use_certificate.3" "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_chain_file.3"
 	ln -sf "SSL_CTX_use_certificate.3" "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_file.3"
 	ln -sf "SSL_SESSION_free.3" "$(DESTDIR)$(mandir)/man3/SSL_SESSION_up_ref.3"
 	ln -sf "SSL_SESSION_get_ex_new_index.3" "$(DESTDIR)$(mandir)/man3/SSL_SESSION_get_ex_data.3"
@@ -2264,6 +2268,7 @@ install-data-hook:
 	ln -sf "SSL_get_ex_new_index.3" "$(DESTDIR)$(mandir)/man3/SSL_set_ex_data.3"
 	ln -sf "SSL_get_fd.3" "$(DESTDIR)$(mandir)/man3/SSL_get_rfd.3"
 	ln -sf "SSL_get_fd.3" "$(DESTDIR)$(mandir)/man3/SSL_get_wfd.3"
+	ln -sf "SSL_get_finished.3" "$(DESTDIR)$(mandir)/man3/SSL_get_peer_finished.3"
 	ln -sf "SSL_get_rbio.3" "$(DESTDIR)$(mandir)/man3/SSL_get_wbio.3"
 	ln -sf "SSL_get_session.3" "$(DESTDIR)$(mandir)/man3/SSL_get0_session.3"
 	ln -sf "SSL_get_session.3" "$(DESTDIR)$(mandir)/man3/SSL_get1_session.3"
@@ -2282,9 +2287,19 @@ install-data-hook:
 	ln -sf "SSL_num_renegotiations.3" "$(DESTDIR)$(mandir)/man3/SSL_clear_num_renegotiations.3"
 	ln -sf "SSL_num_renegotiations.3" "$(DESTDIR)$(mandir)/man3/SSL_total_renegotiations.3"
 	ln -sf "SSL_read.3" "$(DESTDIR)$(mandir)/man3/SSL_peek.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_SESSION_get_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_SESSION_set_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_get_early_data_status.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_get_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_set_max_early_data.3"
+	ln -sf "SSL_read_early_data.3" "$(DESTDIR)$(mandir)/man3/SSL_write_early_data.3"
 	ln -sf "SSL_renegotiate.3" "$(DESTDIR)$(mandir)/man3/SSL_renegotiate_abbreviated.3"
 	ln -sf "SSL_renegotiate.3" "$(DESTDIR)$(mandir)/man3/SSL_renegotiate_pending.3"
 	ln -sf "SSL_rstate_string.3" "$(DESTDIR)$(mandir)/man3/SSL_rstate_string_long.3"
+	ln -sf "SSL_set1_host.3" "$(DESTDIR)$(mandir)/man3/SSL_get0_peername.3"
+	ln -sf "SSL_set1_host.3" "$(DESTDIR)$(mandir)/man3/SSL_set_hostflags.3"
 	ln -sf "SSL_set1_param.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_get0_param.3"
 	ln -sf "SSL_set1_param.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_set1_param.3"
 	ln -sf "SSL_set1_param.3" "$(DESTDIR)$(mandir)/man3/SSL_get0_param.3"
@@ -3093,6 +3108,16 @@ install-data-hook:
 	ln -sf "tls_read.3" "$(DESTDIR)$(mandir)/man3/tls_handshake.3"
 	ln -sf "tls_read.3" "$(DESTDIR)$(mandir)/man3/tls_reset.3"
 	ln -sf "tls_read.3" "$(DESTDIR)$(mandir)/man3/tls_write.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_chain.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_error_depth.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_error_string.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_free.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_new.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_intermediates.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_chains.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_depth.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_signatures.3"
+	ln -sf "x509_verify.3" "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_purpose.3"
 
 uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/ACCESS_DESCRIPTION_free.3"
@@ -4097,6 +4122,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_meth_set_verify_recover.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_meth_set_verifyctx.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_new_CMAC_key.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_new_mac_key.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_up_ref.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_print_params.3"
@@ -4833,6 +4859,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_use_RSAPrivateKey_file.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_use_certificate.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_ASN1.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_chain_file.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_use_certificate_file.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_SESSION_up_ref.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_SESSION_get_ex_data.3"
@@ -4867,6 +4894,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_ex_data.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_rfd.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_wfd.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_peer_finished.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_wbio.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get0_session.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get1_session.3"
@@ -4885,9 +4913,19 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_clear_num_renegotiations.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_total_renegotiations.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_peek.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_SESSION_get_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_SESSION_set_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_early_data_status.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_max_early_data.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_write_early_data.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_renegotiate_abbreviated.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_renegotiate_pending.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_rstate_string_long.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get0_peername.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_hostflags.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_get0_param.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_set1_param.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_get0_param.3"
@@ -5696,3 +5734,14 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_handshake.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_reset.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_write.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_chain.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_error_depth.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_error_string.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_new.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_intermediates.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_chains.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_depth.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_max_signatures.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/x509_verify_ctx_set_purpose.3"
+endif

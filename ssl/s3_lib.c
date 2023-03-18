@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.201 2020/10/14 16:57:33 jsing Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.206 2021/03/24 18:43:59 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -417,7 +417,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_STRONG_NONE,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 0,
 		.alg_bits = 0,
 	},
@@ -433,7 +433,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 128,
 		.alg_bits = 128,
 	},
@@ -449,7 +449,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -518,7 +518,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 128,
 		.alg_bits = 128,
 	},
@@ -534,7 +534,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -550,7 +550,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 128,
 		.alg_bits = 128,
 	},
@@ -566,7 +566,7 @@ const SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_mac = SSL_SHA256,
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
+		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256,
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -1565,10 +1565,10 @@ ssl3_free(SSL *s)
 	EC_KEY_free(S3I(s)->tmp.ecdh);
 	freezero(S3I(s)->tmp.x25519, X25519_KEY_LENGTH);
 
-	tls13_key_share_free(S3I(s)->hs_tls13.key_share);
-	tls13_secrets_destroy(S3I(s)->hs_tls13.secrets);
-	freezero(S3I(s)->hs_tls13.cookie, S3I(s)->hs_tls13.cookie_len);
-	tls13_clienthello_hash_clear(&S3I(s)->hs_tls13);
+	tls13_key_share_free(S3I(s)->hs.tls13.key_share);
+	tls13_secrets_destroy(S3I(s)->hs.tls13.secrets);
+	freezero(S3I(s)->hs.tls13.cookie, S3I(s)->hs.tls13.cookie_len);
+	tls13_clienthello_hash_clear(&S3I(s)->hs.tls13);
 
 	sk_X509_NAME_pop_free(S3I(s)->tmp.ca_names, X509_NAME_free);
 
@@ -1605,15 +1605,15 @@ ssl3_clear(SSL *s)
 	S3I(s)->hs.sigalgs = NULL;
 	S3I(s)->hs.sigalgs_len = 0;
 
-	tls13_key_share_free(S3I(s)->hs_tls13.key_share);
-	S3I(s)->hs_tls13.key_share = NULL;
+	tls13_key_share_free(S3I(s)->hs.tls13.key_share);
+	S3I(s)->hs.tls13.key_share = NULL;
 
-	tls13_secrets_destroy(S3I(s)->hs_tls13.secrets);
-	S3I(s)->hs_tls13.secrets = NULL;
-	freezero(S3I(s)->hs_tls13.cookie, S3I(s)->hs_tls13.cookie_len);
-	S3I(s)->hs_tls13.cookie = NULL;
-	S3I(s)->hs_tls13.cookie_len = 0;
-	tls13_clienthello_hash_clear(&S3I(s)->hs_tls13);
+	tls13_secrets_destroy(S3I(s)->hs.tls13.secrets);
+	S3I(s)->hs.tls13.secrets = NULL;
+	freezero(S3I(s)->hs.tls13.cookie, S3I(s)->hs.tls13.cookie_len);
+	S3I(s)->hs.tls13.cookie = NULL;
+	S3I(s)->hs.tls13.cookie_len = 0;
+	tls13_clienthello_hash_clear(&S3I(s)->hs.tls13);
 
 	S3I(s)->hs.extensions_seen = 0;
 
@@ -1678,8 +1678,8 @@ _SSL_get_peer_tmp_key(SSL *s, EVP_PKEY **key)
 	} else if (sc->peer_x25519_tmp != NULL) {
 		if (!ssl_kex_dummy_ecdhe_x25519(pkey))
 			goto err;
-	} else if (S3I(s)->hs_tls13.key_share != NULL) {
-		if (!tls13_key_share_peer_pkey(S3I(s)->hs_tls13.key_share,
+	} else if (S3I(s)->hs.tls13.key_share != NULL) {
+		if (!tls13_key_share_peer_pkey(S3I(s)->hs.tls13.key_share,
 		    pkey))
 			goto err;
 	} else {
@@ -2548,7 +2548,7 @@ ssl3_get_req_cert_types(SSL *s, CBB *cbb)
 {
 	unsigned long alg_k;
 
-	alg_k = S3I(s)->hs.new_cipher->algorithm_mkey;
+	alg_k = S3I(s)->hs.cipher->algorithm_mkey;
 
 #ifndef OPENSSL_NO_GOST
 	if ((alg_k & SSL_kGOST) != 0) {
@@ -2658,8 +2658,8 @@ ssl3_read_internal(SSL *s, void *buf, int len, int peek)
 	    SSL3_RT_APPLICATION_DATA, buf, len, peek);
 	if ((ret == -1) && (S3I(s)->in_read_app_data == 2)) {
 		/*
-		 * ssl3_read_bytes decided to call s->internal->handshake_func, which
-		 * called ssl3_read_bytes to read handshake data.
+		 * ssl3_read_bytes decided to call s->internal->handshake_func,
+		 * which called ssl3_read_bytes to read handshake data.
 		 * However, ssl3_read_bytes actually found application data
 		 * and thinks that application data makes sense here; so disable
 		 * handshake processing and try to read application data again.
@@ -2721,18 +2721,4 @@ ssl3_renegotiate_check(SSL *s)
 		}
 	}
 	return (ret);
-}
-/*
- * If we are using default SHA1+MD5 algorithms switch to new SHA256 PRF
- * and handshake macs if required.
- */
-long
-ssl_get_algorithm2(SSL *s)
-{
-	long	alg2 = S3I(s)->hs.new_cipher->algorithm2;
-
-	if (SSL_USE_SHA256_PRF(s) &&
-	    alg2 == (SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF))
-		return SSL_HANDSHAKE_MAC_SHA256 | TLS1_PRF_SHA256;
-	return alg2;
 }
