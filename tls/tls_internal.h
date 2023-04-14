@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_internal.h,v 1.42 2016/08/22 17:12:35 jsing Exp $ */
+/* $OpenBSD: tls_internal.h,v 1.52 2017/01/26 12:56:37 jsing Exp $ */
 /*
  * Copyright (c) 2014 Jeremie Courreges-Anglas <jca@openbsd.org>
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
@@ -24,6 +24,8 @@
 
 #include <openssl/ssl.h>
 
+__BEGIN_HIDDEN_DECLS
+
 #ifndef _PATH_SSL_CA_FILE
 #define _PATH_SSL_CA_FILE "/etc/ssl/cert.pem"
 #endif
@@ -41,6 +43,7 @@ union tls_addr {
 struct tls_error {
 	char *msg;
 	int num;
+	int tls;
 };
 
 struct tls_keypair {
@@ -50,6 +53,24 @@ struct tls_keypair {
 	size_t cert_len;
 	char *key_mem;
 	size_t key_len;
+	char *ocsp_staple;
+	size_t ocsp_staple_len;
+};
+
+#define TLS_MIN_SESSION_TIMEOUT (4)
+#define TLS_MAX_SESSION_TIMEOUT (24 * 60 * 60)
+
+#define TLS_NUM_TICKETS				4
+#define TLS_TICKET_NAME_SIZE			16
+#define TLS_TICKET_AES_SIZE			32
+#define TLS_TICKET_HMAC_SIZE			16
+
+struct tls_ticket_key {
+	/* The key_name must be 16 bytes according to -lssl */
+	unsigned char	key_name[TLS_TICKET_NAME_SIZE];
+	unsigned char	aes_key[TLS_TICKET_AES_SIZE];
+	unsigned char	hmac_key[TLS_TICKET_HMAC_SIZE];
+	time_t		time;
 };
 
 struct tls_config {
@@ -65,7 +86,13 @@ struct tls_config {
 	int dheparams;
 	int ecdhecurve;
 	struct tls_keypair *keypair;
+	int ocsp_require_stapling;
 	uint32_t protocols;
+	unsigned char session_id[TLS_MAX_SESSION_ID_LENGTH];
+	int session_lifetime;
+	struct tls_ticket_key ticket_keys[TLS_NUM_TICKETS];
+	uint32_t ticket_keyrev;
+	int ticket_autorekey;
 	int verify_cert;
 	int verify_client;
 	int verify_depth;
@@ -93,6 +120,28 @@ struct tls_conninfo {
 
 #define TLS_EOF_NO_CLOSE_NOTIFY	(1 << 0)
 #define TLS_HANDSHAKE_COMPLETE	(1 << 1)
+#define TLS_SSL_NEEDS_SHUTDOWN  (1 << 2)
+
+struct tls_ocsp_result {
+	const char *result_msg;
+	int response_status;
+	int cert_status;
+	int crl_reason;
+	time_t this_update;
+	time_t next_update;
+	time_t revocation_time;
+};
+
+struct tls_ocsp {
+	/* responder location */
+	char *ocsp_url;
+
+	/* cert data, this struct does not own these */
+	X509 *main_cert;
+	STACK_OF(X509) *extra_certs;
+
+	struct tls_ocsp_result *ocsp_result;
+};
 
 struct tls_sni_ctx {
 	struct tls_sni_ctx *next;
@@ -120,6 +169,8 @@ struct tls {
 
 	struct tls_conninfo *conninfo;
 
+	struct tls_ocsp *ocsp;
+
 	tls_read_cb read_cb;
 	tls_write_cb write_cb;
 	void *cb_arg;
@@ -144,11 +195,13 @@ int tls_handshake_server(struct tls *ctx);
 
 int tls_config_load_file(struct tls_error *error, const char *filetype,
     const char *filename, char **buf, size_t *len);
+int tls_config_ticket_autorekey(struct tls_config *config);
 int tls_host_port(const char *hostport, char **host, char **port);
 
 int tls_set_cbs(struct tls *ctx,
     tls_read_cb read_cb, tls_write_cb write_cb, void *cb_arg);
 
+void tls_error_clear(struct tls_error *error);
 int tls_error_set(struct tls_error *error, const char *fmt, ...)
     __attribute__((__format__ (printf, 2, 3)))
     __attribute__((__nonnull__ (2)));
@@ -167,6 +220,9 @@ int tls_set_error(struct tls *ctx, const char *fmt, ...)
 int tls_set_errorx(struct tls *ctx, const char *fmt, ...)
     __attribute__((__format__ (printf, 2, 3)))
     __attribute__((__nonnull__ (2)));
+int tls_set_ssl_errorx(struct tls *ctx, const char *fmt, ...)
+    __attribute__((__format__ (printf, 2, 3)))
+    __attribute__((__nonnull__ (2)));
 
 int tls_ssl_error(struct tls *ctx, SSL *ssl_conn, int ssl_ret,
     const char *prefix);
@@ -174,6 +230,11 @@ int tls_ssl_error(struct tls *ctx, SSL *ssl_conn, int ssl_ret,
 int tls_conninfo_populate(struct tls *ctx);
 void tls_conninfo_free(struct tls_conninfo *conninfo);
 
-int asn1_time_parse(const char *, size_t, struct tm *, int);
+int tls_ocsp_verify_cb(SSL *ssl, void *arg);
+int tls_ocsp_stapling_cb(SSL *ssl, void *arg);
+void tls_ocsp_free(struct tls_ocsp *ctx);
+struct tls_ocsp *tls_ocsp_setup_from_peer(struct tls *ctx);
+
+__END_HIDDEN_DECLS
 
 #endif /* HEADER_TLS_INTERNAL_H */
