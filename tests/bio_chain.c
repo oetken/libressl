@@ -1,4 +1,4 @@
-/*	$OpenBSD: bio_chain.c,v 1.10 2022/12/09 07:53:06 tb Exp $	*/
+/*	$OpenBSD: bio_chain.c,v 1.15 2023/03/04 12:13:11 tb Exp $	*/
 /*
  * Copyright (c) 2022 Theo Buehler <tb@openbsd.org>
  *
@@ -192,98 +192,65 @@ bio_chain_pop_test(void)
 	return failed;
 }
 
-static int
-walk_forward(BIO *start, BIO *end, size_t expected_len, size_t i, size_t j,
-    const char *fn, const char *description)
+static void
+walk(BIO *(*step)(BIO *), BIO *start, BIO **end, size_t *len)
 {
-	BIO *prev, *next;
-	size_t len;
-	int ret = 0;
+	BIO *current = NULL;
+	BIO *next = start;
 
-	if (start == NULL || end == NULL) {
-		if (expected_len != 0) {
-			fprintf(stderr, "%s case (%zu, %zu) %s: empty chain "
-			    "with expected length %zu > 0\n",
-			    fn, i, j, description, expected_len);
-			goto err;
-		}
-		goto done;
+	*len = 0;
+	while (next != NULL) {
+		current = next;
+		next = step(current);
+		(*len)++;
 	}
-
-	next = start;
-	len = 0;
-
-	do {
-		prev = next;
-		next = BIO_next(prev);
-		len++;
-	} while (next != NULL);
-
-	if (prev != end) {
-		fprintf(stderr, "%s case (%zu, %zu) %s has unexpected end\n",
-		    fn, i, j, description);
-		goto err;
-	}
-
-	if (len != expected_len) {
-		fprintf(stderr, "%s case (%zu, %zu) %s length "
-		    "(walking forward) want: %zu, got %zu\n",
-		    fn, i, j, description, expected_len, len);
-		goto err;
-	}
-
- done:
-	ret = 1;
-
- err:
-	return ret;
+	*end = current;
 }
 
 static int
-walk_backward(BIO *start, BIO *end, size_t expected_len, size_t i, size_t j,
-    const char *fn, const char *description)
+walk_report(BIO *last, BIO *expected_last, size_t len, size_t expected_len,
+    size_t i, size_t j, const char *fn, const char *description,
+    const char *direction, const char *last_name)
 {
-	BIO *prev, *next;
-	size_t len;
-	int ret = 0;
-
-	if (start == NULL || end == NULL) {
-		if (expected_len != 0) {
-			fprintf(stderr, "%s case (%zu, %zu) %s: empty chain "
-			    "with expected length %zu > 0\n",
-			    fn, i, j, description, expected_len);
-			goto err;
-		}
-		goto done;
-	}
-
-	prev = end;
-	len = 0;
-
-	do {
-		next = prev;
-		prev = BIO_prev(prev);
-		len++;
-	} while (prev != NULL);
-
-	if (next != start) {
-		fprintf(stderr, "%s case (%zu, %zu) %s has unexpected start\n",
-		    fn, i, j, description);
-		goto err;
+	if (last != expected_last) {
+		fprintf(stderr, "%s case (%zu, %zu) %s %s has unexpected %s\n",
+		    fn, i, j, description, direction, last_name);
+		return 0;
 	}
 
 	if (len != expected_len) {
-		fprintf(stderr, "%s case (%zu, %zu) %s length "
-		    "(walking backward) want: %zu, got %zu\n",
-		    fn, i, j, description, expected_len, len);
-		goto err;
+		fprintf(stderr, "%s case (%zu, %zu) %s %s want %zu, got %zu\n",
+		    fn, i, j, description, direction, expected_len, len);
+		return 0;
 	}
 
- done:
-	ret = 1;
+	return 1;
+}
 
- err:
-	return ret;
+static int
+walk_forward(BIO *start, BIO *expected_end, size_t expected_len,
+    size_t i, size_t j, const char *fn, const char *description)
+{
+	BIO *end;
+	size_t len;
+
+	walk(BIO_next, start, &end, &len);
+
+	return walk_report(end, expected_end, len, expected_len,
+	    i, j, fn, description, "forward", "end");
+}
+
+static int
+walk_backward(BIO *expected_start, BIO *end, size_t expected_len,
+    size_t i, size_t j, const char *fn, const char *description)
+{
+	BIO *start;
+	size_t len;
+
+	walk(BIO_prev, end, &start, &len);
+
+	return walk_report(start, expected_start, len, expected_len,
+	    i, j, fn, description, "backward", "start");
 }
 
 static int
@@ -369,6 +336,7 @@ link_chains_at(size_t i, size_t j, int use_bio_push)
 
 	new_start = A[0];
 	new_end = B[nitems(B) - 1];
+	/* new_len depends on use_bio_push. It is set a few lines down. */
 
 	oldhead_start = B[0];
 	oldhead_end = BIO_prev(B[j]);
@@ -394,6 +362,21 @@ link_chains_at(size_t i, size_t j, int use_bio_push)
 		oldtail_start = BIO_next(A[i]);
 		oldtail_end = A[nitems(A) - 1];
 		oldtail_len = nitems(A) - i - 1;
+
+		/* If we set next on end of A[], the oldtail chain is empty. */
+		if (i == nitems(A) - 1) {
+			oldtail_start = NULL;
+			oldtail_end = NULL;
+			oldtail_len = 0;
+		}
+	}
+
+	/* The two chains A[] and B[] are split into three disjoint pieces. */
+	if (nitems(A) + nitems(B) != new_len + oldtail_len + oldhead_len) {
+		fprintf(stderr, "%s case (%zu, %zu) inconsistent lengths: "
+		    "%zu + %zu != %zu + %zu + %zu\n", fn, i, j,
+		    nitems(A), nitems(B), new_len, oldtail_len, oldhead_len);
+		goto err;
 	}
 
 	/*

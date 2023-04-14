@@ -1,5 +1,9 @@
 include $(top_srcdir)/Makefile.am.common
 
+-include $(abs_top_builddir)/crypto/libcrypto_la_objects.mk
+-include $(abs_top_builddir)/ssl/libssl_la_objects.mk
+-include $(abs_top_builddir)/tls/libtls_la_objects.mk
+
 AM_CPPFLAGS += -DLIBRESSL_CRYPTO_INTERNAL
 
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/asn1
@@ -14,13 +18,15 @@ AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl
 AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl/compat
 AM_CPPFLAGS += -D_PATH_SSL_CA_FILE=\"$(top_srcdir)/cert.pem\"
 
-LDADD = $(abs_top_builddir)/tls/.libs/libtls.a
-LDADD += $(abs_top_builddir)/ssl/.libs/libssl.a
-LDADD += $(abs_top_builddir)/crypto/.libs/libcrypto.a
-LDADD += $(PLATFORM_LDADD) $(PROG_LDADD)
-if HOST_ASM_MACOSX_X86_64
-LDADD += $(abs_top_builddir)/crypto/.libs/libcrypto_la-cpuid-macosx-x86_64.o
-endif
+noinst_LTLIBRARIES = libtest.la
+libtest_la_LIBADD = $(libcrypto_la_objects)
+libtest_la_LIBADD += $(libcompat_la_objects)
+libtest_la_LIBADD += $(libcompatnoopt_la_objects)
+libtest_la_LIBADD += $(libssl_la_objects)
+libtest_la_LIBADD += $(libtls_la_objects)
+libtest_la_SOURCES = empty.c
+
+LDADD = libtest.la $(PLATFORM_LDADD) $(PROG_LDADD)
 
 TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
 
@@ -190,6 +196,11 @@ TESTS += bn_rand_interval
 check_PROGRAMS += bn_rand_interval
 bn_rand_interval_SOURCES = bn_rand_interval.c
 
+# bn_shift
+TESTS += bn_shift
+check_PROGRAMS += bn_shift
+bn_shift_SOURCES = bn_shift.c
+
 # bn_test
 TESTS += bn_test
 bn_test_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
@@ -205,6 +216,11 @@ bn_to_string_SOURCES = bn_to_string.c
 TESTS += bn_unit
 check_PROGRAMS += bn_unit
 bn_unit_SOURCES = bn_unit.c
+
+# bn_word
+TESTS += bn_word
+check_PROGRAMS += bn_word
+bn_word_SOURCES = bn_word.c
 
 # buffertest
 TESTS += buffertest
@@ -358,6 +374,7 @@ endif
 
 # freenull
 TESTS += freenull
+freenull_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
 check_PROGRAMS += freenull
 freenull_SOURCES = freenull.c
 

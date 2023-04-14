@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_PKCS12_H
 #define _LIBCRYPTO_PKCS12_H
 
+#ifdef _MSC_VER
+#include <../include/openssl/pkcs12.h>
+#else
 #include_next <openssl/pkcs12.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(PKCS12_SAFEBAG_get0_attr);

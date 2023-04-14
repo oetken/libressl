@@ -18,7 +18,11 @@
 #ifndef _LIBSSL_SSL_H_
 #define _LIBSSL_SSL_H_
 
+#ifdef _MSC_VER
+#include <../include/openssl/ssl.h>
+#else
 #include_next <openssl/ssl.h>
+#endif
 #include "ssl_namespace.h"
 
 LSSL_USED(BIO_f_ssl);

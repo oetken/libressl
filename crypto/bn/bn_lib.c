@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_lib.c,v 1.66 2022/11/30 03:08:39 jsing Exp $ */
+/* $OpenBSD: bn_lib.c,v 1.76 2023/02/14 18:22:35 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,22 +66,20 @@
 #include <openssl/err.h>
 
 #include "bn_local.h"
+#include "bn_internal.h"
 
 BIGNUM *
 BN_new(void)
 {
-	BIGNUM *ret;
+	BIGNUM *bn;
 
-	if ((ret = malloc(sizeof(BIGNUM))) == NULL) {
+	if ((bn = calloc(1, sizeof(BIGNUM))) == NULL) {
 		BNerror(ERR_R_MALLOC_FAILURE);
-		return (NULL);
+		return NULL;
 	}
-	ret->flags = BN_FLG_MALLOCED;
-	ret->top = 0;
-	ret->neg = 0;
-	ret->dmax = 0;
-	ret->d = NULL;
-	return (ret);
+	bn->flags = BN_FLG_MALLOCED;
+
+	return bn;
 }
 
 void
@@ -100,24 +98,26 @@ BN_clear(BIGNUM *a)
 }
 
 void
-BN_clear_free(BIGNUM *a)
+BN_free(BIGNUM *bn)
 {
-	int i;
-
-	if (a == NULL)
+	if (bn == NULL)
 		return;
-	if (a->d != NULL && !(BN_get_flags(a, BN_FLG_STATIC_DATA)))
-		freezero(a->d, a->dmax * sizeof(a->d[0]));
-	i = BN_get_flags(a, BN_FLG_MALLOCED);
-	explicit_bzero(a, sizeof(BIGNUM));
-	if (i)
-		free(a);
+
+	if (!BN_get_flags(bn, BN_FLG_STATIC_DATA))
+		freezero(bn->d, bn->dmax * sizeof(bn->d[0]));
+
+	if (!BN_get_flags(bn, BN_FLG_MALLOCED)) {
+		explicit_bzero(bn, sizeof(*bn));
+		return;
+	}
+
+	freezero(bn, sizeof(*bn));
 }
 
 void
-BN_free(BIGNUM *a)
+BN_clear_free(BIGNUM *bn)
 {
-	BN_clear_free(a);
+	BN_free(bn);
 }
 
 /* This stuff appears to be completely unused, so is deprecated */
@@ -220,33 +220,37 @@ BN_value_one(void)
 	return (&const_one);
 }
 
+#ifndef HAVE_BN_WORD_CLZ
 int
-BN_num_bits_word(BN_ULONG l)
+bn_word_clz(BN_ULONG w)
 {
-	BN_ULONG x, mask;
-	int bits;
-	unsigned int shift;
+	BN_ULONG bits, mask, shift;
 
-	/* Constant time calculation of floor(log2(l)) + 1. */
-	bits = (l != 0);
-	shift = BN_BITS4;	/* On _LP64 this is 32, otherwise 16. */
-	do {
-		x = l >> shift;
-		/* If x is 0, set mask to 0, otherwise set it to all 1s. */
-		mask = ((~x & (x - 1)) >> (BN_BITS2 - 1)) - 1;
-		bits += shift & mask;
-		/* If x is 0, leave l alone, otherwise set l = x. */
-		l ^= (x ^ l) & mask;
-	} while ((shift /= 2) != 0);
+	bits = shift = BN_BITS2;
+	mask = 0;
 
-	return bits;
+	while ((shift >>= 1) != 0) {
+		bits += (shift & mask) - (shift & ~mask);
+		mask = bn_ct_ne_zero_mask(w >> bits);
+	}
+	bits += 1 & mask;
+
+	bits -= bn_ct_eq_zero(w);
+
+	return BN_BITS2 - bits;
+}
+#endif
+
+int
+BN_num_bits_word(BN_ULONG w)
+{
+	return BN_BITS2 - bn_word_clz(w);
 }
 
 int
 BN_num_bits(const BIGNUM *a)
 {
 	int i = a->top - 1;
-
 
 	if (BN_is_zero(a))
 		return 0;
@@ -260,139 +264,62 @@ bn_correct_top(BIGNUM *a)
 		a->top--;
 }
 
-/* The caller MUST check that words > b->dmax before calling this */
-static BN_ULONG *
-bn_expand_internal(const BIGNUM *b, int words)
-{
-	BN_ULONG *A, *a = NULL;
-	const BN_ULONG *B;
-	int i;
-
-
-	if (words > (INT_MAX/(4*BN_BITS2))) {
-		BNerror(BN_R_BIGNUM_TOO_LONG);
-		return NULL;
-	}
-	if (BN_get_flags(b, BN_FLG_STATIC_DATA)) {
-		BNerror(BN_R_EXPAND_ON_STATIC_BIGNUM_DATA);
-		return (NULL);
-	}
-	a = A = reallocarray(NULL, words, sizeof(BN_ULONG));
-	if (A == NULL) {
-		BNerror(ERR_R_MALLOC_FAILURE);
-		return (NULL);
-	}
-#if 1
-	B = b->d;
-	/* Check if the previous number needs to be copied */
-	if (B != NULL) {
-		for (i = b->top >> 2; i > 0; i--, A += 4, B += 4) {
-			/*
-			 * The fact that the loop is unrolled
-			 * 4-wise is a tribute to Intel. It's
-			 * the one that doesn't have enough
-			 * registers to accommodate more data.
-			 * I'd unroll it 8-wise otherwise:-)
-			 *
-			 *		<appro@fy.chalmers.se>
-			 */
-			BN_ULONG a0, a1, a2, a3;
-			a0 = B[0];
-			a1 = B[1];
-			a2 = B[2];
-			a3 = B[3];
-			A[0] = a0;
-			A[1] = a1;
-			A[2] = a2;
-			A[3] = a3;
-		}
-		switch (b->top & 3) {
-		case 3:
-			A[2] = B[2];
-		case 2:
-			A[1] = B[1];
-		case 1:
-			A[0] = B[0];
-		}
-	}
-
-#else
-	memset(A, 0, sizeof(BN_ULONG) * words);
-	memcpy(A, b->d, sizeof(b->d[0]) * b->top);
-#endif
-
-	return (a);
-}
-
-/* This is an internal function that should not be used in applications.
- * It ensures that 'b' has enough room for a 'words' word number
- * and initialises any unused part of b->d with leading zeros.
- * It is mostly used by the various BIGNUM routines. If there is an error,
- * NULL is returned. If not, 'b' is returned. */
-
 static int
-bn_expand2(BIGNUM *b, int words)
+bn_expand_internal(BIGNUM *bn, int words)
 {
+	BN_ULONG *d;
 
-	if (words > b->dmax) {
-		BN_ULONG *a = bn_expand_internal(b, words);
-		if (a == NULL)
-			return 0;
-		if (b->d)
-			freezero(b->d, b->dmax * sizeof(b->d[0]));
-		b->d = a;
-		b->dmax = words;
+	if (words < 0) {
+		BNerror(BN_R_BIGNUM_TOO_LONG); // XXX
+		return 0;
 	}
 
-/* None of this should be necessary because of what b->top means! */
-#if 0
-	/* NB: bn_wexpand() calls this only if the BIGNUM really has to grow */
-	if (b->top < b->dmax) {
-		int i;
-		BN_ULONG *A = &(b->d[b->top]);
-		for (i = (b->dmax - b->top) >> 3; i > 0; i--, A += 8) {
-			A[0] = 0;
-			A[1] = 0;
-			A[2] = 0;
-			A[3] = 0;
-			A[4] = 0;
-			A[5] = 0;
-			A[6] = 0;
-			A[7] = 0;
-		}
-		for (i = (b->dmax - b->top)&7; i > 0; i--, A++)
-			A[0] = 0;
-		assert(A == &(b->d[b->dmax]));
+	if (words > INT_MAX / (4 * BN_BITS2)) {
+		BNerror(BN_R_BIGNUM_TOO_LONG);
+		return 0;
 	}
-#endif
+	if (BN_get_flags(bn, BN_FLG_STATIC_DATA)) {
+		BNerror(BN_R_EXPAND_ON_STATIC_BIGNUM_DATA);
+		return 0;
+	}
+
+	d = recallocarray(bn->d, bn->dmax, words, sizeof(BN_ULONG));
+	if (d == NULL) {
+		BNerror(ERR_R_MALLOC_FAILURE);
+		return 0;
+	}
+	bn->d = d;
+	bn->dmax = words;
+
 	return 1;
 }
 
 int
-bn_expand(BIGNUM *a, int bits)
+bn_expand(BIGNUM *bn, int bits)
 {
+	int words;
+
 	if (bits < 0)
 		return 0;
 
 	if (bits > (INT_MAX - BN_BITS2 + 1))
 		return 0;
 
-	if (((bits + BN_BITS2 - 1) / BN_BITS2) <= a->dmax)
-		return 1;
+	words = (bits + BN_BITS2 - 1) / BN_BITS2;
 
-	return bn_expand2(a, (bits + BN_BITS2 - 1) / BN_BITS2);
+	return bn_wexpand(bn, words);
 }
 
 int
-bn_wexpand(BIGNUM *a, int words)
+bn_wexpand(BIGNUM *bn, int words)
 {
 	if (words < 0)
 		return 0;
 
-	if (words <= a->dmax)
+	if (words <= bn->dmax)
 		return 1;
 
-	return bn_expand2(a, words);
+	return bn_expand_internal(bn, words);
 }
 
 BIGNUM *
@@ -695,69 +622,38 @@ int
 BN_ucmp(const BIGNUM *a, const BIGNUM *b)
 {
 	int i;
-	BN_ULONG t1, t2, *ap, *bp;
-
 
 	if (a->top < b->top)
 		return -1;
 	if (a->top > b->top)
 		return 1;
 
-	ap = a->d;
-	bp = b->d;
 	for (i = a->top - 1; i >= 0; i--) {
-		t1 = ap[i];
-		t2 = bp[i];
-		if (t1 != t2)
-			return ((t1 > t2) ? 1 : -1);
+		if (a->d[i] != b->d[i])
+			return (a->d[i] > b->d[i] ? 1 : -1);
 	}
-	return (0);
+
+	return 0;
 }
 
 int
 BN_cmp(const BIGNUM *a, const BIGNUM *b)
 {
-	int i;
-	int gt, lt;
-	BN_ULONG t1, t2;
-
-	if ((a == NULL) || (b == NULL)) {
+	if (a == NULL || b == NULL) {
 		if (a != NULL)
-			return (-1);
-		else if (b != NULL)
-			return (1);
-		else
-			return (0);
+			return -1;
+		if (b != NULL)
+			return 1;
+		return 0;
 	}
 
+	if (a->neg != b->neg)
+		return b->neg - a->neg;
 
-	if (a->neg != b->neg) {
-		if (a->neg)
-			return (-1);
-		else
-			return (1);
-	}
-	if (a->neg == 0) {
-		gt = 1;
-		lt = -1;
-	} else {
-		gt = -1;
-		lt = 1;
-	}
+	if (a->neg)
+		return BN_ucmp(b, a);
 
-	if (a->top > b->top)
-		return (gt);
-	if (a->top < b->top)
-		return (lt);
-	for (i = a->top - 1; i >= 0; i--) {
-		t1 = a->d[i];
-		t2 = b->d[i];
-		if (t1 > t2)
-			return (gt);
-		if (t1 < t2)
-			return (lt);
-	}
-	return (0);
+	return BN_ucmp(a, b);
 }
 
 int
@@ -837,12 +733,9 @@ BN_mask_bits(BIGNUM *a, int n)
 }
 
 void
-BN_set_negative(BIGNUM *a, int b)
+BN_set_negative(BIGNUM *bn, int neg)
 {
-	if (b && !BN_is_zero(a))
-		a->neg = 1;
-	else
-		a->neg = 0;
+	bn->neg = ~BN_is_zero(bn) & bn_ct_ne_zero(neg);
 }
 
 int
@@ -998,11 +891,22 @@ BN_swap_ct(BN_ULONG condition, BIGNUM *a, BIGNUM *b, size_t nwords)
 }
 
 void
-BN_zero_ex(BIGNUM *a)
+BN_zero(BIGNUM *a)
 {
 	a->neg = 0;
 	a->top = 0;
-	/* XXX: a->flags &= ~BN_FIXED_TOP */
+}
+
+void
+BN_zero_ex(BIGNUM *a)
+{
+	BN_zero(a);
+}
+
+int
+BN_one(BIGNUM *a)
+{
+	return BN_set_word(a, 1);
 }
 
 int
@@ -1012,9 +916,15 @@ BN_abs_is_word(const BIGNUM *a, const BN_ULONG w)
 }
 
 int
-BN_is_zero(const BIGNUM *a)
+BN_is_zero(const BIGNUM *bn)
 {
-	return a->top == 0;
+	BN_ULONG bits = 0;
+	int i;
+
+	for (i = 0; i < bn->top; i++)
+		bits |= bn->d[i];
+
+	return bits == 0;
 }
 
 int

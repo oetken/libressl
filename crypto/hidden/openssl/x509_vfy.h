@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_X509_VFY_H
 #define _LIBCRYPTO_X509_VFY_H
 
+#ifdef _MSC_VER
+#include <../include/openssl/x509_vfy.h>
+#else
 #include_next <openssl/x509_vfy.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(X509_STORE_set_depth);
