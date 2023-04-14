@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_lib.c,v 1.91 2016/10/02 21:05:44 guenther Exp $ */
+/* $OpenBSD: t1_lib.c,v 1.89 2016/09/22 06:57:40 guenther Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -1206,6 +1206,7 @@ ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
 	unsigned short size;
 	unsigned short len;
 	unsigned char *data = *p;
+	unsigned char *end = d + n;
 	int renegotiate_seen = 0;
 	int sigalg_seen = 0;
 
@@ -1214,20 +1215,25 @@ ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
 	s->s3->next_proto_neg_seen = 0;
 	free(s->s3->alpn_selected);
 	s->s3->alpn_selected = NULL;
+	s->srtp_profile = NULL;
 
-	if (data >= (d + n - 2))
+	if (data == end)
 		goto ri_check;
+
+	if (end - data < 2)
+		goto err;
 	n2s(data, len);
 
-	if (data > (d + n - len))
-		goto ri_check;
+	if (end - data != len)
+		goto err;
 
-	while (data <= (d + n - 4)) {
+	while (end - data >= 4) {
 		n2s(data, type);
 		n2s(data, size);
 
-		if (data + size > (d + n))
-			goto ri_check;
+		if (end - data < size)
+			goto err;
+
 		if (s->tlsext_debug_cb)
 			s->tlsext_debug_cb(s, 0, type, data, size,
 			    s->tlsext_debug_arg);
@@ -1571,6 +1577,10 @@ ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
 		data += size;
 	}
 
+	/* Spurious data on the end */
+	if (data != end)
+		goto err;
+
 	*p = data;
 
 ri_check:
@@ -1585,6 +1595,10 @@ ri_check:
 	}
 
 	return 1;
+
+err:
+	*al = SSL_AD_DECODE_ERROR;
+	return 0;
 }
 
 /*
@@ -1610,10 +1624,11 @@ int
 ssl_parse_serverhello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
     int n, int *al)
 {
-	unsigned short length;
 	unsigned short type;
 	unsigned short size;
+	unsigned short len;
 	unsigned char *data = *p;
+	unsigned char *end = d + n;
 	int tlsext_servername = 0;
 	int renegotiate_seen = 0;
 
@@ -1621,21 +1636,22 @@ ssl_parse_serverhello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
 	free(s->s3->alpn_selected);
 	s->s3->alpn_selected = NULL;
 
-	if (data >= (d + n - 2))
+	if (data == end)
 		goto ri_check;
 
-	n2s(data, length);
-	if (data + length != d + n) {
-		*al = SSL_AD_DECODE_ERROR;
-		return 0;
-	}
+	if (end - data < 2)
+		goto err;
+	n2s(data, len);
 
-	while (data <= (d + n - 4)) {
+	if (end - data != len)
+		goto err;
+
+	while (end - data >= 4) {
 		n2s(data, type);
 		n2s(data, size);
 
-		if (data + size > (d + n))
-			goto ri_check;
+		if (end - data < size)
+			goto err;
 
 		if (s->tlsext_debug_cb)
 			s->tlsext_debug_cb(s, 1, type, data, size,
@@ -1829,6 +1845,10 @@ ri_check:
 	}
 
 	return 1;
+
+err:
+	*al = SSL_AD_DECODE_ERROR;
+	return 0;
 }
 
 int
@@ -2205,7 +2225,7 @@ tls_decrypt_ticket(SSL *s, const unsigned char *etick, int eticklen,
 	}
 
 	/* Sanity check ticket length: must exceed keyname + IV + HMAC */
-	if (eticklen <= 16 + EVP_CIPHER_CTX_iv_length(&ctx) + mlen) {
+	if (eticklen < 16 + EVP_CIPHER_CTX_iv_length(&ctx) + mlen) {
 		HMAC_CTX_cleanup(&hctx);
 		EVP_CIPHER_CTX_cleanup(&ctx);
 		return 2;
@@ -2213,13 +2233,8 @@ tls_decrypt_ticket(SSL *s, const unsigned char *etick, int eticklen,
 	eticklen -= mlen;
 
 	/* Check HMAC of encrypted ticket */
-	if (HMAC_Update(&hctx, etick, eticklen) <= 0 ||
-	    HMAC_Final(&hctx, tick_hmac, NULL) <= 0) {
-		HMAC_CTX_cleanup(&hctx);
-		EVP_CIPHER_CTX_cleanup(&ctx);
-		return -1;
-	}
-
+	HMAC_Update(&hctx, etick, eticklen);
+	HMAC_Final(&hctx, tick_hmac, NULL);
 	HMAC_CTX_cleanup(&hctx);
 	if (timingsafe_memcmp(tick_hmac, etick + eticklen, mlen)) {
 		EVP_CIPHER_CTX_cleanup(&ctx);
@@ -2231,12 +2246,11 @@ tls_decrypt_ticket(SSL *s, const unsigned char *etick, int eticklen,
 	p = etick + 16 + EVP_CIPHER_CTX_iv_length(&ctx);
 	eticklen -= 16 + EVP_CIPHER_CTX_iv_length(&ctx);
 	sdec = malloc(eticklen);
-	if (sdec == NULL ||
-	    EVP_DecryptUpdate(&ctx, sdec, &slen, p, eticklen) <= 0) {
-		free(sdec);
+	if (!sdec) {
 		EVP_CIPHER_CTX_cleanup(&ctx);
 		return -1;
 	}
+	EVP_DecryptUpdate(&ctx, sdec, &slen, p, eticklen);
 	if (EVP_DecryptFinal_ex(&ctx, sdec + slen, &mlen) <= 0) {
 		free(sdec);
 		EVP_CIPHER_CTX_cleanup(&ctx);
