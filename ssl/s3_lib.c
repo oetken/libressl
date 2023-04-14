@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.165 2018/03/15 12:27:00 jca Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.167 2018/06/02 16:29:01 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -237,22 +237,6 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.alg_bits = 128,
 	},
 
-	/* Cipher 09 */
-	{
-		.valid = 1,
-		.name = SSL3_TXT_RSA_DES_64_CBC_SHA,
-		.id = SSL3_CK_RSA_DES_64_CBC_SHA,
-		.algorithm_mkey = SSL_kRSA,
-		.algorithm_auth = SSL_aRSA,
-		.algorithm_enc = SSL_DES,
-		.algorithm_mac = SSL_SHA1,
-		.algorithm_ssl = SSL_SSLV3,
-		.algo_strength = SSL_LOW,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
-		.strength_bits = 56,
-		.alg_bits = 56,
-	},
-
 	/* Cipher 0A */
 	{
 		.valid = 1,
@@ -272,22 +256,6 @@ SSL_CIPHER ssl3_ciphers[] = {
 	/*
 	 * Ephemeral DH (DHE) ciphers.
 	 */
-
-	/* Cipher 15 */
-	{
-		.valid = 1,
-		.name = SSL3_TXT_EDH_RSA_DES_64_CBC_SHA,
-		.id = SSL3_CK_EDH_RSA_DES_64_CBC_SHA,
-		.algorithm_mkey = SSL_kDHE,
-		.algorithm_auth = SSL_aRSA,
-		.algorithm_enc = SSL_DES,
-		.algorithm_mac = SSL_SHA1,
-		.algorithm_ssl = SSL_SSLV3,
-		.algo_strength = SSL_LOW,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
-		.strength_bits = 56,
-		.alg_bits = 56,
-	},
 
 	/* Cipher 16 */
 	{
@@ -319,22 +287,6 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
 		.strength_bits = 128,
 		.alg_bits = 128,
-	},
-
-	/* Cipher 1A */
-	{
-		.valid = 1,
-		.name = SSL3_TXT_ADH_DES_64_CBC_SHA,
-		.id = SSL3_CK_ADH_DES_64_CBC_SHA,
-		.algorithm_mkey = SSL_kDHE,
-		.algorithm_auth = SSL_aNULL,
-		.algorithm_enc = SSL_DES,
-		.algorithm_mac = SSL_SHA1,
-		.algorithm_ssl = SSL_SSLV3,
-		.algo_strength = SSL_LOW,
-		.algorithm2 = SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF,
-		.strength_bits = 56,
-		.alg_bits = 56,
 	},
 
 	/* Cipher 1B */
@@ -2524,56 +2476,13 @@ ssl3_shutdown(SSL *s)
 int
 ssl3_write(SSL *s, const void *buf, int len)
 {
-	int	ret, n;
-
-#if 0
-	if (s->internal->shutdown & SSL_SEND_SHUTDOWN) {
-		s->internal->rwstate = SSL_NOTHING;
-		return (0);
-	}
-#endif
 	errno = 0;
+
 	if (S3I(s)->renegotiate)
 		ssl3_renegotiate_check(s);
 
-	/*
-	 * This is an experimental flag that sends the
-	 * last handshake message in the same packet as the first
-	 * use data - used to see if it helps the TCP protocol during
-	 * session-id reuse
-	 */
-	/* The second test is because the buffer may have been removed */
-	if ((s->s3->flags & SSL3_FLAGS_POP_BUFFER) && (s->wbio == s->bbio)) {
-		/* First time through, we write into the buffer */
-		if (S3I(s)->delay_buf_pop_ret == 0) {
-			ret = ssl3_write_bytes(s, SSL3_RT_APPLICATION_DATA,
-			    buf, len);
-			if (ret <= 0)
-				return (ret);
-
-			S3I(s)->delay_buf_pop_ret = ret;
-		}
-
-		s->internal->rwstate = SSL_WRITING;
-		n = BIO_flush(s->wbio);
-		if (n <= 0)
-			return (n);
-		s->internal->rwstate = SSL_NOTHING;
-
-		/* We have flushed the buffer, so remove it */
-		ssl_free_wbio_buffer(s);
-		s->s3->flags&= ~SSL3_FLAGS_POP_BUFFER;
-
-		ret = S3I(s)->delay_buf_pop_ret;
-		S3I(s)->delay_buf_pop_ret = 0;
-	} else {
-		ret = s->method->internal->ssl_write_bytes(s,
-		    SSL3_RT_APPLICATION_DATA, buf, len);
-		if (ret <= 0)
-			return (ret);
-	}
-
-	return (ret);
+	return s->method->internal->ssl_write_bytes(s,
+	    SSL3_RT_APPLICATION_DATA, buf, len);
 }
 
 static int
