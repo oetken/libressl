@@ -89,12 +89,15 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@BUILD_NC_TRUE@noinst_PROGRAMS = nc$(EXEEXT)
+@BUILD_NC_TRUE@@ENABLE_NC_TRUE@bin_PROGRAMS = nc$(EXEEXT)
+@BUILD_NC_TRUE@@ENABLE_NC_FALSE@noinst_PROGRAMS = nc$(EXEEXT)
 @BUILD_NC_TRUE@am__append_1 = -I$(top_srcdir)/apps/nc/compat
-@BUILD_NC_TRUE@@HAVE_B64_NTOP_FALSE@am__append_2 = compat/base64.c
-@BUILD_NC_TRUE@@HAVE_ACCEPT4_FALSE@am__append_3 = compat/accept4.c
-@BUILD_NC_TRUE@@HAVE_READPASSPHRASE_FALSE@am__append_4 = compat/readpassphrase.c
-@BUILD_NC_TRUE@@HAVE_STRTONUM_FALSE@am__append_5 = compat/strtonum.c
+@BUILD_NC_TRUE@@OPENSSLDIR_DEFINED_TRUE@am__append_2 = -DDEFAULT_CA_FILE=\"@OPENSSLDIR@/cert.pem\"
+@BUILD_NC_TRUE@@OPENSSLDIR_DEFINED_FALSE@am__append_3 = -DDEFAULT_CA_FILE=\"$(sysconfdir)/ssl/cert.pem\"
+@BUILD_NC_TRUE@@HAVE_B64_NTOP_FALSE@am__append_4 = compat/base64.c
+@BUILD_NC_TRUE@@HAVE_ACCEPT4_FALSE@am__append_5 = compat/accept4.c
+@BUILD_NC_TRUE@@HAVE_READPASSPHRASE_FALSE@am__append_6 = compat/readpassphrase.c
+@BUILD_NC_TRUE@@HAVE_STRTONUM_FALSE@am__append_7 = compat/strtonum.c
 subdir = apps/nc
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/check-hardening-options.m4 \
@@ -111,7 +114,8 @@ DIST_COMMON = $(srcdir)/Makefile.am $(am__noinst_HEADERS_DIST) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-PROGRAMS = $(noinst_PROGRAMS)
+am__installdirs = "$(DESTDIR)$(bindir)"
+PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__nc_SOURCES_DIST = atomicio.c netcat.c socks.c compat/socket.c \
 	compat/base64.c compat/accept4.c compat/readpassphrase.c \
 	compat/strtonum.c
@@ -131,9 +135,9 @@ nc_OBJECTS = $(am_nc_OBJECTS)
 am__DEPENDENCIES_1 =
 @BUILD_NC_TRUE@nc_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 @BUILD_NC_TRUE@	$(am__DEPENDENCIES_1) \
-@BUILD_NC_TRUE@	$(top_builddir)/crypto/libcrypto.la \
-@BUILD_NC_TRUE@	$(top_builddir)/ssl/libssl.la \
-@BUILD_NC_TRUE@	$(top_builddir)/tls/libtls.la
+@BUILD_NC_TRUE@	$(abs_top_builddir)/crypto/libcrypto.la \
+@BUILD_NC_TRUE@	$(abs_top_builddir)/ssl/libssl.la \
+@BUILD_NC_TRUE@	$(abs_top_builddir)/tls/libtls.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -328,15 +332,16 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = 
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
-	-DLIBRESSL_INTERNAL $(am__append_1)
+	-DLIBRESSL_INTERNAL $(am__append_1) $(am__append_2) \
+	$(am__append_3)
 @BUILD_NC_TRUE@EXTRA_DIST = nc.1
 @BUILD_NC_TRUE@nc_LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) \
-@BUILD_NC_TRUE@	$(top_builddir)/crypto/libcrypto.la \
-@BUILD_NC_TRUE@	$(top_builddir)/ssl/libssl.la \
-@BUILD_NC_TRUE@	$(top_builddir)/tls/libtls.la
+@BUILD_NC_TRUE@	$(abs_top_builddir)/crypto/libcrypto.la \
+@BUILD_NC_TRUE@	$(abs_top_builddir)/ssl/libssl.la \
+@BUILD_NC_TRUE@	$(abs_top_builddir)/tls/libtls.la
 @BUILD_NC_TRUE@nc_SOURCES = atomicio.c netcat.c socks.c \
-@BUILD_NC_TRUE@	compat/socket.c $(am__append_2) $(am__append_3) \
-@BUILD_NC_TRUE@	$(am__append_4) $(am__append_5)
+@BUILD_NC_TRUE@	compat/socket.c $(am__append_4) $(am__append_5) \
+@BUILD_NC_TRUE@	$(am__append_6) $(am__append_7)
 @BUILD_NC_TRUE@noinst_HEADERS = atomicio.h compat/sys/socket.h
 all: all-am
 
@@ -372,6 +377,55 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	 || test -f $$p1 \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	    echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	    $(INSTALL_PROGRAM_ENV) $(LIBTOOL) $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=install $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	    } \
+	; done
+
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(bindir)" && rm -f $$files
+
+clean-binPROGRAMS:
+	@list='$(bin_PROGRAMS)'; test -n "$$list" || exit 0; \
+	echo " rm -f" $$list; \
+	rm -f $$list || exit $$?; \
+	test -n "$(EXEEXT)" || exit 0; \
+	list=`for p in $$list; do echo "$$p"; done | sed 's/$(EXEEXT)$$//'`; \
+	echo " rm -f" $$list; \
+	rm -f $$list
 
 clean-noinstPROGRAMS:
 	@list='$(noinst_PROGRAMS)'; test -n "$$list" || exit 0; \
@@ -534,6 +588,9 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(PROGRAMS) $(HEADERS)
 installdirs:
+	for dir in "$(DESTDIR)$(bindir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -568,8 +625,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-libtool clean-noinstPROGRAMS \
-	mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic clean-libtool \
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR) compat/$(DEPDIR)
@@ -595,7 +652,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-binPROGRAMS
 
 install-html: install-html-am
 
@@ -635,15 +692,16 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-binPROGRAMS
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-libtool clean-noinstPROGRAMS cscopelist-am ctags \
-	ctags-am distclean distclean-compile distclean-generic \
-	distclean-libtool distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
+.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
+	clean-binPROGRAMS clean-generic clean-libtool \
+	clean-noinstPROGRAMS cscopelist-am ctags ctags-am distclean \
+	distclean-compile distclean-generic distclean-libtool \
+	distclean-tags distdir dvi dvi-am html html-am info info-am \
+	install install-am install-binPROGRAMS install-data \
 	install-data-am install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
 	install-info-am install-man install-pdf install-pdf-am \
@@ -651,7 +709,7 @@ uninstall-am:
 	installcheck-am installdirs maintainer-clean \
 	maintainer-clean-generic mostlyclean mostlyclean-compile \
 	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags tags-am uninstall uninstall-am
+	tags tags-am uninstall uninstall-am uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
