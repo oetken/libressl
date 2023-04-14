@@ -90,10 +90,13 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = include
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/check-hardening-options.m4 \
+	$(top_srcdir)/m4/check-libc.m4 \
+	$(top_srcdir)/m4/check-os-options.m4 \
+	$(top_srcdir)/m4/disable-compiler-warnings.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(include_HEADERS) \
@@ -282,7 +285,6 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-USER_CFLAGS = @USER_CFLAGS@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -336,7 +338,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/include -DLIBRESSL_INTERNAL
+AM_CFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -DLIBRESSL_INTERNAL
 SUBDIRS = openssl
 noinst_HEADERS = err.h netdb.h poll.h pqueue.h stdio.h stdlib.h \
 	string.h syslog.h unistd.h win32netcompat.h arpa/inet.h \

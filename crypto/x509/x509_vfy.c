@@ -483,12 +483,6 @@ check_chain_extensions(X509_STORE_CTX *ctx)
 	} else {
 		allow_proxy_certs =
 		    !!(ctx->param->flags & X509_V_FLAG_ALLOW_PROXY_CERTS);
-#if 0
-		/* A hack to keep people who don't want to modify their
-		   software happy */
-		if (issetugid() == 0 && getenv("OPENSSL_ALLOW_PROXY_CERTS"))
-			allow_proxy_certs = 1;
-#endif
 		purpose = ctx->param->purpose;
 	}
 
