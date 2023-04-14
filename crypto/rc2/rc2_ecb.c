@@ -1,4 +1,4 @@
-/* $OpenBSD: rc2_ecb.c,v 1.7 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: rc2_ecb.c,v 1.5 2014/06/12 15:49:30 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <openssl/rc2.h>
-#include "rc2_local.h"
+#include "rc2_locl.h"
 #include <openssl/opensslv.h>
 
 /* RC2 as implemented frm a posting from

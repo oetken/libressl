@@ -1,4 +1,4 @@
-/*	$OpenBSD: aes_wrap.c,v 1.5 2021/04/04 20:40:48 tb Exp $	*/
+/* crypto/aes/aes_wrap.c */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -68,11 +68,10 @@ AES_wrap_unwrap_test(const unsigned char *kek, int keybits,
 	unsigned char *otmp = NULL, *ptmp = NULL;
 	int r, ret = 0;
 	AES_KEY wctx;
-
 	otmp = malloc(keylen + 8);
 	ptmp = malloc(keylen);
-	if (otmp == NULL || ptmp == NULL)
-		goto err;
+	if (!otmp || !ptmp)
+		return 0;
 	if (AES_set_encrypt_key(kek, keybits, &wctx))
 		goto err;
 	r = AES_wrap_key(&wctx, iv, otmp, key, keylen);
@@ -85,8 +84,6 @@ AES_wrap_unwrap_test(const unsigned char *kek, int keybits,
 	if (AES_set_decrypt_key(kek, keybits, &wctx))
 		goto err;
 	r = AES_unwrap_key(&wctx, iv, ptmp, otmp, r);
-	if (r <= 0)
-		goto err;
 
 	if (memcmp(key, ptmp, keylen))
 		goto err;

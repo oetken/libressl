@@ -1,4 +1,4 @@
-/* $OpenBSD: bn.h,v 1.57 2022/12/17 15:56:25 jsing Exp $ */
+/* $OpenBSD: bn.h,v 1.23 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1997 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -125,18 +125,27 @@
 #ifndef HEADER_BN_H
 #define HEADER_BN_H
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <openssl/opensslconf.h>
 
+#include <stdio.h> /* FILE */
 #include <openssl/ossl_typ.h>
 #include <openssl/crypto.h>
-#include <openssl/bio.h>
 
 #ifdef  __cplusplus
 extern "C" {
 #endif
+
+/* These preprocessor symbols control various aspects of the bignum headers and
+ * library code. They're not defined by any "normal" configuration, as they are
+ * intended for development and testing purposes. NB: defining all three can be
+ * useful for debugging application code as well as openssl itself.
+ *
+ * BN_DEBUG - turn on various debugging alterations to the bignum code
+ * BN_DEBUG_RAND - uses random poisoning of unused words to trip up
+ * mismanagement of bignum internals. You must also define BN_DEBUG.
+ */
+/* #define BN_DEBUG */
+/* #define BN_DEBUG_RAND */
 
 #ifndef OPENSSL_SMALL_FOOTPRINT
 #define BN_MUL_COMBA
@@ -214,134 +223,134 @@ extern "C" {
 #endif
 
 #ifndef OPENSSL_NO_DEPRECATED
-#define BN_FLG_FREE		0x8000	/* used for debugging */
+#define BN_FLG_FREE		0x8000	/* used for debuging */
 #endif
-void BN_set_flags(BIGNUM *b, int n);
-int BN_get_flags(const BIGNUM *b, int n);
-void BN_with_flags(BIGNUM *dest, const BIGNUM *src, int flags);
+#define BN_set_flags(b,n)	((b)->flags|=(n))
+#define BN_get_flags(b,n)	((b)->flags&(n))
 
-/* Values for |top| in BN_rand() */
-#define BN_RAND_TOP_ANY    -1
-#define BN_RAND_TOP_ONE     0
-#define BN_RAND_TOP_TWO     1
+/* get a clone of a BIGNUM with changed flags, for *temporary* use only
+ * (the two BIGNUMs cannot not be used in parallel!) */
+#define BN_with_flags(dest,b,n)  ((dest)->d=(b)->d, \
+                                  (dest)->top=(b)->top, \
+                                  (dest)->dmax=(b)->dmax, \
+                                  (dest)->neg=(b)->neg, \
+                                  (dest)->flags=(((dest)->flags & BN_FLG_MALLOCED) \
+                                                 |  ((b)->flags & ~BN_FLG_MALLOCED) \
+                                                 |  BN_FLG_STATIC_DATA \
+                                                 |  (n)))
 
-/* Values for |bottom| in BN_rand() */
-#define BN_RAND_BOTTOM_ANY  0
-#define BN_RAND_BOTTOM_ODD  1
+/* Already declared in ossl_typ.h */
+#if 0
+typedef struct bignum_st BIGNUM;
+/* Used for temp variables (declaration hidden in bn_lcl.h) */
+typedef struct bignum_ctx BN_CTX;
+typedef struct bn_blinding_st BN_BLINDING;
+typedef struct bn_mont_ctx_st BN_MONT_CTX;
+typedef struct bn_recp_ctx_st BN_RECP_CTX;
+typedef struct bn_gencb_st BN_GENCB;
+#endif
 
-BN_GENCB *BN_GENCB_new(void);
-void BN_GENCB_free(BN_GENCB *cb);
+struct bignum_st {
+	BN_ULONG *d;	/* Pointer to an array of 'BN_BITS2' bit chunks. */
+	int top;	/* Index of last used d +1. */
+	/* The next are internal book keeping for bn_expand. */
+	int dmax;	/* Size of the d array. */
+	int neg;	/* one if the number is negative */
+	int flags;
+};
 
+/* Used for montgomery multiplication */
+struct bn_mont_ctx_st {
+	int ri;        /* number of bits in R */
+	BIGNUM RR;     /* used to convert to montgomery form */
+	BIGNUM N;      /* The modulus */
+	BIGNUM Ni;     /* R*(1/R mod N) - N*Ni = 1
+	                * (Ni is only stored for bignum algorithm) */
+	BN_ULONG n0[2];/* least significant word(s) of Ni;
+	                  (type changed with 0.9.9, was "BN_ULONG n0;" before) */
+	int flags;
+};
+
+/* Used for reciprocal division/mod functions
+ * It cannot be shared between threads
+ */
+struct bn_recp_ctx_st {
+	BIGNUM N;	/* the divisor */
+	BIGNUM Nr;	/* the reciprocal */
+	int num_bits;
+	int shift;
+	int flags;
+};
+
+/* Used for slow "generation" functions. */
+struct bn_gencb_st {
+	unsigned int ver;	/* To handle binary (in)compatibility */
+	void *arg;		/* callback-specific data */
+	union {
+		/* if(ver==1) - handles old style callbacks */
+		void (*cb_1)(int, int, void *);
+		/* if(ver==2) - new callback style */
+		int (*cb_2)(int, int, BN_GENCB *);
+	} cb;
+};
 /* Wrapper function to make using BN_GENCB easier,  */
 int BN_GENCB_call(BN_GENCB *cb, int a, int b);
-
-/* Populate a BN_GENCB structure with an "old"-style callback */
-void BN_GENCB_set_old(BN_GENCB *gencb, void (*callback)(int, int, void *),
-    void *cb_arg);
-
-/* Populate a BN_GENCB structure with a "new"-style callback */
-void BN_GENCB_set(BN_GENCB *gencb, int (*callback)(int, int, BN_GENCB *),
-    void *cb_arg);
-
-void *BN_GENCB_get_arg(BN_GENCB *cb);
+/* Macro to populate a BN_GENCB structure with an "old"-style callback */
+#define BN_GENCB_set_old(gencb, callback, cb_arg) { \
+		BN_GENCB *tmp_gencb = (gencb); \
+		tmp_gencb->ver = 1; \
+		tmp_gencb->arg = (cb_arg); \
+		tmp_gencb->cb.cb_1 = (callback); }
+/* Macro to populate a BN_GENCB structure with a "new"-style callback */
+#define BN_GENCB_set(gencb, callback, cb_arg) { \
+		BN_GENCB *tmp_gencb = (gencb); \
+		tmp_gencb->ver = 2; \
+		tmp_gencb->arg = (cb_arg); \
+		tmp_gencb->cb.cb_2 = (callback); }
 
 #define BN_prime_checks 0 /* default: select number of iterations
 			     based on the size of the number */
 
-/*
- * BN_prime_checks_for_size() returns the number of Miller-Rabin
- * iterations that will be done for checking that a random number
- * is probably prime.  The error rate for accepting a composite
- * number as prime depends on the size of the prime |b|.  The error
- * rates used are for calculating an RSA key with 2 primes, and so
- * the level is what you would expect for a key of double the size
- * of the prime.
- *
- * This table is generated using the algorithm of FIPS PUB 186-4
- * Digital Signature Standard (DSS), section F.1, page 117.
- * (https://dx.doi.org/10.6028/NIST.FIPS.186-4)
- *
- * The following magma script was used to generate the output:
- * securitybits:=125;
- * k:=1024;
- * for t:=1 to 65 do
- *   for M:=3 to Floor(2*Sqrt(k-1)-1) do
- *     S:=0;
- *     // Sum over m
- *     for m:=3 to M do
- *       s:=0;
- *       // Sum over j
- *       for j:=2 to m do
- *         s+:=(RealField(32)!2)^-(j+(k-1)/j);
- *       end for;
- *       S+:=2^(m-(m-1)*t)*s;
- *     end for;
- *     A:=2^(k-2-M*t);
- *     B:=8*(Pi(RealField(32))^2-6)/3*2^(k-2)*S;
- *     pkt:=2.00743*Log(2)*k*2^-k*(A+B);
- *     seclevel:=Floor(-Log(2,pkt));
- *     if seclevel ge securitybits then
- *       printf "k: %5o, security: %o bits  (t: %o, M: %o)\n",k,seclevel,t,M;
- *       break;
- *     end if;
- *   end for;
- *   if seclevel ge securitybits then break; end if;
- * end for;
- *
- * It can be run online at:
- * http://magma.maths.usyd.edu.au/calc
- *
- * And will output:
- * k:  1024, security: 129 bits  (t: 6, M: 23)
- *
- * k is the number of bits of the prime, securitybits is the level
- * we want to reach.
- *
- * prime length | RSA key size | # MR tests | security level
- * -------------+--------------|------------+---------------
- *  (b) >= 6394 |     >= 12788 |          3 |        256 bit
- *  (b) >= 3747 |     >=  7494 |          3 |        192 bit
- *  (b) >= 1345 |     >=  2690 |          4 |        128 bit
- *  (b) >= 1080 |     >=  2160 |          5 |        128 bit
- *  (b) >=  852 |     >=  1704 |          5 |        112 bit
- *  (b) >=  476 |     >=   952 |          5 |         80 bit
- *  (b) >=  400 |     >=   800 |          6 |         80 bit
- *  (b) >=  347 |     >=   694 |          7 |         80 bit
- *  (b) >=  308 |     >=   616 |          8 |         80 bit
- *  (b) >=   55 |     >=   110 |         27 |         64 bit
- *  (b) >=    6 |     >=    12 |         34 |         64 bit
- */
-
-#define BN_prime_checks_for_size(b) ((b) >= 3747 ?  3 : \
-				(b) >=  1345 ?  4 : \
-				(b) >=  476 ?  5 : \
-				(b) >=  400 ?  6 : \
-				(b) >=  347 ?  7 : \
-				(b) >=  308 ?  8 : \
-				(b) >=  55  ? 27 : \
-				/* b >= 6 */ 34)
+/* number of Miller-Rabin iterations for an error rate  of less than 2^-80
+ * for random 'b'-bit input, b >= 100 (taken from table 4.4 in the Handbook
+ * of Applied Cryptography [Menezes, van Oorschot, Vanstone; CRC Press 1996];
+ * original paper: Damgaard, Landrock, Pomerance: Average case error estimates
+ * for the strong probable prime test. -- Math. Comp. 61 (1993) 177-194) */
+#define BN_prime_checks_for_size(b) ((b) >= 1300 ?  2 : \
+                                (b) >=  850 ?  3 : \
+                                (b) >=  650 ?  4 : \
+                                (b) >=  550 ?  5 : \
+                                (b) >=  450 ?  6 : \
+                                (b) >=  400 ?  7 : \
+                                (b) >=  350 ?  8 : \
+                                (b) >=  300 ?  9 : \
+                                (b) >=  250 ? 12 : \
+                                (b) >=  200 ? 15 : \
+                                (b) >=  150 ? 18 : \
+                                /* b >= 100 */ 27)
 
 #define BN_num_bytes(a)	((BN_num_bits(a)+7)/8)
 
-int BN_abs_is_word(const BIGNUM *a, const BN_ULONG w);
-int BN_is_zero(const BIGNUM *a);
-int BN_is_one(const BIGNUM *a);
-int BN_is_word(const BIGNUM *a, const BN_ULONG w);
-int BN_is_odd(const BIGNUM *a);
+/* Note that BN_abs_is_word didn't work reliably for w == 0 until 0.9.8 */
+#define BN_abs_is_word(a,w) ((((a)->top == 1) && ((a)->d[0] == (BN_ULONG)(w))) || \
+				(((w) == 0) && ((a)->top == 0)))
+#define BN_is_zero(a)       ((a)->top == 0)
+#define BN_is_one(a)        (BN_abs_is_word((a),1) && !(a)->neg)
+#define BN_is_word(a,w)     (BN_abs_is_word((a),(w)) && (!(w) || !(a)->neg))
+#define BN_is_odd(a)	    (((a)->top > 0) && ((a)->d[0] & 1))
 
-#if defined(LIBRESSL_INTERNAL) || defined(LIBRESSL_NEXT_API)
-void BN_zero(BIGNUM *a);
-int BN_one(BIGNUM *a);
-#else
-#define BN_one(a)	BN_set_word((a), 1)
-
-void BN_zero_ex(BIGNUM *a);
+#define BN_one(a)	(BN_set_word((a),1))
+#define BN_zero_ex(a) \
+	do { \
+		BIGNUM *_tmp_bn = (a); \
+		_tmp_bn->top = 0; \
+		_tmp_bn->neg = 0; \
+	} while(0)
 
 #ifdef OPENSSL_NO_DEPRECATED
 #define BN_zero(a)	BN_zero_ex(a)
 #else
 #define BN_zero(a)	(BN_set_word((a),0))
-#endif
 #endif
 
 const BIGNUM *BN_value_one(void);
@@ -367,9 +376,6 @@ BIGNUM *BN_copy(BIGNUM *a, const BIGNUM *b);
 void	BN_swap(BIGNUM *a, BIGNUM *b);
 BIGNUM *BN_bin2bn(const unsigned char *s, int len, BIGNUM *ret);
 int	BN_bn2bin(const BIGNUM *a, unsigned char *to);
-int	BN_bn2binpad(const BIGNUM *a, unsigned char *to, int tolen);
-BIGNUM *BN_lebin2bn(const unsigned char *s, int len, BIGNUM *ret);
-int	BN_bn2lebinpad(const BIGNUM *a, unsigned char *to, int tolen);
 BIGNUM *BN_mpi2bn(const unsigned char *s, int len, BIGNUM *ret);
 int	BN_bn2mpi(const BIGNUM *a, unsigned char *to);
 int	BN_sub(BIGNUM *r, const BIGNUM *a, const BIGNUM *b);
@@ -383,14 +389,15 @@ int	BN_sqr(BIGNUM *r, const BIGNUM *a, BN_CTX *ctx);
  * \param  n  0 if the BIGNUM b should be positive and a value != 0 otherwise
  */
 void	BN_set_negative(BIGNUM *b, int n);
+/** BN_is_negative returns 1 if the BIGNUM is negative
+ * \param  a  pointer to the BIGNUM object
+ * \return 1 if a < 0 and 0 otherwise
+ */
+#define BN_is_negative(a) ((a)->neg != 0)
 
-int BN_is_negative(const BIGNUM *b);
-
-#ifndef LIBRESSL_INTERNAL
 int	BN_div(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, const BIGNUM *d,
     BN_CTX *ctx);
 #define BN_mod(rem,m,d,ctx) BN_div(NULL,(rem),(m),(d),(ctx))
-#endif
 int	BN_nnmod(BIGNUM *r, const BIGNUM *m, const BIGNUM *d, BN_CTX *ctx);
 int	BN_mod_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m, BN_CTX *ctx);
 int	BN_mod_add_quick(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *m);
@@ -419,12 +426,10 @@ int	BN_lshift(BIGNUM *r, const BIGNUM *a, int n);
 int	BN_lshift1(BIGNUM *r, const BIGNUM *a);
 int	BN_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx);
 
-#ifndef LIBRESSL_INTERNAL
 int	BN_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     const BIGNUM *m, BN_CTX *ctx);
 int	BN_mod_exp_mont(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
     const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *m_ctx);
-#endif
 int BN_mod_exp_mont_consttime(BIGNUM *rr, const BIGNUM *a, const BIGNUM *p,
     const BIGNUM *m, BN_CTX *ctx, BN_MONT_CTX *in_mont);
 int	BN_mod_exp_mont_word(BIGNUM *r, BN_ULONG a, const BIGNUM *p,
@@ -437,7 +442,11 @@ int	BN_mod_exp_simple(BIGNUM *r, const BIGNUM *a, const BIGNUM *p,
 
 int	BN_mask_bits(BIGNUM *a, int n);
 int	BN_print_fp(FILE *fp, const BIGNUM *a);
+#ifdef HEADER_BIO_H
 int	BN_print(BIO *fp, const BIGNUM *a);
+#else
+int	BN_print(void *fp, const BIGNUM *a);
+#endif
 int	BN_reciprocal(BIGNUM *r, const BIGNUM *m, int len, BN_CTX *ctx);
 int	BN_rshift(BIGNUM *r, const BIGNUM *a, int n);
 int	BN_rshift1(BIGNUM *r, const BIGNUM *a);
@@ -451,20 +460,14 @@ char *	BN_bn2dec(const BIGNUM *a);
 int 	BN_hex2bn(BIGNUM **a, const char *str);
 int 	BN_dec2bn(BIGNUM **a, const char *str);
 int	BN_asc2bn(BIGNUM **a, const char *str);
-#ifndef LIBRESSL_INTERNAL
 int	BN_gcd(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, BN_CTX *ctx);
-#endif
 int	BN_kronecker(const BIGNUM *a,const BIGNUM *b,BN_CTX *ctx); /* returns -2 for error */
-#ifndef LIBRESSL_INTERNAL
 BIGNUM *BN_mod_inverse(BIGNUM *ret,
     const BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
-#endif
 BIGNUM *BN_mod_sqrt(BIGNUM *ret,
     const BIGNUM *a, const BIGNUM *n, BN_CTX *ctx);
 
 void	BN_consttime_swap(BN_ULONG swap, BIGNUM *a, BIGNUM *b, int nwords);
-
-int	BN_security_bits(int L, int N);
 
 /* Deprecated versions */
 #ifndef OPENSSL_NO_DEPRECATED
@@ -501,8 +504,8 @@ BN_MONT_CTX *BN_MONT_CTX_new(void );
 void BN_MONT_CTX_init(BN_MONT_CTX *ctx);
 int BN_mod_mul_montgomery(BIGNUM *r, const BIGNUM *a, const BIGNUM *b,
     BN_MONT_CTX *mont, BN_CTX *ctx);
-int BN_to_montgomery(BIGNUM *r, const BIGNUM *a, BN_MONT_CTX *mont,
-    BN_CTX *ctx);
+#define BN_to_montgomery(r,a,mont,ctx)	BN_mod_mul_montgomery(\
+	(r),(a),&((mont)->RR),(mont),(ctx))
 int BN_from_montgomery(BIGNUM *r, const BIGNUM *a,
     BN_MONT_CTX *mont, BN_CTX *ctx);
 void BN_MONT_CTX_free(BN_MONT_CTX *mont);
@@ -626,11 +629,128 @@ const BIGNUM *BN_get0_nist_prime_256(void);
 const BIGNUM *BN_get0_nist_prime_384(void);
 const BIGNUM *BN_get0_nist_prime_521(void);
 
+/* library internal functions */
+
+#define bn_expand(a,bits) ((((((bits+BN_BITS2-1))/BN_BITS2)) <= (a)->dmax)?\
+	(a):bn_expand2((a),(bits+BN_BITS2-1)/BN_BITS2))
+#define bn_wexpand(a,words) (((words) <= (a)->dmax)?(a):bn_expand2((a),(words)))
+BIGNUM *bn_expand2(BIGNUM *a, int words);
+#ifndef OPENSSL_NO_DEPRECATED
+BIGNUM *bn_dup_expand(const BIGNUM *a, int words); /* unused */
+#endif
+
+/* Bignum consistency macros
+ * There is one "API" macro, bn_fix_top(), for stripping leading zeroes from
+ * bignum data after direct manipulations on the data. There is also an
+ * "internal" macro, bn_check_top(), for verifying that there are no leading
+ * zeroes. Unfortunately, some auditing is required due to the fact that
+ * bn_fix_top() has become an overabused duct-tape because bignum data is
+ * occasionally passed around in an inconsistent state. So the following
+ * changes have been made to sort this out;
+ * - bn_fix_top()s implementation has been moved to bn_correct_top()
+ * - if BN_DEBUG isn't defined, bn_fix_top() maps to bn_correct_top(), and
+ *   bn_check_top() is as before.
+ * - if BN_DEBUG *is* defined;
+ *   - bn_check_top() tries to pollute unused words even if the bignum 'top' is
+ *     consistent. (ed: only if BN_DEBUG_RAND is defined)
+ *   - bn_fix_top() maps to bn_check_top() rather than "fixing" anything.
+ * The idea is to have debug builds flag up inconsistent bignums when they
+ * occur. If that occurs in a bn_fix_top(), we examine the code in question; if
+ * the use of bn_fix_top() was appropriate (ie. it follows directly after code
+ * that manipulates the bignum) it is converted to bn_correct_top(), and if it
+ * was not appropriate, we convert it permanently to bn_check_top() and track
+ * down the cause of the bug. Eventually, no internal code should be using the
+ * bn_fix_top() macro. External applications and libraries should try this with
+ * their own code too, both in terms of building against the openssl headers
+ * with BN_DEBUG defined *and* linking with a version of OpenSSL built with it
+ * defined. This not only improves external code, it provides more test
+ * coverage for openssl's own code.
+ */
+
+#ifdef BN_DEBUG
+
+/* We only need assert() when debugging */
+#include <assert.h>
+
+#ifdef BN_DEBUG_RAND
+/* To avoid "make update" cvs wars due to BN_DEBUG, use some tricks */
+#ifndef RAND_pseudo_bytes
+int RAND_pseudo_bytes(unsigned char *buf, int num);
+#define BN_DEBUG_TRIX
+#endif
+#define bn_pollute(a) \
+	do { \
+		const BIGNUM *_bnum1 = (a); \
+		if(_bnum1->top < _bnum1->dmax) { \
+			unsigned char _tmp_char; \
+			/* We cast away const without the compiler knowing, any \
+			 * *genuinely* constant variables that aren't mutable \
+			 * wouldn't be constructed with top!=dmax. */ \
+			BN_ULONG *_not_const; \
+			memcpy(&_not_const, &_bnum1->d, sizeof(BN_ULONG*)); \
+			RAND_pseudo_bytes(&_tmp_char, 1); \
+			memset((unsigned char *)(_not_const + _bnum1->top), _tmp_char, \
+				(_bnum1->dmax - _bnum1->top) * sizeof(BN_ULONG)); \
+		} \
+	} while(0)
+#ifdef BN_DEBUG_TRIX
+#undef RAND_pseudo_bytes
+#endif
+#else
+#define bn_pollute(a)
+#endif
+#define bn_check_top(a) \
+	do { \
+		const BIGNUM *_bnum2 = (a); \
+		if (_bnum2 != NULL) { \
+			assert((_bnum2->top == 0) || \
+				(_bnum2->d[_bnum2->top - 1] != 0)); \
+			bn_pollute(_bnum2); \
+		} \
+	} while(0)
+
+#define bn_fix_top(a)		bn_check_top(a)
+
+#define bn_check_size(bn, bits) bn_wcheck_size(bn, ((bits+BN_BITS2-1))/BN_BITS2)
+#define bn_wcheck_size(bn, words) \
+	do { \
+		const BIGNUM *_bnum2 = (bn); \
+		assert(words <= (_bnum2)->dmax && words >= (_bnum2)->top); \
+	} while(0)
+
+#else /* !BN_DEBUG */
+
+#define bn_pollute(a)
+#define bn_check_top(a)
+#define bn_fix_top(a)		bn_correct_top(a)
+#define bn_check_size(bn, bits)
+#define bn_wcheck_size(bn, words)
+
+#endif
+
+#define bn_correct_top(a) \
+        { \
+        BN_ULONG *ftl; \
+	int tmp_top = (a)->top; \
+	if (tmp_top > 0) \
+		{ \
+		for (ftl= &((a)->d[tmp_top-1]); tmp_top > 0; tmp_top--) \
+			if (*(ftl--)) break; \
+		(a)->top = tmp_top; \
+		} \
+	bn_pollute(a); \
+	}
+
+			BN_ULONG bn_mul_add_words(BN_ULONG *rp, const BN_ULONG *ap, int num, BN_ULONG w);
+BN_ULONG bn_mul_words(BN_ULONG *rp, const BN_ULONG *ap, int num, BN_ULONG w);
+void     bn_sqr_words(BN_ULONG *rp, const BN_ULONG *ap, int num);
+BN_ULONG bn_div_words(BN_ULONG h, BN_ULONG l, BN_ULONG d);
+BN_ULONG bn_add_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp, int num);
+BN_ULONG bn_sub_words(BN_ULONG *rp, const BN_ULONG *ap, const BN_ULONG *bp, int num);
+
 /* Primes from RFC 2409 */
 BIGNUM *get_rfc2409_prime_768(BIGNUM *bn);
 BIGNUM *get_rfc2409_prime_1024(BIGNUM *bn);
-BIGNUM *BN_get_rfc2409_prime_768(BIGNUM *bn);
-BIGNUM *BN_get_rfc2409_prime_1024(BIGNUM *bn);
 
 /* Primes from RFC 3526 */
 BIGNUM *get_rfc3526_prime_1536(BIGNUM *bn);
@@ -639,13 +759,13 @@ BIGNUM *get_rfc3526_prime_3072(BIGNUM *bn);
 BIGNUM *get_rfc3526_prime_4096(BIGNUM *bn);
 BIGNUM *get_rfc3526_prime_6144(BIGNUM *bn);
 BIGNUM *get_rfc3526_prime_8192(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_1536(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_2048(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_3072(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_4096(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_6144(BIGNUM *bn);
-BIGNUM *BN_get_rfc3526_prime_8192(BIGNUM *bn);
 
+int BN_bntest_rand(BIGNUM *rnd, int bits, int top, int bottom);
+
+/* BEGIN ERROR CODES */
+/* The following lines are auto generated by the script mkerr.pl. Any changes
+ * made after this point may be overwritten when the script is next run.
+ */
 void ERR_load_BN_strings(void);
 
 /* Error codes for the BN functions. */
@@ -667,7 +787,6 @@ void ERR_load_BN_strings(void);
 #define BN_F_BN_DIV_RECP				 130
 #define BN_F_BN_EXP					 123
 #define BN_F_BN_EXPAND2					 108
-#define BN_F_BN_GENERATE_PRIME_EX			 140
 #define BN_F_BN_EXPAND_INTERNAL				 120
 #define BN_F_BN_GF2M_MOD				 131
 #define BN_F_BN_GF2M_MOD_EXP				 132
@@ -697,7 +816,6 @@ void ERR_load_BN_strings(void);
 #define BN_R_ARG2_LT_ARG3				 100
 #define BN_R_BAD_RECIPROCAL				 101
 #define BN_R_BIGNUM_TOO_LONG				 114
-#define BN_R_BITS_TOO_SMALL				 117
 #define BN_R_CALLED_WITH_EVEN_MODULUS			 102
 #define BN_R_DIV_BY_ZERO				 103
 #define BN_R_ENCODING_ERROR				 104

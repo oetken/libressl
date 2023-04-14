@@ -1,4 +1,4 @@
-/* $OpenBSD: aes_ecb.c,v 1.7 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -54,14 +54,18 @@
 #  define NDEBUG
 # endif
 #endif
+#include <assert.h>
 
 #include <openssl/aes.h>
-#include "aes_local.h"
+#include "aes_locl.h"
 
 void
 AES_ecb_encrypt(const unsigned char *in, unsigned char *out,
     const AES_KEY *key, const int enc)
 {
+	assert(in && out && key);
+	assert((AES_ENCRYPT == enc) || (AES_DECRYPT == enc));
+
 	if (AES_ENCRYPT == enc)
 		AES_encrypt(in, out, key);
 	else

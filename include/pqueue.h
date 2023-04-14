@@ -1,4 +1,4 @@
-/* $OpenBSD: pqueue.h,v 1.4 2016/11/04 18:28:58 guenther Exp $ */
+/* $OpenBSD$ */
 
 /*
  * DTLS implementation written by Nagendra Modadugu
@@ -61,8 +61,6 @@
 #ifndef HEADER_PQUEUE_H
 #define HEADER_PQUEUE_H
 
-__BEGIN_HIDDEN_DECLS 
-
 typedef struct _pqueue *pqueue;
 
 typedef struct _pitem {
@@ -87,7 +85,5 @@ pitem *pqueue_iterator(pqueue pq);
 pitem *pqueue_next(piterator *iter);
 
 int    pqueue_size(pqueue pq);
-
-__END_HIDDEN_DECLS 
 
 #endif /* ! HEADER_PQUEUE_H */

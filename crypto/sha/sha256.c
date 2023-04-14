@@ -1,4 +1,4 @@
-/* $OpenBSD: sha256.c,v 1.11 2021/11/09 18:40:21 bcook Exp $ */
+/* $OpenBSD: sha256.c,v 1.6 2014/07/09 16:06:13 miod Exp $ */
 /* ====================================================================
  * Copyright (c) 2004 The OpenSSL Project.  All rights reserved
  * according to the OpenSSL license [found in ../../LICENSE].
@@ -9,7 +9,8 @@
 
 #if !defined(OPENSSL_NO_SHA) && !defined(OPENSSL_NO_SHA256)
 
-#include <endian.h>
+#include <machine/endian.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -48,7 +49,7 @@ unsigned char *SHA224(const unsigned char *d, size_t n, unsigned char *md)
 	SHA224_Init(&c);
 	SHA256_Update(&c,d,n);
 	SHA256_Final(md,&c);
-	explicit_bzero(&c,sizeof(c));
+	OPENSSL_cleanse(&c,sizeof(c));
 	return(md);
 	}
 
@@ -61,7 +62,7 @@ unsigned char *SHA256(const unsigned char *d, size_t n, unsigned char *md)
 	SHA256_Init(&c);
 	SHA256_Update(&c,d,n);
 	SHA256_Final(md,&c);
-	explicit_bzero(&c,sizeof(c));
+	OPENSSL_cleanse(&c,sizeof(c));
 	return(md);
 	}
 
@@ -80,7 +81,7 @@ int SHA224_Final (unsigned char *md, SHA256_CTX *c)
  * default: case below covers for it. It's not clear however if it's
  * permitted to truncate to amount of bytes not divisible by 4. I bet not,
  * but if it is, then default: case shall be extended. For reference.
- * Idea behind separate cases for pre-defined lengths is to let the
+ * Idea behind separate cases for pre-defined lenghts is to let the
  * compiler decide if it's appropriate to unroll small loops.
  */
 #define	HASH_MAKE_STRING(c,s)	do {	\
@@ -89,17 +90,17 @@ int SHA224_Final (unsigned char *md, SHA256_CTX *c)
 	switch ((c)->md_len)		\
 	{   case SHA224_DIGEST_LENGTH:	\
 		for (nn=0;nn<SHA224_DIGEST_LENGTH/4;nn++)	\
-		{   ll=(c)->h[nn]; HOST_l2c(ll,(s));   }	\
+		{   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }	\
 		break;			\
 	    case SHA256_DIGEST_LENGTH:	\
 		for (nn=0;nn<SHA256_DIGEST_LENGTH/4;nn++)	\
-		{   ll=(c)->h[nn]; HOST_l2c(ll,(s));   }	\
+		{   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }	\
 		break;			\
 	    default:			\
 		if ((c)->md_len > SHA256_DIGEST_LENGTH)	\
 		    return 0;				\
 		for (nn=0;nn<(c)->md_len/4;nn++)		\
-		{   ll=(c)->h[nn]; HOST_l2c(ll,(s));   }	\
+		{   ll=(c)->h[nn]; (void)HOST_l2c(ll,(s));   }	\
 		break;			\
 	}				\
 	} while (0)

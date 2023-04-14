@@ -1,4 +1,4 @@
-/* $OpenBSD: p5_crpt.c,v 1.21 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: p5_crpt.c,v 1.12 2014/07/10 13:58:22 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -64,8 +64,6 @@
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 
-#include "evp_local.h"
-
 /* Doesn't do anything now: Builtin PBE algorithms in static table.
  */
 
@@ -88,31 +86,25 @@ PKCS5_PBE_keyivgen(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
 	const unsigned char *pbuf;
 	int mdsize;
 	int rv = 0;
+	EVP_MD_CTX_init(&ctx);
 
 	/* Extract useful info from parameter */
 	if (param == NULL || param->type != V_ASN1_SEQUENCE ||
 	    param->value.sequence == NULL) {
-		EVPerror(EVP_R_DECODE_ERROR);
+		EVPerr(EVP_F_PKCS5_PBE_KEYIVGEN, EVP_R_DECODE_ERROR);
 		return 0;
 	}
 
-	mdsize = EVP_MD_size(md);
-	if (mdsize < 0)
-		return 0;
-
 	pbuf = param->value.sequence->data;
 	if (!(pbe = d2i_PBEPARAM(NULL, &pbuf, param->value.sequence->length))) {
-		EVPerror(EVP_R_DECODE_ERROR);
+		EVPerr(EVP_F_PKCS5_PBE_KEYIVGEN, EVP_R_DECODE_ERROR);
 		return 0;
 	}
 
 	if (!pbe->iter)
 		iter = 1;
-	else if ((iter = ASN1_INTEGER_get(pbe->iter)) <= 0) {
-		EVPerror(EVP_R_UNSUPORTED_NUMBER_OF_ROUNDS);
-		PBEPARAM_free(pbe);
-		return 0;
-	}
+	else
+		iter = ASN1_INTEGER_get (pbe->iter);
 	salt = pbe->salt->data;
 	saltlen = pbe->salt->length;
 
@@ -121,16 +113,18 @@ PKCS5_PBE_keyivgen(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
 	else if (passlen == -1)
 		passlen = strlen(pass);
 
-	EVP_MD_CTX_init(&ctx);
-
 	if (!EVP_DigestInit_ex(&ctx, md, NULL))
 		goto err;
 	if (!EVP_DigestUpdate(&ctx, pass, passlen))
 		goto err;
 	if (!EVP_DigestUpdate(&ctx, salt, saltlen))
 		goto err;
+	PBEPARAM_free(pbe);
 	if (!EVP_DigestFinal_ex(&ctx, md_tmp, NULL))
 		goto err;
+	mdsize = EVP_MD_size(md);
+	if (mdsize < 0)
+		return 0;
 	for (i = 1; i < iter; i++) {
 		if (!EVP_DigestInit_ex(&ctx, md, NULL))
 			goto err;
@@ -139,25 +133,18 @@ PKCS5_PBE_keyivgen(EVP_CIPHER_CTX *cctx, const char *pass, int passlen,
 		if (!EVP_DigestFinal_ex (&ctx, md_tmp, NULL))
 			goto err;
 	}
-	if ((size_t)EVP_CIPHER_key_length(cipher) > sizeof(md_tmp)) {
-		EVPerror(EVP_R_BAD_KEY_LENGTH);
-		goto err;
-	}
+	OPENSSL_assert(EVP_CIPHER_key_length(cipher) <= (int)sizeof(md_tmp));
 	memcpy(key, md_tmp, EVP_CIPHER_key_length(cipher));
-	if ((size_t)EVP_CIPHER_iv_length(cipher) > 16) {
-		EVPerror(EVP_R_IV_TOO_LARGE);
-		goto err;
-	}
+	OPENSSL_assert(EVP_CIPHER_iv_length(cipher) <= 16);
 	memcpy(iv, md_tmp + (16 - EVP_CIPHER_iv_length(cipher)),
 	    EVP_CIPHER_iv_length(cipher));
 	if (!EVP_CipherInit_ex(cctx, cipher, NULL, key, iv, en_de))
 		goto err;
-	explicit_bzero(md_tmp, EVP_MAX_MD_SIZE);
-	explicit_bzero(key, EVP_MAX_KEY_LENGTH);
-	explicit_bzero(iv, EVP_MAX_IV_LENGTH);
+	OPENSSL_cleanse(md_tmp, EVP_MAX_MD_SIZE);
+	OPENSSL_cleanse(key, EVP_MAX_KEY_LENGTH);
+	OPENSSL_cleanse(iv, EVP_MAX_IV_LENGTH);
 	rv = 1;
 err:
 	EVP_MD_CTX_cleanup(&ctx);
-	PBEPARAM_free(pbe);
 	return rv;
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_list.c,v 1.25 2022/12/26 07:18:51 jmc Exp $ */
+/* $OpenBSD: eng_list.c,v 1.14 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Geoff Thorpe (geoff@geoffthorpe.net) for the OpenSSL
  * project 2000.
  */
@@ -66,8 +66,6 @@
 
 #include <openssl/opensslconf.h>
 
-#include <openssl/err.h>
-
 #include "cryptlib.h"
 #include "eng_int.h"
 
@@ -92,8 +90,11 @@ engine_list_cleanup(void)
 {
 	ENGINE *iterator = engine_list_head;
 
-	while (iterator != NULL && ENGINE_remove(iterator))
+	while (iterator != NULL) {
+		ENGINE_remove(iterator);
 		iterator = engine_list_head;
+	}
+	return;
 }
 
 /* These static functions starting with a lower case "engine_" always
@@ -105,7 +106,8 @@ engine_list_add(ENGINE *e)
 	ENGINE *iterator = NULL;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_LIST_ADD,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	iterator = engine_list_head;
@@ -114,13 +116,15 @@ engine_list_add(ENGINE *e)
 		iterator = iterator->next;
 	}
 	if (conflict) {
-		ENGINEerror(ENGINE_R_CONFLICTING_ENGINE_ID);
+		ENGINEerr(ENGINE_F_ENGINE_LIST_ADD,
+		    ENGINE_R_CONFLICTING_ENGINE_ID);
 		return 0;
 	}
 	if (engine_list_head == NULL) {
 		/* We are adding to an empty list. */
 		if (engine_list_tail) {
-			ENGINEerror(ENGINE_R_INTERNAL_LIST_ERROR);
+			ENGINEerr(ENGINE_F_ENGINE_LIST_ADD,
+			    ENGINE_R_INTERNAL_LIST_ERROR);
 			return 0;
 		}
 		engine_list_head = e;
@@ -132,7 +136,8 @@ engine_list_add(ENGINE *e)
 		/* We are adding to the tail of an existing list. */
 		if ((engine_list_tail == NULL) ||
 		    (engine_list_tail->next != NULL)) {
-			ENGINEerror(ENGINE_R_INTERNAL_LIST_ERROR);
+			ENGINEerr(ENGINE_F_ENGINE_LIST_ADD,
+			    ENGINE_R_INTERNAL_LIST_ERROR);
 			return 0;
 		}
 		engine_list_tail->next = e;
@@ -154,7 +159,8 @@ engine_list_remove(ENGINE *e)
 	ENGINE *iterator;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_LIST_REMOVE,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	/* We need to check that e is in our linked list! */
@@ -162,7 +168,8 @@ engine_list_remove(ENGINE *e)
 	while (iterator && (iterator != e))
 		iterator = iterator->next;
 	if (iterator == NULL) {
-		ENGINEerror(ENGINE_R_ENGINE_IS_NOT_IN_LIST);
+		ENGINEerr(ENGINE_F_ENGINE_LIST_REMOVE,
+		    ENGINE_R_ENGINE_IS_NOT_IN_LIST);
 		return 0;
 	}
 	/* un-link e from the chain. */
@@ -217,13 +224,14 @@ ENGINE_get_next(ENGINE *e)
 	ENGINE *ret = NULL;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_GET_NEXT,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
 	ret = e->next;
 	if (ret) {
-		/* Return a valid structural reference to the next ENGINE */
+		/* Return a valid structural refernce to the next ENGINE */
 		ret->struct_ref++;
 		engine_ref_debug(ret, 0, 1)
 	}
@@ -239,7 +247,8 @@ ENGINE_get_prev(ENGINE *e)
 	ENGINE *ret = NULL;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_GET_PREV,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
@@ -262,15 +271,18 @@ ENGINE_add(ENGINE *e)
 	int to_return = 1;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_ADD,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	if ((e->id == NULL) || (e->name == NULL)) {
-		ENGINEerror(ENGINE_R_ID_OR_NAME_MISSING);
+		ENGINEerr(ENGINE_F_ENGINE_ADD,
+		    ENGINE_R_ID_OR_NAME_MISSING);
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
 	if (!engine_list_add(e)) {
-		ENGINEerror(ENGINE_R_INTERNAL_LIST_ERROR);
+		ENGINEerr(ENGINE_F_ENGINE_ADD,
+		    ENGINE_R_INTERNAL_LIST_ERROR);
 		to_return = 0;
 	}
 	CRYPTO_w_unlock(CRYPTO_LOCK_ENGINE);
@@ -284,12 +296,14 @@ ENGINE_remove(ENGINE *e)
 	int to_return = 1;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_REMOVE,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
 	if (!engine_list_remove(e)) {
-		ENGINEerror(ENGINE_R_INTERNAL_LIST_ERROR);
+		ENGINEerr(ENGINE_F_ENGINE_REMOVE,
+		    ENGINE_R_INTERNAL_LIST_ERROR);
 		to_return = 0;
 	}
 	CRYPTO_w_unlock(CRYPTO_LOCK_ENGINE);
@@ -316,9 +330,6 @@ engine_cpy(ENGINE *dest, const ENGINE *src)
 #ifndef OPENSSL_NO_ECDSA
 	dest->ecdsa_meth = src->ecdsa_meth;
 #endif
-#ifndef OPENSSL_NO_EC
-	dest->ec_meth = src->ec_meth;
-#endif
 	dest->rand_meth = src->rand_meth;
 	dest->store_meth = src->store_meth;
 	dest->ciphers = src->ciphers;
@@ -338,9 +349,11 @@ ENGINE *
 ENGINE_by_id(const char *id)
 {
 	ENGINE *iterator;
+	char *load_dir = NULL;
 
 	if (id == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_BY_ID,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return NULL;
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
@@ -365,23 +378,53 @@ ENGINE_by_id(const char *id)
 		}
 	}
 	CRYPTO_w_unlock(CRYPTO_LOCK_ENGINE);
-
+#if 0
 	if (iterator == NULL) {
-		ENGINEerror(ENGINE_R_NO_SUCH_ENGINE);
+		ENGINEerr(ENGINE_F_ENGINE_BY_ID,
+		    ENGINE_R_NO_SUCH_ENGINE);
 		ERR_asprintf_error_data("id=%s", id);
 	}
 	return iterator;
+#else
+	/* EEK! Experimental code starts */
+	if (iterator)
+		return iterator;
+	/* Prevent infinite recusrion if we're looking for the dynamic engine. */
+	if (strcmp(id, "dynamic")) {
+		if (issetugid() == 0) {
+			load_dir = getenv("OPENSSL_ENGINES");
+			if (load_dir == NULL)
+				load_dir = ENGINESDIR;
+		} else
+			load_dir = ENGINESDIR;
+
+		iterator = ENGINE_by_id("dynamic");
+		if (!iterator ||
+		    !ENGINE_ctrl_cmd_string(iterator, "ID", id, 0) ||
+		    !ENGINE_ctrl_cmd_string(iterator, "DIR_LOAD", "2", 0) ||
+		    !ENGINE_ctrl_cmd_string(iterator, "DIR_ADD", load_dir, 0) ||
+		    !ENGINE_ctrl_cmd_string(iterator, "LIST_ADD", "1", 0) ||
+		    !ENGINE_ctrl_cmd_string(iterator, "LOAD", NULL, 0))
+			goto notfound;
+		return iterator;
+	}
+
+notfound:
+	ENGINE_free(iterator);
+	ENGINEerr(ENGINE_F_ENGINE_BY_ID, ENGINE_R_NO_SUCH_ENGINE);
+	ERR_asprintf_error_data("id=%s", id);
+	return NULL;
+	/* EEK! Experimental code ends */
+#endif
 }
 
 int
 ENGINE_up_ref(ENGINE *e)
 {
-	int refs;
-
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_UP_REF, ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
-	refs = CRYPTO_add(&e->struct_ref, 1, CRYPTO_LOCK_ENGINE);
-	return refs > 1 ? 1 : 0;
+	CRYPTO_add(&e->struct_ref, 1, CRYPTO_LOCK_ENGINE);
+	return 1;
 }

@@ -1,4 +1,3 @@
-/*	$OpenBSD: evptest.c,v 1.12 2023/03/02 20:24:51 tb Exp $	*/
 /* Written by Ben Laurie, 2001 */
 /*
  * Copyright (c) 2001 The OpenSSL Project.  All rights reserved.
@@ -59,8 +58,6 @@
 #include <openssl/err.h>
 #include <openssl/conf.h>
 
-int verbose;
-
 static void
 hexdump(FILE *f, const char *title, const unsigned char *s, int l)
 {
@@ -84,14 +81,10 @@ convert(unsigned char *s)
 		unsigned int n;
 
 		if (!s[1]) {
-			fprintf(stderr, "Odd number of hex digits!\n");
+			fprintf(stderr, "Odd number of hex digits!");
 			exit(4);
 		}
-		if (sscanf((char *)s, "%2x", &n) != 1) {
-			fprintf(stderr, "Invalid hex value at %s\n", s);
-			exit(4);
-		}
-
+		sscanf((char *)s, "%2x",&n);
 		*d = (unsigned char)n;
 	}
 	return s - d;
@@ -144,49 +137,38 @@ test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
     const unsigned char *iv, int in, const unsigned char *plaintext, int pn,
     const unsigned char *ciphertext, int cn, int encdec)
 {
-	EVP_CIPHER_CTX *ctx;
+	EVP_CIPHER_CTX ctx;
 	unsigned char out[4096];
-	const unsigned char *eiv;
 	int outl, outl2;
 
-	if (verbose) {
-		printf("Testing cipher %s%s\n", EVP_CIPHER_name(c),
-		    (encdec == 1 ? "(encrypt)" : (encdec == 0 ? "(decrypt)" : "(encrypt/decrypt)")));
-		hexdump(stdout, "Key",key,kn);
-		if (in)
-			hexdump(stdout, "IV",iv,in);
-		hexdump(stdout, "Plaintext",plaintext,pn);
-		hexdump(stdout, "Ciphertext",ciphertext,cn);
-	}
+	printf("Testing cipher %s%s\n", EVP_CIPHER_name(c),
+	    (encdec == 1 ? "(encrypt)" : (encdec == 0 ? "(decrypt)" : "(encrypt/decrypt)")));
+	hexdump(stdout, "Key",key,kn);
+	if (in)
+		hexdump(stdout, "IV",iv,in);
+	hexdump(stdout, "Plaintext",plaintext,pn);
+	hexdump(stdout, "Ciphertext",ciphertext,cn);
 
-	if (kn != EVP_CIPHER_key_length(c)) {
+	if (kn != c->key_len) {
 		fprintf(stderr, "Key length doesn't match, got %d expected %lu\n",kn,
-		    (unsigned long)EVP_CIPHER_key_length(c));
+		    (unsigned long)c->key_len);
 		test1_exit(5);
 	}
-	if ((ctx = EVP_CIPHER_CTX_new()) == NULL) {
-		fprintf(stderr, "EVP_CIPHER_CTX_new failed\n");
-		ERR_print_errors_fp(stderr);
-		test1_exit(12);
-	}
-	EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+	EVP_CIPHER_CTX_init(&ctx);
 	if (encdec != 0) {
-		eiv = iv;
-		if (EVP_CIPHER_mode(c) == EVP_CIPH_WRAP_MODE && in == 0)
-			eiv = NULL;
-		if (!EVP_EncryptInit_ex(ctx, c, NULL, key, eiv)) {
+		if (!EVP_EncryptInit_ex(&ctx, c,NULL, key, iv)) {
 			fprintf(stderr, "EncryptInit failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(10);
 		}
-		EVP_CIPHER_CTX_set_padding(ctx, 0);
+		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 
-		if (!EVP_EncryptUpdate(ctx, out, &outl, plaintext, pn)) {
+		if (!EVP_EncryptUpdate(&ctx, out, &outl, plaintext, pn)) {
 			fprintf(stderr, "Encrypt failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(6);
 		}
-		if (!EVP_EncryptFinal_ex(ctx, out + outl, &outl2)) {
+		if (!EVP_EncryptFinal_ex(&ctx, out + outl, &outl2)) {
 			fprintf(stderr, "EncryptFinal failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(7);
@@ -207,22 +189,19 @@ test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
 	}
 
 	if (encdec <= 0) {
-		eiv = iv;
-		if (EVP_CIPHER_mode(c) == EVP_CIPH_WRAP_MODE && in == 0)
-			eiv = NULL;
-		if (!EVP_DecryptInit_ex(ctx, c,NULL, key, eiv)) {
+		if (!EVP_DecryptInit_ex(&ctx, c,NULL, key, iv)) {
 			fprintf(stderr, "DecryptInit failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(11);
 		}
-		EVP_CIPHER_CTX_set_padding(ctx, 0);
+		EVP_CIPHER_CTX_set_padding(&ctx, 0);
 
-		if (!EVP_DecryptUpdate(ctx, out, &outl, ciphertext, cn)) {
+		if (!EVP_DecryptUpdate(&ctx, out, &outl, ciphertext, cn)) {
 			fprintf(stderr, "Decrypt failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(6);
 		}
-		if (!EVP_DecryptFinal_ex(ctx, out + outl, &outl2)) {
+		if (!EVP_DecryptFinal_ex(&ctx, out + outl, &outl2)) {
 			fprintf(stderr, "DecryptFinal failed\n");
 			ERR_print_errors_fp(stderr);
 			test1_exit(7);
@@ -242,10 +221,9 @@ test1(const EVP_CIPHER *c, const unsigned char *key, int kn,
 		}
 	}
 
-	EVP_CIPHER_CTX_free(ctx);
+	EVP_CIPHER_CTX_cleanup(&ctx);
 
-	if (verbose)
-		printf("\n");
+	printf("\n");
 }
 
 static int
@@ -269,7 +247,7 @@ test_digest(const char *digest, const unsigned char *plaintext, int pn,
     const unsigned char *ciphertext, unsigned int cn)
 {
 	const EVP_MD *d;
-	EVP_MD_CTX *ctx;
+	EVP_MD_CTX ctx;
 	unsigned char md[EVP_MAX_MD_SIZE];
 	unsigned int mdn;
 
@@ -277,34 +255,27 @@ test_digest(const char *digest, const unsigned char *plaintext, int pn,
 	if (!d)
 		return 0;
 
-	if (verbose) {
-		printf("Testing digest %s\n",EVP_MD_name(d));
-		hexdump(stdout, "Plaintext",plaintext,pn);
-		hexdump(stdout, "Digest",ciphertext,cn);
-	}
+	printf("Testing digest %s\n",EVP_MD_name(d));
+	hexdump(stdout, "Plaintext",plaintext,pn);
+	hexdump(stdout, "Digest",ciphertext,cn);
 
-	if ((ctx = EVP_MD_CTX_new()) == NULL) {
-		fprintf(stderr, "EVP_CIPHER_CTX_new failed\n");
-		ERR_print_errors_fp(stderr);
-		test1_exit(104);
-	}
-	if (!EVP_DigestInit_ex(ctx, d, NULL)) {
+	EVP_MD_CTX_init(&ctx);
+	if (!EVP_DigestInit_ex(&ctx, d, NULL)) {
 		fprintf(stderr, "DigestInit failed\n");
 		ERR_print_errors_fp(stderr);
 		exit(100);
 	}
-	if (!EVP_DigestUpdate(ctx, plaintext, pn)) {
+	if (!EVP_DigestUpdate(&ctx, plaintext, pn)) {
 		fprintf(stderr, "DigestUpdate failed\n");
 		ERR_print_errors_fp(stderr);
 		exit(101);
 	}
-	if (!EVP_DigestFinal_ex(ctx, md, &mdn)) {
+	if (!EVP_DigestFinal_ex(&ctx, md, &mdn)) {
 		fprintf(stderr, "DigestFinal failed\n");
 		ERR_print_errors_fp(stderr);
 		exit(101);
 	}
-	EVP_MD_CTX_free(ctx);
-	ctx = NULL;
+	EVP_MD_CTX_cleanup(&ctx);
 
 	if (mdn != cn) {
 		fprintf(stderr, "Digest length mismatch, got %d expected %d\n",mdn,cn);
@@ -317,8 +288,10 @@ test_digest(const char *digest, const unsigned char *plaintext, int pn,
 		hexdump(stderr, "Expected",ciphertext,cn);
 		exit(103);
 	}
-	if (verbose)
-		printf("\n");
+
+	printf("\n");
+
+	EVP_MD_CTX_cleanup(&ctx);
 
 	return 1;
 }
@@ -329,14 +302,9 @@ main(int argc, char **argv)
 	const char *szTestFile;
 	FILE *f;
 
-	if (argc != 2 && argc != 3) {
+	if (argc != 2) {
 		fprintf(stderr, "%s <test file>\n",argv[0]);
 		exit(1);
-	}
-	if (argc == 3 && strcmp(argv[1], "-v") == 0) {
-		verbose = 1;
-		argv++;
-		argc--;
 	}
 
 	szTestFile = argv[1];
@@ -369,7 +337,7 @@ main(int argc, char **argv)
 #endif
 
 	for (;;) {
-		char line[8 * 1024];
+		char line[4096];
 		char *p;
 		char *cipher;
 		unsigned char *iv, *key, *plaintext, *ciphertext;
@@ -402,52 +370,38 @@ main(int argc, char **argv)
 		if (!test_cipher(cipher, key, kn, iv, in, plaintext, pn, ciphertext, cn, encdec) &&
 		    !test_digest(cipher, plaintext, pn, ciphertext, cn)) {
 #ifdef OPENSSL_NO_AES
-			if (strstr(cipher, "AES") == cipher && verbose) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+			if (strstr(cipher, "AES") == cipher) {
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif
 #ifdef OPENSSL_NO_DES
-			if (strstr(cipher, "DES") == cipher && verbose) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+			if (strstr(cipher, "DES") == cipher) {
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif
 #ifdef OPENSSL_NO_RC4
-			if (strstr(cipher, "RC4") == cipher && verbose) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+			if (strstr(cipher, "RC4") == cipher) {
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif
 #ifdef OPENSSL_NO_CAMELLIA
-			if (strstr(cipher, "CAMELLIA") == cipher && verbose) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+			if (strstr(cipher, "CAMELLIA") == cipher) {
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif
 #ifdef OPENSSL_NO_SEED
 			if (strstr(cipher, "SEED") == cipher) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif
 #ifdef OPENSSL_NO_CHACHA
 			if (strstr(cipher, "ChaCha") == cipher) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
-				continue;
-			}
-#endif
-#ifdef OPENSSL_NO_GOST
-			if (strstr(cipher, "md_gost") == cipher ||
-			    strstr(cipher, "streebog") == cipher) {
-				if (verbose)
-					fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
+				fprintf(stdout, "Cipher disabled, skipping %s\n", cipher);
 				continue;
 			}
 #endif

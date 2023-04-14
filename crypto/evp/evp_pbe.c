@@ -1,4 +1,4 @@
-/* $OpenBSD: evp_pbe.c,v 1.27 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: evp_pbe.c,v 1.20 2014/07/11 08:44:48 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -66,7 +66,7 @@
 #include <openssl/pkcs12.h>
 #include <openssl/x509.h>
 
-#include "evp_local.h"
+#include "evp_locl.h"
 
 /* Password based encryption (PBE) functions */
 
@@ -114,8 +114,6 @@ static const EVP_PBE_CTL builtin_pbe[] = {
 	{EVP_PBE_TYPE_PRF, NID_hmacWithSHA384, -1, NID_sha384, 0},
 	{EVP_PBE_TYPE_PRF, NID_hmacWithSHA512, -1, NID_sha512, 0},
 	{EVP_PBE_TYPE_PRF, NID_id_HMACGostR3411_94, -1, NID_id_GostR3411_94, 0},
-	{EVP_PBE_TYPE_PRF, NID_id_tc26_hmac_gost_3411_12_256, -1, NID_id_tc26_gost3411_2012_256, 0},
-	{EVP_PBE_TYPE_PRF, NID_id_tc26_hmac_gost_3411_12_512, -1, NID_id_tc26_gost3411_2012_512, 0},
 };
 
 int
@@ -130,9 +128,9 @@ EVP_PBE_CipherInit(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
 	if (!EVP_PBE_find(EVP_PBE_TYPE_OUTER, OBJ_obj2nid(pbe_obj),
 	    &cipher_nid, &md_nid, &keygen)) {
 		char obj_tmp[80];
-		EVPerror(EVP_R_UNKNOWN_PBE_ALGORITHM);
+		EVPerr(EVP_F_EVP_PBE_CIPHERINIT, EVP_R_UNKNOWN_PBE_ALGORITHM);
 		if (!pbe_obj)
-			strlcpy(obj_tmp, "NULL", sizeof obj_tmp);
+			strlcpy (obj_tmp, "NULL", sizeof obj_tmp);
 		else
 			i2t_ASN1_OBJECT(obj_tmp, sizeof obj_tmp, pbe_obj);
 		ERR_asprintf_error_data("TYPE=%s", obj_tmp);
@@ -149,7 +147,7 @@ EVP_PBE_CipherInit(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
 	else {
 		cipher = EVP_get_cipherbynid(cipher_nid);
 		if (!cipher) {
-			EVPerror(EVP_R_UNKNOWN_CIPHER);
+			EVPerr(EVP_F_EVP_PBE_CIPHERINIT, EVP_R_UNKNOWN_CIPHER);
 			return 0;
 		}
 	}
@@ -159,21 +157,19 @@ EVP_PBE_CipherInit(ASN1_OBJECT *pbe_obj, const char *pass, int passlen,
 	else {
 		md = EVP_get_digestbynid(md_nid);
 		if (!md) {
-			EVPerror(EVP_R_UNKNOWN_DIGEST);
+			EVPerr(EVP_F_EVP_PBE_CIPHERINIT, EVP_R_UNKNOWN_DIGEST);
 			return 0;
 		}
 	}
 
 	if (!keygen(ctx, pass, passlen, param, cipher, md, en_de)) {
-		EVPerror(EVP_R_KEYGEN_FAILURE);
+		EVPerr(EVP_F_EVP_PBE_CIPHERINIT, EVP_R_KEYGEN_FAILURE);
 		return 0;
 	}
 	return 1;
 }
 
-static int pbe2_cmp_BSEARCH_CMP_FN(const void *, const void *);
-static int pbe2_cmp(EVP_PBE_CTL const *, EVP_PBE_CTL const *);
-static EVP_PBE_CTL *OBJ_bsearch_pbe2(EVP_PBE_CTL *key, EVP_PBE_CTL const *base, int num);
+DECLARE_OBJ_BSEARCH_CMP_FN(EVP_PBE_CTL, EVP_PBE_CTL, pbe2);
 
 static int
 pbe2_cmp(const EVP_PBE_CTL *pbe1, const EVP_PBE_CTL *pbe2)
@@ -186,21 +182,7 @@ pbe2_cmp(const EVP_PBE_CTL *pbe1, const EVP_PBE_CTL *pbe2)
 		return pbe1->pbe_nid - pbe2->pbe_nid;
 }
 
-
-static int
-pbe2_cmp_BSEARCH_CMP_FN(const void *a_, const void *b_)
-{
-	EVP_PBE_CTL const *a = a_;
-	EVP_PBE_CTL const *b = b_;
-	return pbe2_cmp(a, b);
-}
-
-static EVP_PBE_CTL *
-OBJ_bsearch_pbe2(EVP_PBE_CTL *key, EVP_PBE_CTL const *base, int num)
-{
-	return (EVP_PBE_CTL *)OBJ_bsearch_(key, base, num, sizeof(EVP_PBE_CTL),
-	    pbe2_cmp_BSEARCH_CMP_FN);
-}
+IMPLEMENT_OBJ_BSEARCH_CMP_FN(EVP_PBE_CTL, EVP_PBE_CTL, pbe2);
 
 static int
 pbe_cmp(const EVP_PBE_CTL * const *a, const EVP_PBE_CTL * const *b)
@@ -221,16 +203,10 @@ EVP_PBE_alg_add_type(int pbe_type, int pbe_nid, int cipher_nid, int md_nid,
 {
 	EVP_PBE_CTL *pbe_tmp;
 
-	if (pbe_algs == NULL) {
+	if (!pbe_algs)
 		pbe_algs = sk_EVP_PBE_CTL_new(pbe_cmp);
-		if (pbe_algs == NULL) {
-			EVPerror(ERR_R_MALLOC_FAILURE);
-			return 0;
-		}
-	}
-	pbe_tmp = malloc(sizeof(EVP_PBE_CTL));
-	if (pbe_tmp == NULL) {
-		EVPerror(ERR_R_MALLOC_FAILURE);
+	if (!(pbe_tmp = (EVP_PBE_CTL*) malloc (sizeof(EVP_PBE_CTL)))) {
+		EVPerr(EVP_F_EVP_PBE_ALG_ADD_TYPE, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
 	pbe_tmp->pbe_type = pbe_type;
@@ -239,11 +215,7 @@ EVP_PBE_alg_add_type(int pbe_type, int pbe_nid, int cipher_nid, int md_nid,
 	pbe_tmp->md_nid = md_nid;
 	pbe_tmp->keygen = keygen;
 
-	if (sk_EVP_PBE_CTL_push(pbe_algs, pbe_tmp) == 0) {
-		free(pbe_tmp);
-		EVPerror(ERR_R_MALLOC_FAILURE);
-		return 0;
-	}
+	sk_EVP_PBE_CTL_push (pbe_algs, pbe_tmp);
 	return 1;
 }
 

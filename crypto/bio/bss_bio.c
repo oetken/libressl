@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_bio.c,v 1.25 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1998-2003 The OpenSSL Project.  All rights reserved.
  *
@@ -78,13 +78,10 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/crypto.h>
-
-#include "bio_local.h"
 
 static int bio_new(BIO *bio);
 static int bio_free(BIO *bio);
@@ -96,7 +93,7 @@ static int bio_puts(BIO *bio, const char *str);
 static int bio_make_pair(BIO *bio1, BIO *bio2);
 static void bio_destroy_pair(BIO *bio);
 
-static const BIO_METHOD methods_biop = {
+static BIO_METHOD methods_biop = {
 	.type = BIO_TYPE_BIO,
 	.name = "BIO pair",
 	.bwrite = bio_write,
@@ -107,7 +104,7 @@ static const BIO_METHOD methods_biop = {
 	.destroy = bio_free
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_bio(void)
 {
 	return &methods_biop;
@@ -350,7 +347,7 @@ bio_write(BIO *bio, const char *buf, int num_)
 	b->request = 0;
 	if (b->closed) {
 		/* we already closed */
-		BIOerror(BIO_R_BROKEN_PIPE);
+		BIOerr(BIO_F_BIO_WRITE, BIO_R_BROKEN_PIPE);
 		return -1;
 	}
 
@@ -427,7 +424,7 @@ bio_nwrite0(BIO *bio, char **buf)
 
 	b->request = 0;
 	if (b->closed) {
-		BIOerror(BIO_R_BROKEN_PIPE);
+		BIOerr(BIO_F_BIO_NWRITE0, BIO_R_BROKEN_PIPE);
 		return -1;
 	}
 
@@ -493,17 +490,19 @@ bio_ctrl(BIO *bio, int cmd, long num, void *ptr)
 
 	case BIO_C_SET_WRITE_BUF_SIZE:
 		if (b->peer) {
-			BIOerror(BIO_R_IN_USE);
+			BIOerr(BIO_F_BIO_CTRL, BIO_R_IN_USE);
 			ret = 0;
 		} else if (num == 0) {
-			BIOerror(BIO_R_INVALID_ARGUMENT);
+			BIOerr(BIO_F_BIO_CTRL, BIO_R_INVALID_ARGUMENT);
 			ret = 0;
 		} else {
 			size_t new_size = num;
 
 			if (b->size != new_size) {
-				free(b->buf);
-				b->buf = NULL;
+				if (b->buf) {
+					free(b->buf);
+					b->buf = NULL;
+				}
 				b->size = new_size;
 			}
 			ret = 1;
@@ -681,14 +680,14 @@ bio_make_pair(BIO *bio1, BIO *bio2)
 	b2 = bio2->ptr;
 
 	if (b1->peer != NULL || b2->peer != NULL) {
-		BIOerror(BIO_R_IN_USE);
+		BIOerr(BIO_F_BIO_MAKE_PAIR, BIO_R_IN_USE);
 		return 0;
 	}
 
 	if (b1->buf == NULL) {
 		b1->buf = malloc(b1->size);
 		if (b1->buf == NULL) {
-			BIOerror(ERR_R_MALLOC_FAILURE);
+			BIOerr(BIO_F_BIO_MAKE_PAIR, ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 		b1->len = 0;
@@ -698,7 +697,7 @@ bio_make_pair(BIO *bio1, BIO *bio2)
 	if (b2->buf == NULL) {
 		b2->buf = malloc(b2->size);
 		if (b2->buf == NULL) {
-			BIOerror(ERR_R_MALLOC_FAILURE);
+			BIOerr(BIO_F_BIO_MAKE_PAIR, ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 		b2->len = 0;
@@ -824,7 +823,7 @@ BIO_nread0(BIO *bio, char **buf)
 	long ret;
 
 	if (!bio->init) {
-		BIOerror(BIO_R_UNINITIALIZED);
+		BIOerr(BIO_F_BIO_NREAD0, BIO_R_UNINITIALIZED);
 		return -2;
 	}
 
@@ -841,7 +840,7 @@ BIO_nread(BIO *bio, char **buf, int num)
 	int ret;
 
 	if (!bio->init) {
-		BIOerror(BIO_R_UNINITIALIZED);
+		BIOerr(BIO_F_BIO_NREAD, BIO_R_UNINITIALIZED);
 		return -2;
 	}
 
@@ -857,7 +856,7 @@ BIO_nwrite0(BIO *bio, char **buf)
 	long ret;
 
 	if (!bio->init) {
-		BIOerror(BIO_R_UNINITIALIZED);
+		BIOerr(BIO_F_BIO_NWRITE0, BIO_R_UNINITIALIZED);
 		return -2;
 	}
 
@@ -874,7 +873,7 @@ BIO_nwrite(BIO *bio, char **buf, int num)
 	int ret;
 
 	if (!bio->init) {
-		BIOerror(BIO_R_UNINITIALIZED);
+		BIOerr(BIO_F_BIO_NWRITE, BIO_R_UNINITIALIZED);
 		return -2;
 	}
 

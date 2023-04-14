@@ -1,4 +1,4 @@
-/* $OpenBSD: sha.h,v 1.21 2015/09/13 21:09:56 doug Exp $ */
+/* $OpenBSD: sha.h,v 1.16 2014/07/10 09:01:04 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,9 +60,6 @@
 
 #ifndef HEADER_SHA_H
 #define HEADER_SHA_H
-#if !defined(HAVE_ATTRIBUTE__BOUNDED__) && !defined(__OpenBSD__)
-#define __bounded__(x, y, z)
-#endif
 
 #include <openssl/opensslconf.h>
 
@@ -70,13 +67,14 @@
 extern "C" {
 #endif
 
-#if defined(OPENSSL_NO_SHA) || defined(OPENSSL_NO_SHA1)
+#if defined(OPENSSL_NO_SHA) || (defined(OPENSSL_NO_SHA0) && defined(OPENSSL_NO_SHA1))
 #error SHA is disabled.
 #endif
 
 /*
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * ! SHA_LONG has to be at least 32 bits wide.                    !
+ * ! SHA_LONG has to be at least 32 bits wide. If it's wider, then !
+ * ! SHA_LONG_LOG2 has to be defined along.                        !
  * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  */
 
@@ -97,6 +95,15 @@ typedef struct SHAstate_st
 	unsigned int num;
 	} SHA_CTX;
 
+#ifndef OPENSSL_NO_SHA0
+int SHA_Init(SHA_CTX *c);
+int SHA_Update(SHA_CTX *c, const void *data, size_t len)
+	__attribute__ ((__bounded__(__buffer__,2,3)));
+int SHA_Final(unsigned char *md, SHA_CTX *c);
+unsigned char *SHA(const unsigned char *d, size_t n, unsigned char *md)
+	__attribute__ ((__bounded__(__buffer__,1,2)));
+void SHA_Transform(SHA_CTX *c, const unsigned char *data);
+#endif
 #ifndef OPENSSL_NO_SHA1
 int SHA1_Init(SHA_CTX *c);
 int SHA1_Update(SHA_CTX *c, const void *data, size_t len)

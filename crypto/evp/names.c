@@ -1,4 +1,4 @@
-/* $OpenBSD: names.c,v 1.16 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: names.c,v 1.11 2014/06/12 15:49:29 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,8 +62,6 @@
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 
-#include "evp_local.h"
-
 int
 EVP_add_cipher(const EVP_CIPHER *c)
 {
@@ -71,6 +69,8 @@ EVP_add_cipher(const EVP_CIPHER *c)
 
 	if (c == NULL)
 		return 0;
+
+	OPENSSL_init();
 
 	r = OBJ_NAME_add(OBJ_nid2sn(c->nid), OBJ_NAME_TYPE_CIPHER_METH,
 	    (const char *)c);
@@ -87,6 +87,8 @@ EVP_add_digest(const EVP_MD *md)
 {
 	int r;
 	const char *name;
+
+	OPENSSL_init();
 
 	name = OBJ_nid2sn(md->type);
 	r = OBJ_NAME_add(name, OBJ_NAME_TYPE_MD_METH, (const char *)md);
@@ -115,9 +117,6 @@ EVP_get_cipherbyname(const char *name)
 {
 	const EVP_CIPHER *cp;
 
-	if (!OPENSSL_init_crypto(0, NULL))
-		return NULL;
-
 	cp = (const EVP_CIPHER *)OBJ_NAME_get(name, OBJ_NAME_TYPE_CIPHER_METH);
 	return (cp);
 }
@@ -126,9 +125,6 @@ const EVP_MD *
 EVP_get_digestbyname(const char *name)
 {
 	const EVP_MD *cp;
-
-	if (!OPENSSL_init_crypto(0, NULL))
-		return NULL;
 
 	cp = (const EVP_MD *)OBJ_NAME_get(name, OBJ_NAME_TYPE_MD_METH);
 	return (cp);
@@ -175,9 +171,6 @@ EVP_CIPHER_do_all(void (*fn)(const EVP_CIPHER *ciph, const char *from,
 {
 	struct doall_cipher dc;
 
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
 	dc.fn = fn;
 	dc.arg = arg;
 	OBJ_NAME_do_all(OBJ_NAME_TYPE_CIPHER_METH, do_all_cipher_fn, &dc);
@@ -188,9 +181,6 @@ EVP_CIPHER_do_all_sorted(void (*fn)(const EVP_CIPHER *ciph, const char *from,
     const char *to, void *x), void *arg)
 {
 	struct doall_cipher dc;
-
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
 
 	dc.fn = fn;
 	dc.arg = arg;
@@ -221,9 +211,6 @@ EVP_MD_do_all(void (*fn)(const EVP_MD *md, const char *from, const char *to,
 {
 	struct doall_md dc;
 
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
 	dc.fn = fn;
 	dc.arg = arg;
 	OBJ_NAME_do_all(OBJ_NAME_TYPE_MD_METH, do_all_md_fn, &dc);
@@ -234,9 +221,6 @@ EVP_MD_do_all_sorted(void (*fn)(const EVP_MD *md,
     const char *from, const char *to, void *x), void *arg)
 {
 	struct doall_md dc;
-
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
 
 	dc.fn = fn;
 	dc.arg = arg;

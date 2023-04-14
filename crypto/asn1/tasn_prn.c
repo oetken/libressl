@@ -1,4 +1,4 @@
-/* $OpenBSD: tasn_prn.c,v 1.23 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: tasn_prn.c,v 1.10 2014/06/12 15:49:27 deraadt Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -65,7 +65,7 @@
 #include <openssl/objects.h>
 #include <openssl/x509v3.h>
 
-#include "asn1_local.h"
+#include "asn1_locl.h"
 
 /* Print routines.
  */
@@ -84,14 +84,18 @@ ASN1_PCTX default_pctx = {
 ASN1_PCTX *
 ASN1_PCTX_new(void)
 {
-	ASN1_PCTX *p;
-
-	if ((p = calloc(1, sizeof(ASN1_PCTX))) == NULL) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+	ASN1_PCTX *ret;
+	ret = malloc(sizeof(ASN1_PCTX));
+	if (ret == NULL) {
+		ASN1err(ASN1_F_ASN1_PCTX_NEW, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
-
-	return p;
+	ret->flags = 0;
+	ret->nm_flags = 0;
+	ret->cert_flags = 0;
+	ret->oid_flags = 0;
+	ret->str_flags = 0;
+	return ret;
 }
 
 void
@@ -101,7 +105,7 @@ ASN1_PCTX_free(ASN1_PCTX *p)
 }
 
 unsigned long
-ASN1_PCTX_get_flags(const ASN1_PCTX *p)
+ASN1_PCTX_get_flags(ASN1_PCTX *p)
 {
 	return p->flags;
 }
@@ -113,7 +117,7 @@ ASN1_PCTX_set_flags(ASN1_PCTX *p, unsigned long flags)
 }
 
 unsigned long
-ASN1_PCTX_get_nm_flags(const ASN1_PCTX *p)
+ASN1_PCTX_get_nm_flags(ASN1_PCTX *p)
 {
 	return p->nm_flags;
 }
@@ -125,7 +129,7 @@ ASN1_PCTX_set_nm_flags(ASN1_PCTX *p, unsigned long flags)
 }
 
 unsigned long
-ASN1_PCTX_get_cert_flags(const ASN1_PCTX *p)
+ASN1_PCTX_get_cert_flags(ASN1_PCTX *p)
 {
 	return p->cert_flags;
 }
@@ -137,7 +141,7 @@ ASN1_PCTX_set_cert_flags(ASN1_PCTX *p, unsigned long flags)
 }
 
 unsigned long
-ASN1_PCTX_get_oid_flags(const ASN1_PCTX *p)
+ASN1_PCTX_get_oid_flags(ASN1_PCTX *p)
 {
 	return p->oid_flags;
 }
@@ -149,7 +153,7 @@ ASN1_PCTX_set_oid_flags(ASN1_PCTX *p, unsigned long flags)
 }
 
 unsigned long
-ASN1_PCTX_get_str_flags(const ASN1_PCTX *p)
+ASN1_PCTX_get_str_flags(ASN1_PCTX *p)
 {
 	return p->str_flags;
 }
@@ -210,10 +214,9 @@ asn1_item_print_ctx(BIO *out, ASN1_VALUE **fld, int indent, const ASN1_ITEM *it,
 		parg.pctx = pctx;
 		asn1_cb = aux->asn1_cb;
 	} else
-		asn1_cb = NULL;
+		asn1_cb = 0;
 
-	if ((it->itype != ASN1_ITYPE_PRIMITIVE ||
-	    it->utype != V_ASN1_BOOLEAN) && *fld == NULL) {
+	if (*fld == NULL) {
 		if (pctx->flags & ASN1_PCTX_FLAGS_SHOW_ABSENT) {
 			if (!nohdr &&
 			    !asn1_print_fsname(out, indent, fname, sname, pctx))
@@ -257,6 +260,11 @@ asn1_item_print_ctx(BIO *out, ASN1_VALUE **fld, int indent, const ASN1_ITEM *it,
 		break;
 
 	case ASN1_ITYPE_CHOICE:
+#if 0
+		if (!nohdr &&
+		    !asn1_print_fsname(out, indent, fname, sname, pctx))
+			return 0;
+#endif
 		/* CHOICE type, get selector */
 		i = asn1_get_choice_selector(fld, it);
 		/* This should never happen... */
@@ -298,10 +306,7 @@ asn1_item_print_ctx(BIO *out, ASN1_VALUE **fld, int indent, const ASN1_ITEM *it,
 		/* Print each field entry */
 		for (i = 0, tt = it->templates; i < it->tcount; i++, tt++) {
 			const ASN1_TEMPLATE *seqtt;
-
 			seqtt = asn1_do_adb(fld, tt, 1);
-			if (seqtt == NULL)
-				return 0;
 			tmpfld = asn1_get_field_ptr(fld, seqtt);
 			if (!asn1_template_print_ctx(out, tmpfld, indent + 2,
 			    seqtt, pctx))
@@ -336,7 +341,7 @@ asn1_template_print_ctx(BIO *out, ASN1_VALUE **fld, int indent,
 
 	flags = tt->flags;
 	if (pctx->flags & ASN1_PCTX_FLAGS_SHOW_FIELD_STRUCT_NAME)
-		sname = tt->item->sname;
+		sname = ASN1_ITEM_ptr(tt->item)->sname;
 	else
 		sname = NULL;
 	if (pctx->flags & ASN1_PCTX_FLAGS_NO_FIELD_NAME)
@@ -368,7 +373,7 @@ asn1_template_print_ctx(BIO *out, ASN1_VALUE **fld, int indent,
 				return 0;
 			skitem = sk_ASN1_VALUE_value(stack, i);
 			if (!asn1_item_print_ctx(out, &skitem, indent + 2,
-			    tt->item, NULL, NULL, 1, pctx))
+			    ASN1_ITEM_ptr(tt->item), NULL, NULL, 1, pctx))
 				return 0;
 		}
 		if (!i && BIO_printf(out, "%*s<EMPTY>\n", indent + 2, "") <= 0)
@@ -379,7 +384,7 @@ asn1_template_print_ctx(BIO *out, ASN1_VALUE **fld, int indent,
 		}
 		return 1;
 	}
-	return asn1_item_print_ctx(out, fld, indent, tt->item,
+	return asn1_item_print_ctx(out, fld, indent, ASN1_ITEM_ptr(tt->item),
 	    fname, sname, 0, pctx);
 }
 
@@ -389,6 +394,11 @@ asn1_print_fsname(BIO *out, int indent, const char *fname, const char *sname,
 {
 	static char spaces[] = "                    ";
 	const int nspaces = sizeof(spaces) - 1;
+
+#if 0
+	if (!sname && !fname)
+		return 1;
+#endif
 
 	while (indent > nspaces) {
 		if (BIO_write(out, spaces, nspaces) != nspaces)
@@ -451,8 +461,7 @@ asn1_print_integer_ctx(BIO *out, ASN1_INTEGER *str, const ASN1_PCTX *pctx)
 {
 	char *s;
 	int ret = 1;
-	if ((s = i2s_ASN1_INTEGER(NULL, str)) == NULL)
-		return 0;
+	s = i2s_ASN1_INTEGER(NULL, str);
 	if (BIO_puts(out, s) <= 0)
 		ret = 0;
 	free(s);
@@ -498,28 +507,18 @@ asn1_primitive_print(BIO *out, ASN1_VALUE **fld, const ASN1_ITEM *it,
 	ASN1_STRING *str;
 	int ret = 1, needlf = 1;
 	const char *pname;
+	const ASN1_PRIMITIVE_FUNCS *pf;
 
+	pf = it->funcs;
 	if (!asn1_print_fsname(out, indent, fname, sname, pctx))
 		return 0;
-
-	if (it != NULL && it->funcs != NULL) {
-		const ASN1_PRIMITIVE_FUNCS *pf = it->funcs;
-
-		if (pf->prim_print == NULL)
-			return 0;
-
+	if (pf && pf->prim_print)
 		return pf->prim_print(out, fld, it, indent, pctx);
-	}
-	if (it->itype == ASN1_ITYPE_MSTRING) {
-		str = (ASN1_STRING *)*fld;
+	str = (ASN1_STRING *)*fld;
+	if (it->itype == ASN1_ITYPE_MSTRING)
 		utype = str->type & ~V_ASN1_NEG;
-	} else {
+	else
 		utype = it->utype;
-		if (utype == V_ASN1_BOOLEAN)
-			str = NULL;
-		else
-			str = (ASN1_STRING *)*fld;
-	}
 	if (utype == V_ASN1_ANY) {
 		ASN1_TYPE *atype = (ASN1_TYPE *)*fld;
 		utype = atype->type;

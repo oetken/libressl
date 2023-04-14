@@ -1,4 +1,4 @@
-/* $OpenBSD: conf_mod.c,v 1.27 2017/01/29 17:49:22 beck Exp $ */
+/* $OpenBSD: conf_mod.c,v 1.22 2014/07/10 13:58:22 jsing Exp $ */
 /* Written by Stephen Henson (steve@openssl.org) for the OpenSSL
  * project 2001.
  */
@@ -211,7 +211,7 @@ module_run(const CONF *cnf, char *name, char *value, unsigned long flags)
 
 	if (!md) {
 		if (!(flags & CONF_MFLAGS_SILENT)) {
-			CONFerror(CONF_R_UNKNOWN_MODULE_NAME);
+			CONFerr(CONF_F_MODULE_RUN, CONF_R_UNKNOWN_MODULE_NAME);
 			ERR_asprintf_error_data("module=%s", name);
 		}
 		return -1;
@@ -221,7 +221,8 @@ module_run(const CONF *cnf, char *name, char *value, unsigned long flags)
 
 	if (ret <= 0) {
 		if (!(flags & CONF_MFLAGS_SILENT)) {
-			CONFerror(CONF_R_MODULE_INITIALIZATION_ERROR);
+			CONFerr(CONF_F_MODULE_RUN,
+			    CONF_R_MODULE_INITIALIZATION_ERROR);
 			ERR_asprintf_error_data
 			    ("module=%s, value=%s, retcode=%-8d",
 			    name, value, ret);
@@ -270,7 +271,7 @@ module_load_dso(const CONF *cnf, char *name, char *value, unsigned long flags)
 err:
 	if (dso)
 		DSO_free(dso);
-	CONFerror(errcode);
+	CONFerr(CONF_F_MODULE_LOAD_DSO, errcode);
 	ERR_asprintf_error_data("module=%s, path=%s", name, path);
 	return NULL;
 }
@@ -282,8 +283,6 @@ module_add(DSO *dso, const char *name, conf_init_func *ifunc,
 {
 	CONF_MODULE *tmod = NULL;
 
-	if (name == NULL)
-		return NULL;
 	if (supported_modules == NULL)
 		supported_modules = sk_CONF_MODULE_new_null();
 	if (supported_modules == NULL)
@@ -293,7 +292,7 @@ module_add(DSO *dso, const char *name, conf_init_func *ifunc,
 		return NULL;
 
 	tmod->dso = dso;
-	tmod->name = strdup(name);
+	tmod->name = BUF_strdup(name);
 	tmod->init = ifunc;
 	tmod->finish = ffunc;
 	tmod->links = 0;
@@ -348,8 +347,8 @@ module_init(CONF_MODULE *pmod, char *name, char *value, const CONF *cnf)
 		goto err;
 
 	imod->pmod = pmod;
-	imod->name = name ? strdup(name) : NULL;
-	imod->value = value ? strdup(value) : NULL;
+	imod->name = BUF_strdup(name);
+	imod->value = BUF_strdup(value);
 	imod->usr_data = NULL;
 
 	if (!imod->name || !imod->value)
@@ -367,13 +366,13 @@ module_init(CONF_MODULE *pmod, char *name, char *value, const CONF *cnf)
 	if (initialized_modules == NULL) {
 		initialized_modules = sk_CONF_IMODULE_new_null();
 		if (!initialized_modules) {
-			CONFerror(ERR_R_MALLOC_FAILURE);
+			CONFerr(CONF_F_MODULE_INIT, ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
 	}
 
 	if (!sk_CONF_IMODULE_push(initialized_modules, imod)) {
-		CONFerror(ERR_R_MALLOC_FAILURE);
+		CONFerr(CONF_F_MODULE_INIT, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
@@ -545,6 +544,10 @@ CONF_get1_default_config_file(void)
 {
 	char *file = NULL;
 
+	if (issetugid() == 0)
+		file = getenv("OPENSSL_CONF");
+	if (file)
+		return BUF_strdup(file);
 	if (asprintf(&file, "%s/openssl.cnf",
 	    X509_get_default_cert_area()) == -1)
 		return (NULL);
@@ -565,7 +568,7 @@ CONF_parse_list(const char *list_, int sep, int nospc,
 	const char *lstart, *tmpend, *p;
 
 	if (list_ == NULL) {
-		CONFerror(CONF_R_LIST_CANNOT_BE_NULL);
+		CONFerr(CONF_F_CONF_PARSE_LIST, CONF_R_LIST_CANNOT_BE_NULL);
 		return 0;
 	}
 

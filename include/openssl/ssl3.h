@@ -1,25 +1,25 @@
-/* $OpenBSD: ssl3.h,v 1.57 2021/09/10 14:49:13 tb Exp $ */
+/* $OpenBSD: ssl3.h,v 1.24 2014/07/10 08:51:15 tedu Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
  * This package is an SSL implementation written
  * by Eric Young (eay@cryptsoft.com).
  * The implementation was written so as to conform with Netscapes SSL.
- *
+ * 
  * This library is free for commercial and non-commercial use as long as
  * the following conditions are aheared to.  The following conditions
  * apply to all code found in this distribution, be it the RC4, RSA,
  * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
  * included with this distribution is covered by the same copyright terms
  * except that the holder is Tim Hudson (tjh@cryptsoft.com).
- *
+ * 
  * Copyright remains Eric Young's, and as such any Copyright notices in
  * the code are not to be removed.
  * If this package is used in a product, Eric Young should be given attribution
  * as the author of the parts of the library used.
  * This can be in the form of a textual message at program startup or
  * in documentation (online or textual) provided with the package.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -34,10 +34,10 @@
  *     Eric Young (eay@cryptsoft.com)"
  *    The word 'cryptographic' can be left out if the rouines from the library
  *    being used are not cryptographic related :-).
- * 4. If you include any Windows specific code (or a derivative thereof) from
+ * 4. If you include any Windows specific code (or a derivative thereof) from 
  *    the apps directory (application code) you must include an acknowledgement:
  *    "This product includes software written by Tim Hudson (tjh@cryptsoft.com)"
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,7 +49,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
+ * 
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
@@ -63,7 +63,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer. 
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -110,14 +110,13 @@
  */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
- * ECC cipher suite support in OpenSSL originally developed by
+ * ECC cipher suite support in OpenSSL originally developed by 
  * SUN MICROSYSTEMS, INC., and contributed to the OpenSSL project.
  */
 
-#ifndef HEADER_SSL3_H
-#define HEADER_SSL3_H
+#ifndef HEADER_SSL3_H 
+#define HEADER_SSL3_H 
 
-#include <openssl/opensslconf.h>
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 #include <openssl/ssl.h>
@@ -126,11 +125,8 @@
 extern "C" {
 #endif
 
-/* TLS_EMPTY_RENEGOTIATION_INFO_SCSV from RFC 5746. */
+/* Signalling cipher suite value: from draft-ietf-tls-renegotiation-03.txt */
 #define SSL3_CK_SCSV				0x030000FF
-
-/* TLS_FALLBACK_SCSV from draft-ietf-tls-downgrade-scsv-03. */
-#define SSL3_CK_FALLBACK_SCSV			0x03005600
 
 #define SSL3_CK_RSA_NULL_MD5			0x03000001
 #define SSL3_CK_RSA_NULL_SHA			0x03000002
@@ -235,12 +231,22 @@ extern "C" {
 #define SSL3_RANDOM_SIZE			32
 #define SSL3_SEQUENCE_SIZE			8
 #define SSL3_SESSION_ID_SIZE			32
-#define SSL3_CIPHER_VALUE_SIZE			2
-
 #define SSL3_RT_HEADER_LENGTH			5
-#define SSL3_HM_HEADER_LENGTH			4
 
-#define SSL3_ALIGN_PAYLOAD			8
+#ifndef SSL3_ALIGN_PAYLOAD
+ /* Some will argue that this increases memory footprint, but it's
+  * not actually true. Point is that malloc has to return at least
+  * 64-bit aligned pointers, meaning that allocating 5 bytes wastes
+  * 3 bytes in either case. Suggested pre-gaping simply moves these
+  * wasted bytes from the end of allocated region to its front,
+  * but makes data payload aligned, which improves performance:-) */
+# define SSL3_ALIGN_PAYLOAD			8
+#else
+# if (SSL3_ALIGN_PAYLOAD&(SSL3_ALIGN_PAYLOAD-1))!=0
+#  error "insane SSL3_ALIGN_PAYLOAD"
+#  undef SSL3_ALIGN_PAYLOAD
+# endif
+#endif
 
 /* This is the maximum MAC (digest) size used by the SSL library.
  * Currently maximum of 20 is used by SHA1, but we reserve for
@@ -292,11 +298,11 @@ extern "C" {
 #define SSL3_RT_ALERT			21
 #define SSL3_RT_HANDSHAKE		22
 #define SSL3_RT_APPLICATION_DATA	23
+#define TLS1_RT_HEARTBEAT		24
 
 #define SSL3_AL_WARNING			1
 #define SSL3_AL_FATAL			2
 
-#ifndef LIBRESSL_INTERNAL
 #define SSL3_AD_CLOSE_NOTIFY		 0
 #define SSL3_AD_UNEXPECTED_MESSAGE	10	/* fatal */
 #define SSL3_AD_BAD_RECORD_MAC		20	/* fatal */
@@ -309,10 +315,31 @@ extern "C" {
 #define SSL3_AD_CERTIFICATE_EXPIRED	45
 #define SSL3_AD_CERTIFICATE_UNKNOWN	46
 #define SSL3_AD_ILLEGAL_PARAMETER	47	/* fatal */
-#endif
 
 #define TLS1_HB_REQUEST		1
 #define TLS1_HB_RESPONSE	2
+
+#ifndef OPENSSL_NO_SSL_INTERN
+
+typedef struct ssl3_record_st {
+/*r */	int type;               /* type of record */
+/*rw*/	unsigned int length;    /* How many bytes available */
+/*r */	unsigned int off;       /* read/write offset into 'buf' */
+/*rw*/	unsigned char *data;    /* pointer to the record data */
+/*rw*/	unsigned char *input;   /* where the decode bytes are */
+/*r */  unsigned long epoch;    /* epoch number, needed by DTLS1 */
+/*r */  unsigned char seq_num[8]; /* sequence number, needed by DTLS1 */
+} SSL3_RECORD;
+
+typedef struct ssl3_buffer_st {
+	unsigned char *buf;	/* at least SSL3_RT_MAX_PACKET_SIZE bytes,
+	                         * see ssl3_setup_buffers() */
+	size_t len;		/* buffer size */
+	int offset;		/* where to 'copy from' */
+	int left;		/* how many bytes left */
+} SSL3_BUFFER;
+
+#endif
 
 #define SSL3_CT_RSA_SIGN			1
 #define SSL3_CT_DSS_SIGN			2
@@ -325,17 +352,168 @@ extern "C" {
  * enough to contain all of the cert types defined either for
  * SSLv3 and TLSv1.
  */
-#define SSL3_CT_NUMBER			13
+#define SSL3_CT_NUMBER			9
+
 
 #define SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS	0x0001
+#define SSL3_FLAGS_DELAY_CLIENT_FINISHED	0x0002
+#define SSL3_FLAGS_POP_BUFFER			0x0004
+#define TLS1_FLAGS_TLS_PADDING_BUG		0x0008
 #define TLS1_FLAGS_SKIP_CERT_VERIFY		0x0010
-#define TLS1_FLAGS_FREEZE_TRANSCRIPT		0x0020
+#define TLS1_FLAGS_KEEP_HANDSHAKE		0x0020
 #define SSL3_FLAGS_CCS_OK			0x0080
+
+/* SSL3_FLAGS_SGC_RESTART_DONE is set when we
+ * restart a handshake because of MS SGC and so prevents us
+ * from restarting the handshake in a loop. It's reset on a
+ * renegotiation, so effectively limits the client to one restart
+ * per negotiation. This limits the possibility of a DDoS
+ * attack where the client handshakes in a loop using SGC to
+ * restart. Servers which permit renegotiation can still be
+ * effected, but we can't prevent that.
+ */
+#define SSL3_FLAGS_SGC_RESTART_DONE		0x0040
+
+#ifndef OPENSSL_NO_SSL_INTERN
+
+typedef struct ssl3_state_st {
+	long flags;
+	int delay_buf_pop_ret;
+
+	unsigned char read_sequence[SSL3_SEQUENCE_SIZE];
+	int read_mac_secret_size;
+	unsigned char read_mac_secret[EVP_MAX_MD_SIZE];
+	unsigned char write_sequence[SSL3_SEQUENCE_SIZE];
+	int write_mac_secret_size;
+	unsigned char write_mac_secret[EVP_MAX_MD_SIZE];
+
+	unsigned char server_random[SSL3_RANDOM_SIZE];
+	unsigned char client_random[SSL3_RANDOM_SIZE];
+
+	/* flags for countermeasure against known-IV weakness */
+	int need_empty_fragments;
+	int empty_fragment_done;
+
+	/* The value of 'extra' when the buffers were initialized */
+	int init_extra;
+
+	SSL3_BUFFER rbuf;	/* read IO goes into here */
+	SSL3_BUFFER wbuf;	/* write IO goes into here */
+
+	SSL3_RECORD rrec;	/* each decoded record goes in here */
+	SSL3_RECORD wrec;	/* goes out from here */
+
+	/* storage for Alert/Handshake protocol data received but not
+	 * yet processed by ssl3_read_bytes: */
+	unsigned char alert_fragment[2];
+	unsigned int alert_fragment_len;
+	unsigned char handshake_fragment[4];
+	unsigned int handshake_fragment_len;
+
+	/* partial write - check the numbers match */
+	unsigned int wnum;	/* number of bytes sent so far */
+	int wpend_tot;		/* number bytes written */
+	int wpend_type;
+	int wpend_ret;		/* number of bytes submitted */
+	const unsigned char *wpend_buf;
+
+	/* used during startup, digest all incoming/outgoing packets */
+	BIO *handshake_buffer;
+	/* When set of handshake digests is determined, buffer is hashed
+	 * and freed and MD_CTX-es for all required digests are stored in
+	 * this array */
+	EVP_MD_CTX **handshake_dgst;
+	/* this is set whenerver we see a change_cipher_spec message
+	 * come in when we are not looking for one */
+	int change_cipher_spec;
+
+	int warn_alert;
+	int fatal_alert;
+	/* we allow one fatal and one warning alert to be outstanding,
+	 * send close alert via the warning alert */
+	int alert_dispatch;
+	unsigned char send_alert[2];
+
+	/* This flag is set when we should renegotiate ASAP, basically when
+	 * there is no more data in the read or write buffers */
+	int renegotiate;
+	int total_renegotiations;
+	int num_renegotiations;
+
+	int in_read_app_data;
+
+	struct	{
+		/* actually only needs to be 16+20 */
+		unsigned char cert_verify_md[EVP_MAX_MD_SIZE*2];
+
+		/* actually only need to be 16+20 for SSLv3 and 12 for TLS */
+		unsigned char finish_md[EVP_MAX_MD_SIZE*2];
+		int finish_md_len;
+		unsigned char peer_finish_md[EVP_MAX_MD_SIZE*2];
+		int peer_finish_md_len;
+
+		unsigned long message_size;
+		int message_type;
+
+		/* used to hold the new cipher we are going to use */
+		const SSL_CIPHER *new_cipher;
+		DH *dh;
+
+		EC_KEY *ecdh; /* holds short lived ECDH key */
+
+		/* used when SSL_ST_FLUSH_DATA is entered */
+		int next_state;
+
+		int reuse_message;
+
+		/* used for certificate requests */
+		int cert_req;
+		int ctype_num;
+		char ctype[SSL3_CT_NUMBER];
+		STACK_OF(X509_NAME) *ca_names;
+
+		int use_rsa_tmp;
+
+		int key_block_length;
+		unsigned char *key_block;
+
+		const EVP_CIPHER *new_sym_enc;
+		const EVP_AEAD *new_aead;
+		const EVP_MD *new_hash;
+		int new_mac_pkey_type;
+		int new_mac_secret_size;
+		int cert_request;
+	} tmp;
+
+	/* Connection binding to prevent renegotiation attacks */
+	unsigned char previous_client_finished[EVP_MAX_MD_SIZE];
+	unsigned char previous_client_finished_len;
+	unsigned char previous_server_finished[EVP_MAX_MD_SIZE];
+	unsigned char previous_server_finished_len;
+	int send_connection_binding; /* TODOEKR */
+
+#ifndef OPENSSL_NO_NEXTPROTONEG
+	/* Set if we saw the Next Protocol Negotiation extension from our peer.
+	 */
+	int next_proto_neg_seen;
+#endif
+
+	/* This is set to true if we believe that this is a version of Safari
+	 * running on OS X 10.6 or newer. We wish to know this because Safari
+	 * on 10.8 .. 10.8.3 has broken ECDHE-ECDSA support. */
+	char is_probably_safari;
+} SSL3_STATE;
+
+#endif
 
 /* SSLv3 */
 /*client */
 /* extra state */
 #define SSL3_ST_CW_FLUSH			(0x100|SSL_ST_CONNECT)
+#ifndef OPENSSL_NO_SCTP
+#define DTLS1_SCTP_ST_CW_WRITE_SOCK		(0x310|SSL_ST_CONNECT)
+#define DTLS1_SCTP_ST_CR_READ_SOCK		(0x320|SSL_ST_CONNECT)
+#endif	
 /* write to server */
 #define SSL3_ST_CW_CLNT_HELLO_A			(0x110|SSL_ST_CONNECT)
 #define SSL3_ST_CW_CLNT_HELLO_B			(0x111|SSL_ST_CONNECT)
@@ -363,6 +541,10 @@ extern "C" {
 #define SSL3_ST_CW_CERT_VRFY_B			(0x191|SSL_ST_CONNECT)
 #define SSL3_ST_CW_CHANGE_A			(0x1A0|SSL_ST_CONNECT)
 #define SSL3_ST_CW_CHANGE_B			(0x1A1|SSL_ST_CONNECT)
+#ifndef OPENSSL_NO_NEXTPROTONEG
+#define SSL3_ST_CW_NEXT_PROTO_A			(0x200|SSL_ST_CONNECT)
+#define SSL3_ST_CW_NEXT_PROTO_B			(0x201|SSL_ST_CONNECT)
+#endif
 #define SSL3_ST_CW_FINISHED_A			(0x1B0|SSL_ST_CONNECT)
 #define SSL3_ST_CW_FINISHED_B			(0x1B1|SSL_ST_CONNECT)
 /* read from server */
@@ -378,6 +560,10 @@ extern "C" {
 /* server */
 /* extra state */
 #define SSL3_ST_SW_FLUSH			(0x100|SSL_ST_ACCEPT)
+#ifndef OPENSSL_NO_SCTP
+#define DTLS1_SCTP_ST_SW_WRITE_SOCK		(0x310|SSL_ST_ACCEPT)
+#define DTLS1_SCTP_ST_SR_READ_SOCK		(0x320|SSL_ST_ACCEPT)
+#endif	
 /* read from client */
 /* Do not change the number values, they do matter */
 #define SSL3_ST_SR_CLNT_HELLO_A			(0x110|SSL_ST_ACCEPT)
@@ -408,6 +594,10 @@ extern "C" {
 #define SSL3_ST_SR_CERT_VRFY_B			(0x1A1|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_A			(0x1B0|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_CHANGE_B			(0x1B1|SSL_ST_ACCEPT)
+#ifndef OPENSSL_NO_NEXTPROTONEG
+#define SSL3_ST_SR_NEXT_PROTO_A			(0x210|SSL_ST_ACCEPT)
+#define SSL3_ST_SR_NEXT_PROTO_B			(0x211|SSL_ST_ACCEPT)
+#endif
 #define SSL3_ST_SR_FINISHED_A			(0x1C0|SSL_ST_ACCEPT)
 #define SSL3_ST_SR_FINISHED_B			(0x1C1|SSL_ST_ACCEPT)
 /* write to client */
@@ -433,21 +623,23 @@ extern "C" {
 #define SSL3_MT_FINISHED			20
 #define SSL3_MT_CERTIFICATE_STATUS		22
 
+#ifndef OPENSSL_NO_NEXTPROTONEG
+#define SSL3_MT_NEXT_PROTO			67
+#endif
+
 #define DTLS1_MT_HELLO_VERIFY_REQUEST		3
 
 #define SSL3_MT_CCS				1
 
-#ifndef LIBRESSL_INTERNAL
 /* These are used when changing over to a new cipher */
 #define SSL3_CC_READ		0x01
 #define SSL3_CC_WRITE		0x02
 #define SSL3_CC_CLIENT		0x10
 #define SSL3_CC_SERVER		0x20
-#define SSL3_CHANGE_CIPHER_CLIENT_WRITE		(SSL3_CC_CLIENT|SSL3_CC_WRITE)
+#define SSL3_CHANGE_CIPHER_CLIENT_WRITE		(SSL3_CC_CLIENT|SSL3_CC_WRITE)	
 #define SSL3_CHANGE_CIPHER_SERVER_READ		(SSL3_CC_SERVER|SSL3_CC_READ)
 #define SSL3_CHANGE_CIPHER_CLIENT_READ		(SSL3_CC_CLIENT|SSL3_CC_READ)
 #define SSL3_CHANGE_CIPHER_SERVER_WRITE		(SSL3_CC_SERVER|SSL3_CC_WRITE)
-#endif
 
 #ifdef  __cplusplus
 }

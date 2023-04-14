@@ -1,4 +1,4 @@
-/* $OpenBSD: conf_def.c,v 1.33 2020/02/17 12:51:48 inoguchi Exp $ */
+/* $OpenBSD: conf_def.c,v 1.27 2014/07/11 08:44:48 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -69,8 +69,6 @@
 #include <openssl/stack.h>
 
 #include "conf_def.h"
-
-#define MAX_CONF_VALUE_LENGTH 65536
 
 static char *eat_ws(CONF *conf, char *p);
 static char *eat_alpha_numeric(CONF *conf, char *p);
@@ -197,9 +195,9 @@ def_load(CONF *conf, const char *name, long *line)
 	in = BIO_new_file(name, "rb");
 	if (in == NULL) {
 		if (ERR_GET_REASON(ERR_peek_last_error()) == BIO_R_NO_SUCH_FILE)
-			CONFerror(CONF_R_NO_SUCH_FILE);
+			CONFerr(CONF_F_DEF_LOAD, CONF_R_NO_SUCH_FILE);
 		else
-			CONFerror(ERR_R_SYS_LIB);
+			CONFerr(CONF_F_DEF_LOAD, ERR_R_SYS_LIB);
 		return 0;
 	}
 
@@ -226,24 +224,26 @@ def_load_bio(CONF *conf, BIO *in, long *line)
 	void *h = (void *)(conf->data);
 
 	if ((buff = BUF_MEM_new()) == NULL) {
-		CONFerror(ERR_R_BUF_LIB);
+		CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_BUF_LIB);
 		goto err;
 	}
 
-	section = strdup("default");
+	section = malloc(10);
 	if (section == NULL) {
-		CONFerror(ERR_R_MALLOC_FAILURE);
+		CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
+	strlcpy(section, "default",10);
 
 	if (_CONF_new_data(conf) == 0) {
-		CONFerror(ERR_R_MALLOC_FAILURE);
+		CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
 	sv = _CONF_new_section(conf, section);
 	if (sv == NULL) {
-		CONFerror(CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
+		CONFerr(CONF_F_DEF_LOAD_BIO,
+		    CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
 		goto err;
 	}
 
@@ -251,7 +251,7 @@ def_load_bio(CONF *conf, BIO *in, long *line)
 	again = 0;
 	for (;;) {
 		if (!BUF_MEM_grow(buff, bufnum + CONFBUFSIZE)) {
-			CONFerror(ERR_R_BUF_LIB);
+			CONFerr(CONF_F_DEF_LOAD_BIO, ERR_R_BUF_LIB);
 			goto err;
 		}
 		p = &(buff->data[bufnum]);
@@ -317,7 +317,8 @@ again:
 					ss = p;
 					goto again;
 				}
-				CONFerror(CONF_R_MISSING_CLOSE_SQUARE_BRACKET);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    CONF_R_MISSING_CLOSE_SQUARE_BRACKET);
 				goto err;
 			}
 			*end = '\0';
@@ -326,7 +327,8 @@ again:
 			if ((sv = _CONF_get_section(conf, section)) == NULL)
 				sv = _CONF_new_section(conf, section);
 			if (sv == NULL) {
-				CONFerror(CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
 				goto err;
 			}
 			continue;
@@ -343,7 +345,8 @@ again:
 			}
 			p = eat_ws(conf, end);
 			if (*p != '=') {
-				CONFerror(CONF_R_MISSING_EQUAL_SIGN);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    CONF_R_MISSING_EQUAL_SIGN);
 				goto err;
 			}
 			*end = '\0';
@@ -358,7 +361,8 @@ again:
 			*p = '\0';
 
 			if (!(v = malloc(sizeof(CONF_VALUE)))) {
-				CONFerror(ERR_R_MALLOC_FAILURE);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    ERR_R_MALLOC_FAILURE);
 				goto err;
 			}
 			if (psection == NULL)
@@ -366,7 +370,8 @@ again:
 			v->name = strdup(pname);
 			v->value = NULL;
 			if (v->name == NULL) {
-				CONFerror(ERR_R_MALLOC_FAILURE);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    ERR_R_MALLOC_FAILURE);
 				goto err;
 			}
 			if (!str_copy(conf, psection, &(v->value), start))
@@ -377,16 +382,33 @@ again:
 					== NULL)
 					tv = _CONF_new_section(conf, psection);
 				if (tv == NULL) {
-					CONFerror(CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
+					CONFerr(CONF_F_DEF_LOAD_BIO,
+					    CONF_R_UNABLE_TO_CREATE_NEW_SECTION);
 					goto err;
 				}
 			} else
 				tv = sv;
-
+#if 1
 			if (_CONF_add_string(conf, tv, v) == 0) {
-				CONFerror(ERR_R_MALLOC_FAILURE);
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    ERR_R_MALLOC_FAILURE);
 				goto err;
 			}
+#else
+			v->section = tv->section;
+			if (!sk_CONF_VALUE_push(ts, v)) {
+				CONFerr(CONF_F_DEF_LOAD_BIO,
+				    ERR_R_MALLOC_FAILURE);
+				goto err;
+			}
+			vv = (CONF_VALUE *)lh_insert(conf->data, v);
+			if (vv != NULL) {
+				sk_CONF_VALUE_delete_ptr(ts, vv);
+				free(vv->name);
+				free(vv->value);
+				free(vv);
+			}
+#endif
 			v = NULL;
 		}
 	}
@@ -457,7 +479,6 @@ str_copy(CONF *conf, char *section, char **pto, char *from)
 {
 	int q, r,rr = 0, to = 0, len = 0;
 	char *s, *e, *rp, *p, *rrp, *np, *cp, v;
-	size_t newsize;
 	BUF_MEM *buf;
 
 	if ((buf = BUF_MEM_new()) == NULL)
@@ -544,7 +565,8 @@ str_copy(CONF *conf, char *section, char **pto, char *from)
 			rp = e;
 			if (q) {
 				if (r != q) {
-					CONFerror(CONF_R_NO_CLOSE_BRACE);
+					CONFerr(CONF_F_STR_COPY,
+					    CONF_R_NO_CLOSE_BRACE);
 					goto err;
 				}
 				e++;
@@ -563,18 +585,12 @@ str_copy(CONF *conf, char *section, char **pto, char *from)
 				*rrp = rr;
 			*rp = r;
 			if (p == NULL) {
-				CONFerror(CONF_R_VARIABLE_HAS_NO_VALUE);
+				CONFerr(CONF_F_STR_COPY,
+				    CONF_R_VARIABLE_HAS_NO_VALUE);
 				goto err;
 			}
-			newsize = strlen(p) + buf->length - (e - from);
-			if (newsize > MAX_CONF_VALUE_LENGTH) {
-				CONFerror(CONF_R_VARIABLE_EXPANSION_TOO_LONG);
-				goto err;
-			}
-			if (!BUF_MEM_grow_clean(buf, newsize)) {
-				CONFerror(CONF_R_MODULE_INITIALIZATION_ERROR);
-				goto err;
-			}
+			BUF_MEM_grow_clean(buf,
+			    (strlen(p) + buf->length - (e - from)));
 			while (*p)
 				buf->data[to++] = *(p++);
 

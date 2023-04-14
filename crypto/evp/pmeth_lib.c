@@ -1,4 +1,4 @@
-/* $OpenBSD: pmeth_lib.c,v 1.27 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: pmeth_lib.c,v 1.7 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -56,98 +56,77 @@
  *
  */
 
-#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include <openssl/opensslconf.h>
 
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
-#include <openssl/x509v3.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
 
-#include "asn1_local.h"
-#include "evp_local.h"
+#include "asn1_locl.h"
+#include "evp_locl.h"
+
+typedef int sk_cmp_fn_type(const char * const *a, const char * const *b);
 
 DECLARE_STACK_OF(EVP_PKEY_METHOD)
-STACK_OF(EVP_PKEY_METHOD) *pkey_app_methods = NULL;
+STACK_OF(EVP_PKEY_METHOD) *app_pkey_methods = NULL;
 
-extern const EVP_PKEY_METHOD cmac_pkey_meth;
-extern const EVP_PKEY_METHOD dh_pkey_meth;
-extern const EVP_PKEY_METHOD dsa_pkey_meth;
-extern const EVP_PKEY_METHOD ec_pkey_meth;
-extern const EVP_PKEY_METHOD ed25519_pkey_meth;
-extern const EVP_PKEY_METHOD gostimit_pkey_meth;
-extern const EVP_PKEY_METHOD gostr01_pkey_meth;
-extern const EVP_PKEY_METHOD hkdf_pkey_meth;
-extern const EVP_PKEY_METHOD hmac_pkey_meth;
-extern const EVP_PKEY_METHOD rsa_pkey_meth;
-extern const EVP_PKEY_METHOD rsa_pss_pkey_meth;
-extern const EVP_PKEY_METHOD x25519_pkey_meth;
+extern const EVP_PKEY_METHOD rsa_pkey_meth, dh_pkey_meth, dsa_pkey_meth;
+extern const EVP_PKEY_METHOD ec_pkey_meth, hmac_pkey_meth, cmac_pkey_meth;
 
-static const EVP_PKEY_METHOD *pkey_methods[] = {
-	&cmac_pkey_meth,
-	&dh_pkey_meth,
-	&dsa_pkey_meth,
-	&ec_pkey_meth,
-	&ed25519_pkey_meth,
-	&gostimit_pkey_meth,
-	&gostr01_pkey_meth,
-	&hkdf_pkey_meth,
-	&hmac_pkey_meth,
+static const EVP_PKEY_METHOD *standard_methods[] = {
+#ifndef OPENSSL_NO_RSA
 	&rsa_pkey_meth,
-	&rsa_pss_pkey_meth,
-	&x25519_pkey_meth,
+#endif
+#ifndef OPENSSL_NO_DH
+	&dh_pkey_meth,
+#endif
+#ifndef OPENSSL_NO_DSA
+	&dsa_pkey_meth,
+#endif
+#ifndef OPENSSL_NO_EC
+	&ec_pkey_meth,
+#endif
+	&hmac_pkey_meth,
+	&cmac_pkey_meth
 };
 
-static const size_t pkey_methods_count =
-    sizeof(pkey_methods) / sizeof(pkey_methods[0]);
+DECLARE_OBJ_BSEARCH_CMP_FN(const EVP_PKEY_METHOD *, const EVP_PKEY_METHOD *,
+    pmeth);
 
-int
-evp_pkey_meth_get_count(void)
+static int
+pmeth_cmp(const EVP_PKEY_METHOD * const *a, const EVP_PKEY_METHOD * const *b)
 {
-	int num = pkey_methods_count;
-
-	if (pkey_app_methods != NULL)
-		num += sk_EVP_PKEY_METHOD_num(pkey_app_methods);
-
-	return num;
+	return ((*a)->pkey_id - (*b)->pkey_id);
 }
 
-const EVP_PKEY_METHOD *
-evp_pkey_meth_get0(int idx)
-{
-	int num = pkey_methods_count;
-
-	if (idx < 0)
-		return NULL;
-	if (idx < num)
-		return pkey_methods[idx];
-
-	idx -= num;
-
-	return sk_EVP_PKEY_METHOD_value(pkey_app_methods, idx);
-}
+IMPLEMENT_OBJ_BSEARCH_CMP_FN(const EVP_PKEY_METHOD *, const EVP_PKEY_METHOD *,
+    pmeth);
 
 const EVP_PKEY_METHOD *
 EVP_PKEY_meth_find(int type)
 {
-	const EVP_PKEY_METHOD *pmeth;
-	int i;
+	EVP_PKEY_METHOD tmp;
+	const EVP_PKEY_METHOD *t = &tmp, **ret;
 
-	for (i = evp_pkey_meth_get_count() - 1; i >= 0; i--) {
-		pmeth = evp_pkey_meth_get0(i);
-		if (pmeth->pkey_id == type)
-			return pmeth;
+	tmp.pkey_id = type;
+	if (app_pkey_methods) {
+		int idx;
+		idx = sk_EVP_PKEY_METHOD_find(app_pkey_methods, &tmp);
+		if (idx >= 0)
+			return sk_EVP_PKEY_METHOD_value(app_pkey_methods, idx);
 	}
-
-	return NULL;
+	ret = OBJ_bsearch_pmeth(&t, standard_methods,
+	    sizeof(standard_methods)/sizeof(EVP_PKEY_METHOD *));
+	if (!ret || !*ret)
+		return NULL;
+	return *ret;
 }
 
 static EVP_PKEY_CTX *
@@ -167,13 +146,13 @@ int_ctx_new(EVP_PKEY *pkey, ENGINE *e, int id)
 	/* Try to find an ENGINE which implements this method */
 	if (e) {
 		if (!ENGINE_init(e)) {
-			EVPerror(ERR_R_ENGINE_LIB);
+			EVPerr(EVP_F_INT_CTX_NEW, ERR_R_ENGINE_LIB);
 			return NULL;
 		}
 	} else
 		e = ENGINE_get_pkey_meth_engine(id);
 
-	/* If an ENGINE handled this method look it up. Otherwise
+	/* If an ENGINE handled this method look it up. Othewise
 	 * use internal tables.
 	 */
 
@@ -184,16 +163,17 @@ int_ctx_new(EVP_PKEY *pkey, ENGINE *e, int id)
 		pmeth = EVP_PKEY_meth_find(id);
 
 	if (pmeth == NULL) {
-		EVPerror(EVP_R_UNSUPPORTED_ALGORITHM);
+		EVPerr(EVP_F_INT_CTX_NEW, EVP_R_UNSUPPORTED_ALGORITHM);
 		return NULL;
 	}
 
 	ret = malloc(sizeof(EVP_PKEY_CTX));
-	if (ret == NULL) {
+	if (!ret) {
 #ifndef OPENSSL_NO_ENGINE
-		ENGINE_finish(e);
+		if (e)
+			ENGINE_finish(e);
 #endif
-		EVPerror(ERR_R_MALLOC_FAILURE);
+		EVPerr(EVP_F_INT_CTX_NEW, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
 	ret->engine = e;
@@ -221,11 +201,38 @@ EVP_PKEY_meth_new(int id, int flags)
 {
 	EVP_PKEY_METHOD *pmeth;
 
-	if ((pmeth = calloc(1, sizeof(EVP_PKEY_METHOD))) == NULL)
+	pmeth = calloc(1, sizeof(EVP_PKEY_METHOD));
+	if (!pmeth)
 		return NULL;
 
 	pmeth->pkey_id = id;
 	pmeth->flags = flags | EVP_PKEY_FLAG_DYNAMIC;
+
+	pmeth->init = 0;
+	pmeth->copy = 0;
+	pmeth->cleanup = 0;
+	pmeth->paramgen_init = 0;
+	pmeth->paramgen = 0;
+	pmeth->keygen_init = 0;
+	pmeth->keygen = 0;
+	pmeth->sign_init = 0;
+	pmeth->sign = 0;
+	pmeth->verify_init = 0;
+	pmeth->verify = 0;
+	pmeth->verify_recover_init = 0;
+	pmeth->verify_recover = 0;
+	pmeth->signctx_init = 0;
+	pmeth->signctx = 0;
+	pmeth->verifyctx_init = 0;
+	pmeth->verifyctx = 0;
+	pmeth->encrypt_init = 0;
+	pmeth->encrypt = 0;
+	pmeth->decrypt_init = 0;
+	pmeth->decrypt = 0;
+	pmeth->derive_init = 0;
+	pmeth->derive = 0;
+	pmeth->ctrl = 0;
+	pmeth->ctrl_str = 0;
 
 	return pmeth;
 }
@@ -242,15 +249,42 @@ EVP_PKEY_meth_get0_info(int *ppkey_id, int *pflags, const EVP_PKEY_METHOD *meth)
 void
 EVP_PKEY_meth_copy(EVP_PKEY_METHOD *dst, const EVP_PKEY_METHOD *src)
 {
-	EVP_PKEY_METHOD preserve;
+	dst->init = src->init;
+	dst->copy = src->copy;
+	dst->cleanup = src->cleanup;
 
-	preserve.pkey_id = dst->pkey_id;
-	preserve.flags = dst->flags;
+	dst->paramgen_init = src->paramgen_init;
+	dst->paramgen = src->paramgen;
 
-	*dst = *src;
+	dst->keygen_init = src->keygen_init;
+	dst->keygen = src->keygen;
 
-	dst->pkey_id = preserve.pkey_id;
-	dst->flags = preserve.flags;
+	dst->sign_init = src->sign_init;
+	dst->sign = src->sign;
+
+	dst->verify_init = src->verify_init;
+	dst->verify = src->verify;
+
+	dst->verify_recover_init = src->verify_recover_init;
+	dst->verify_recover = src->verify_recover;
+
+	dst->signctx_init = src->signctx_init;
+	dst->signctx = src->signctx;
+
+	dst->verifyctx_init = src->verifyctx_init;
+	dst->verifyctx = src->verifyctx;
+
+	dst->encrypt_init = src->encrypt_init;
+	dst->encrypt = src->encrypt;
+
+	dst->decrypt_init = src->decrypt_init;
+	dst->decrypt = src->decrypt;
+
+	dst->derive_init = src->derive_init;
+	dst->derive = src->derive;
+
+	dst->ctrl = src->ctrl;
+	dst->ctrl_str = src->ctrl_str;
 }
 
 void
@@ -282,7 +316,7 @@ EVP_PKEY_CTX_dup(EVP_PKEY_CTX *pctx)
 #ifndef OPENSSL_NO_ENGINE
 	/* Make sure it's safe to copy a pkey context using an ENGINE */
 	if (pctx->engine && !ENGINE_init(pctx->engine)) {
-		EVPerror(ERR_R_ENGINE_LIB);
+		EVPerr(EVP_F_EVP_PKEY_CTX_DUP, ERR_R_ENGINE_LIB);
 		return 0;
 	}
 #endif
@@ -319,15 +353,14 @@ EVP_PKEY_CTX_dup(EVP_PKEY_CTX *pctx)
 int
 EVP_PKEY_meth_add0(const EVP_PKEY_METHOD *pmeth)
 {
-	if (pkey_app_methods == NULL) {
-		pkey_app_methods = sk_EVP_PKEY_METHOD_new(NULL);
-		if (pkey_app_methods == NULL)
+	if (app_pkey_methods == NULL) {
+		app_pkey_methods = sk_EVP_PKEY_METHOD_new(pmeth_cmp);
+		if (!app_pkey_methods)
 			return 0;
 	}
-
-	if (!sk_EVP_PKEY_METHOD_push(pkey_app_methods, pmeth))
+	if (!sk_EVP_PKEY_METHOD_push(app_pkey_methods, pmeth))
 		return 0;
-
+	sk_EVP_PKEY_METHOD_sort(app_pkey_methods);
 	return 1;
 }
 
@@ -338,10 +371,15 @@ EVP_PKEY_CTX_free(EVP_PKEY_CTX *ctx)
 		return;
 	if (ctx->pmeth && ctx->pmeth->cleanup)
 		ctx->pmeth->cleanup(ctx);
-	EVP_PKEY_free(ctx->pkey);
-	EVP_PKEY_free(ctx->peerkey);
+	if (ctx->pkey)
+		EVP_PKEY_free(ctx->pkey);
+	if (ctx->peerkey)
+		EVP_PKEY_free(ctx->peerkey);
 #ifndef OPENSSL_NO_ENGINE
-	ENGINE_finish(ctx->engine);
+	if (ctx->engine)
+		/* The EVP_PKEY_CTX we used belongs to an ENGINE, release the
+		 * functional reference we held for this reason. */
+		ENGINE_finish(ctx->engine);
 #endif
 	free(ctx);
 }
@@ -353,26 +391,26 @@ EVP_PKEY_CTX_ctrl(EVP_PKEY_CTX *ctx, int keytype, int optype, int cmd,
 	int ret;
 
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->ctrl) {
-		EVPerror(EVP_R_COMMAND_NOT_SUPPORTED);
+		EVPerr(EVP_F_EVP_PKEY_CTX_CTRL, EVP_R_COMMAND_NOT_SUPPORTED);
 		return -2;
 	}
 	if ((keytype != -1) && (ctx->pmeth->pkey_id != keytype))
 		return -1;
 
 	if (ctx->operation == EVP_PKEY_OP_UNDEFINED) {
-		EVPerror(EVP_R_NO_OPERATION_SET);
+		EVPerr(EVP_F_EVP_PKEY_CTX_CTRL, EVP_R_NO_OPERATION_SET);
 		return -1;
 	}
 
 	if ((optype != -1) && !(ctx->operation & optype)) {
-		EVPerror(EVP_R_INVALID_OPERATION);
+		EVPerr(EVP_F_EVP_PKEY_CTX_CTRL, EVP_R_INVALID_OPERATION);
 		return -1;
 	}
 
 	ret = ctx->pmeth->ctrl(ctx, cmd, p1, p2);
 
 	if (ret == -2)
-		EVPerror(EVP_R_COMMAND_NOT_SUPPORTED);
+		EVPerr(EVP_F_EVP_PKEY_CTX_CTRL, EVP_R_COMMAND_NOT_SUPPORTED);
 
 	return ret;
 
@@ -382,58 +420,20 @@ int
 EVP_PKEY_CTX_ctrl_str(EVP_PKEY_CTX *ctx, const char *name, const char *value)
 {
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->ctrl_str) {
-		EVPerror(EVP_R_COMMAND_NOT_SUPPORTED);
+		EVPerr(EVP_F_EVP_PKEY_CTX_CTRL_STR,
+		    EVP_R_COMMAND_NOT_SUPPORTED);
 		return -2;
 	}
 	if (!strcmp(name, "digest")) {
-		return EVP_PKEY_CTX_md(ctx, EVP_PKEY_OP_TYPE_SIG,
-		    EVP_PKEY_CTRL_MD, value);
+		const EVP_MD *md;
+		if (!value || !(md = EVP_get_digestbyname(value))) {
+			EVPerr(EVP_F_EVP_PKEY_CTX_CTRL_STR,
+			    EVP_R_INVALID_DIGEST);
+			return 0;
+		}
+		return EVP_PKEY_CTX_set_signature_md(ctx, md);
 	}
 	return ctx->pmeth->ctrl_str(ctx, name, value);
-}
-
-int
-EVP_PKEY_CTX_str2ctrl(EVP_PKEY_CTX *ctx, int cmd, const char *str)
-{
-	size_t len;
-
-	if ((len = strlen(str)) > INT_MAX)
-		return -1;
-
-	return ctx->pmeth->ctrl(ctx, cmd, len, (void *)str);
-}
-
-int
-EVP_PKEY_CTX_hex2ctrl(EVP_PKEY_CTX *ctx, int cmd, const char *hexstr)
-{
-	unsigned char *hex = NULL;
-	long length;
-	int ret = 0;
-
-	if ((hex = string_to_hex(hexstr, &length)) == NULL)
-		goto err;
-	if (length < 0 || length > INT_MAX) {
-		ret = -1;
-		goto err;
-	}
-
-	ret = ctx->pmeth->ctrl(ctx, cmd, length, hex);
-
- err:
-	free(hex);
-	return ret;
-}
-
-int
-EVP_PKEY_CTX_md(EVP_PKEY_CTX *ctx, int optype, int cmd, const char *md_name)
-{
-	const EVP_MD *md;
-
-	if ((md = EVP_get_digestbyname(md_name)) == NULL) {
-		EVPerror(EVP_R_INVALID_DIGEST);
-		return 0;
-	}
-	return EVP_PKEY_CTX_ctrl(ctx, -1, optype, cmd, 0, (void *)md);
 }
 
 int
@@ -611,24 +611,4 @@ EVP_PKEY_meth_set_ctrl(EVP_PKEY_METHOD *pmeth,
 {
 	pmeth->ctrl = ctrl;
 	pmeth->ctrl_str = ctrl_str;
-}
-
-void
-EVP_PKEY_meth_set_check(EVP_PKEY_METHOD *pmeth, int (*check)(EVP_PKEY *pkey))
-{
-	pmeth->check = check;
-}
-
-void
-EVP_PKEY_meth_set_public_check(EVP_PKEY_METHOD *pmeth,
-    int (*public_check)(EVP_PKEY *pkey))
-{
-	pmeth->public_check = public_check;
-}
-
-void
-EVP_PKEY_meth_set_param_check(EVP_PKEY_METHOD *pmeth,
-    int (*param_check)(EVP_PKEY *pkey))
-{
-	pmeth->param_check = param_check;
 }

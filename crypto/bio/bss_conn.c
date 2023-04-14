@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_conn.c,v 1.37 2022/01/14 08:40:57 tb Exp $ */
+/* $OpenBSD: bss_conn.c,v 1.28 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -70,8 +70,6 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
-#include "bio_local.h"
-
 #define SOCKET_PROTOCOL IPPROTO_TCP
 
 typedef struct bio_connect_st {
@@ -92,7 +90,7 @@ typedef struct bio_connect_st {
 	/* called when the connection is initially made
 	 *  callback(BIO,state,ret);  The callback should return
 	 * 'ret'.  state is for compatibility with the ssl info_callback */
-	BIO_info_cb *info_callback;
+	int (*info_callback)(const BIO *bio, int state, int ret);
 } BIO_CONNECT;
 
 static int conn_write(BIO *h, const char *buf, int num);
@@ -101,14 +99,14 @@ static int conn_puts(BIO *h, const char *str);
 static long conn_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int conn_new(BIO *h);
 static int conn_free(BIO *data);
-static long conn_callback_ctrl(BIO *h, int cmd, BIO_info_cb *);
+static long conn_callback_ctrl(BIO *h, int cmd, bio_info_cb *);
 
 static int conn_state(BIO *b, BIO_CONNECT *c);
 static void conn_close_socket(BIO *data);
 BIO_CONNECT *BIO_CONNECT_new(void);
 void BIO_CONNECT_free(BIO_CONNECT *a);
 
-static const BIO_METHOD methods_connectp = {
+static BIO_METHOD methods_connectp = {
 	.type = BIO_TYPE_CONNECT,
 	.name = "socket connect",
 	.bwrite = conn_write,
@@ -126,7 +124,7 @@ conn_state(BIO *b, BIO_CONNECT *c)
 	int ret = -1, i;
 	unsigned long l;
 	char *p, *q;
-	BIO_info_cb *cb = NULL;
+	int (*cb)(const BIO *, int, int) = NULL;
 
 	if (c->info_callback != NULL)
 		cb = c->info_callback;
@@ -136,7 +134,7 @@ conn_state(BIO *b, BIO_CONNECT *c)
 		case BIO_CONN_S_BEFORE:
 			p = c->param_hostname;
 			if (p == NULL) {
-				BIOerror(BIO_R_NO_HOSTNAME_SPECIFIED);
+				BIOerr(BIO_F_CONN_STATE, BIO_R_NO_HOSTNAME_SPECIFIED);
 				goto exit_loop;
 			}
 			for (; *p != '\0'; p++) {
@@ -154,12 +152,12 @@ conn_state(BIO *b, BIO_CONNECT *c)
 							break;
 						}
 					free(c->param_port);
-					c->param_port = strdup(p);
+					c->param_port = BUF_strdup(p);
 				}
 			}
 
 			if (c->param_port == NULL) {
-				BIOerror(BIO_R_NO_PORT_SPECIFIED);
+				BIOerr(BIO_F_CONN_STATE, BIO_R_NO_PORT_SPECIFIED);
 				ERR_asprintf_error_data("host=%s",
 				    c->param_hostname);
 				goto exit_loop;
@@ -197,10 +195,11 @@ conn_state(BIO *b, BIO_CONNECT *c)
 
 			ret = socket(AF_INET, SOCK_STREAM, SOCKET_PROTOCOL);
 			if (ret == -1) {
-				SYSerror(errno);
+				SYSerr(SYS_F_SOCKET, errno);
 				ERR_asprintf_error_data("host=%s:%s",
 				    c->param_hostname, c->param_port);
-				BIOerror(BIO_R_UNABLE_TO_CREATE_SOCKET);
+				BIOerr(BIO_F_CONN_STATE,
+				    BIO_R_UNABLE_TO_CREATE_SOCKET);
 				goto exit_loop;
 			}
 			b->num = ret;
@@ -210,7 +209,8 @@ conn_state(BIO *b, BIO_CONNECT *c)
 		case BIO_CONN_S_NBIO:
 			if (c->nbio) {
 				if (!BIO_socket_nbio(b->num, 1)) {
-					BIOerror(BIO_R_ERROR_SETTING_NBIO);
+					BIOerr(BIO_F_CONN_STATE,
+					    BIO_R_ERROR_SETTING_NBIO);
 					ERR_asprintf_error_data("host=%s:%s",
 					    c->param_hostname, c->param_port);
 					goto exit_loop;
@@ -218,14 +218,14 @@ conn_state(BIO *b, BIO_CONNECT *c)
 			}
 			c->state = BIO_CONN_S_CONNECT;
 
-#if defined(SO_KEEPALIVE)
+#if defined(SO_KEEPALIVE) && !defined(OPENSSL_SYS_MPE)
 			i = 1;
-			i = setsockopt(b->num, SOL_SOCKET, SO_KEEPALIVE, &i, sizeof(i));
+			i = setsockopt(b->num, SOL_SOCKET, SO_KEEPALIVE,(char *)&i, sizeof(i));
 			if (i < 0) {
-				SYSerror(errno);
+				SYSerr(SYS_F_SOCKET, errno);
 				ERR_asprintf_error_data("host=%s:%s",
 				    c->param_hostname, c->param_port);
-				BIOerror(BIO_R_KEEPALIVE);
+				BIOerr(BIO_F_CONN_STATE, BIO_R_KEEPALIVE);
 				goto exit_loop;
 			}
 #endif
@@ -243,10 +243,11 @@ conn_state(BIO *b, BIO_CONNECT *c)
 					c->state = BIO_CONN_S_BLOCKED_CONNECT;
 					b->retry_reason = BIO_RR_CONNECT;
 				} else {
-					SYSerror(errno);
+					SYSerr(SYS_F_CONNECT, errno);
 					ERR_asprintf_error_data("host=%s:%s",
 					    c->param_hostname, c->param_port);
-					BIOerror(BIO_R_CONNECT_ERROR);
+					BIOerr(BIO_F_CONN_STATE,
+					    BIO_R_CONNECT_ERROR);
 				}
 				goto exit_loop;
 			} else
@@ -257,10 +258,11 @@ conn_state(BIO *b, BIO_CONNECT *c)
 			i = BIO_sock_error(b->num);
 			if (i) {
 				BIO_clear_retry_flags(b);
-				SYSerror(i);
+				SYSerr(SYS_F_CONNECT, i);
 				ERR_asprintf_error_data("host=%s:%s",
 				    c->param_hostname, c->param_port);
-				BIOerror(BIO_R_NBIO_CONNECT_ERROR);
+				BIOerr(BIO_F_CONN_STATE,
+				    BIO_R_NBIO_CONNECT_ERROR);
 				ret = 0;
 				goto exit_loop;
 			} else
@@ -321,7 +323,7 @@ BIO_CONNECT_free(BIO_CONNECT *a)
 	free(a);
 }
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_connect(void)
 {
 	return (&methods_connectp);
@@ -469,10 +471,10 @@ conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 			b->init = 1;
 			if (num == 0) {
 				free(data->param_hostname);
-				data->param_hostname = strdup(ptr);
+				data->param_hostname = BUF_strdup(ptr);
 			} else if (num == 1) {
 				free(data->param_port);
-				data->param_port = strdup(ptr);
+				data->param_port = BUF_strdup(ptr);
 			} else if (num == 2) {
 				unsigned char *p = ptr;
 				free(data->param_hostname);
@@ -523,13 +525,15 @@ conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 				BIO_set_conn_hostname(dbio,
 				    data->param_hostname);
 			BIO_set_nbio(dbio, data->nbio);
-			(void)BIO_set_info_callback(dbio, data->info_callback);
+			/* FIXME: the cast of the function seems unlikely to be a good idea */
+			(void)BIO_set_info_callback(dbio,
+			    (bio_info_cb *)data->info_callback);
 		}
 		break;
 	case BIO_CTRL_SET_CALLBACK:
 		{
 #if 0 /* FIXME: Should this be used?  -- Richard Levitte */
-			BIOerror(ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
+			BIOerr(BIO_F_CONN_CTRL, ERR_R_SHOULD_NOT_HAVE_BEEN_CALLED);
 			ret = -1;
 #else
 			ret = 0;
@@ -538,8 +542,9 @@ conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 		break;
 	case BIO_CTRL_GET_CALLBACK:
 		{
-			BIO_info_cb **fptr = ptr;
+			int (**fptr)(const BIO *bio, int state, int xret);
 
+			fptr = (int (**)(const BIO *bio, int state, int xret))ptr;
 			*fptr = data->info_callback;
 		}
 		break;
@@ -551,7 +556,7 @@ conn_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 static long
-conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+conn_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	long ret = 1;
 	BIO_CONNECT *data;
@@ -560,7 +565,9 @@ conn_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
 
 	switch (cmd) {
 	case BIO_CTRL_SET_CALLBACK:
-		data->info_callback = (BIO_info_cb *)fp;
+		{
+			data->info_callback = (int (*)(const struct bio_st *, int, int))fp;
+		}
 		break;
 	default:
 		ret = 0;
@@ -580,7 +587,7 @@ conn_puts(BIO *bp, const char *str)
 }
 
 BIO *
-BIO_new_connect(const char *str)
+BIO_new_connect(char *str)
 {
 	BIO *ret;
 

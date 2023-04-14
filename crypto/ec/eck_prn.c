@@ -1,4 +1,4 @@
-/* $OpenBSD: eck_prn.c,v 1.20 2022/11/19 07:29:29 tb Exp $ */
+/* $OpenBSD: eck_prn.c,v 1.8 2014/07/10 22:45:57 jsing Exp $ */
 /*
  * Written by Nils Larsch for the OpenSSL project.
  */
@@ -64,19 +64,21 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <openssl/opensslconf.h>
+
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-int
-ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
+int 
+ECPKParameters_print_fp(FILE * fp, const EC_GROUP * x, int off)
 {
 	BIO *b;
 	int ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		ECerror(ERR_R_BUF_LIB);
+		ECerr(EC_F_ECPKPARAMETERS_PRINT_FP, ERR_R_BUF_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -85,14 +87,14 @@ ECPKParameters_print_fp(FILE *fp, const EC_GROUP *x, int off)
 	return (ret);
 }
 
-int
-EC_KEY_print_fp(FILE *fp, const EC_KEY *x, int off)
+int 
+EC_KEY_print_fp(FILE * fp, const EC_KEY * x, int off)
 {
 	BIO *b;
 	int ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		ECerror(ERR_R_BIO_LIB);
+		ECerr(EC_F_EC_KEY_PRINT_FP, ERR_R_BIO_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -101,14 +103,14 @@ EC_KEY_print_fp(FILE *fp, const EC_KEY *x, int off)
 	return (ret);
 }
 
-int
-ECParameters_print_fp(FILE *fp, const EC_KEY *x)
+int 
+ECParameters_print_fp(FILE * fp, const EC_KEY * x)
 {
 	BIO *b;
 	int ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		ECerror(ERR_R_BIO_LIB);
+		ECerr(EC_F_ECPARAMETERS_PRINT_FP, ERR_R_BIO_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -117,48 +119,38 @@ ECParameters_print_fp(FILE *fp, const EC_KEY *x)
 	return (ret);
 }
 
-int
-EC_KEY_print(BIO *bp, const EC_KEY *x, int off)
+int 
+EC_KEY_print(BIO * bp, const EC_KEY * x, int off)
 {
 	EVP_PKEY *pk;
-	int ret = 0;
-
-	if ((pk = EVP_PKEY_new()) == NULL)
-		goto err;
-
-	if (!EVP_PKEY_set1_EC_KEY(pk, (EC_KEY *) x))
-		goto err;
-
+	int ret;
+	pk = EVP_PKEY_new();
+	if (!pk || !EVP_PKEY_set1_EC_KEY(pk, (EC_KEY *) x))
+		return 0;
 	ret = EVP_PKEY_print_private(bp, pk, off, NULL);
- err:
 	EVP_PKEY_free(pk);
 	return ret;
 }
 
-int
-ECParameters_print(BIO *bp, const EC_KEY *x)
+int 
+ECParameters_print(BIO * bp, const EC_KEY * x)
 {
 	EVP_PKEY *pk;
-	int ret = 0;
-
-	if ((pk = EVP_PKEY_new()) == NULL)
-		goto err;
-
-	if (!EVP_PKEY_set1_EC_KEY(pk, (EC_KEY *) x))
-		goto err;
-
+	int ret;
+	pk = EVP_PKEY_new();
+	if (!pk || !EVP_PKEY_set1_EC_KEY(pk, (EC_KEY *) x))
+		return 0;
 	ret = EVP_PKEY_print_params(bp, pk, 4, NULL);
- err:
 	EVP_PKEY_free(pk);
 	return ret;
 }
 
-static int
-print_bin(BIO *fp, const char *str, const unsigned char *num,
+static int 
+print_bin(BIO * fp, const char *str, const unsigned char *num,
     size_t len, int off);
 
-int
-ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
+int 
+ECPKParameters_print(BIO * bp, const EC_GROUP * x, int off)
 {
 	unsigned char *buffer = NULL;
 	size_t buf_len = 0, i;
@@ -169,7 +161,6 @@ ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
 	*cofactor = NULL;
 	const unsigned char *seed;
 	size_t seed_len = 0;
-	const char *nname;
 
 	static const char *gen_compressed = "Generator (compressed):";
 	static const char *gen_uncompressed = "Generator (uncompressed):";
@@ -199,14 +190,6 @@ ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
 			goto err;
 		if (BIO_printf(bp, "\n") <= 0)
 			goto err;
-
-		nname = EC_curve_nid2nist(nid);
-		if (nname) {
-			if (!BIO_indent(bp, off, 128))
-				goto err;
-			if (BIO_printf(bp, "NIST CURVE: %s\n", nname) <= 0)
-				goto err;
-		}
 	} else {
 		/* explicit parameters */
 		int is_char_two = 0;
@@ -222,9 +205,19 @@ ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
 			reason = ERR_R_MALLOC_FAILURE;
 			goto err;
 		}
-		if (!EC_GROUP_get_curve(x, p, a, b, ctx)) {
-			reason = ERR_R_EC_LIB;
-			goto err;
+#ifndef OPENSSL_NO_EC2M
+		if (is_char_two) {
+			if (!EC_GROUP_get_curve_GF2m(x, p, a, b, ctx)) {
+				reason = ERR_R_EC_LIB;
+				goto err;
+			}
+		} else		/* prime field */
+#endif
+		{
+			if (!EC_GROUP_get_curve_GFp(x, p, a, b, ctx)) {
+				reason = ERR_R_EC_LIB;
+				goto err;
+			}
 		}
 
 		if ((point = EC_GROUP_get0_generator(x)) == NULL) {
@@ -319,22 +312,29 @@ ECPKParameters_print(BIO *bp, const EC_GROUP *x, int off)
 			goto err;
 	}
 	ret = 1;
- err:
+err:
 	if (!ret)
-		ECerror(reason);
-	BN_free(p);
-	BN_free(a);
-	BN_free(b);
-	BN_free(gen);
-	BN_free(order);
-	BN_free(cofactor);
-	BN_CTX_free(ctx);
+		ECerr(EC_F_ECPKPARAMETERS_PRINT, reason);
+	if (p)
+		BN_free(p);
+	if (a)
+		BN_free(a);
+	if (b)
+		BN_free(b);
+	if (gen)
+		BN_free(gen);
+	if (order)
+		BN_free(order);
+	if (cofactor)
+		BN_free(cofactor);
+	if (ctx)
+		BN_CTX_free(ctx);
 	free(buffer);
 	return (ret);
 }
 
-static int
-print_bin(BIO *fp, const char *name, const unsigned char *buf,
+static int 
+print_bin(BIO * fp, const char *name, const unsigned char *buf,
     size_t len, int off)
 {
 	size_t i;

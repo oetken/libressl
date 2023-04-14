@@ -1,4 +1,4 @@
-/* $OpenBSD: t_spki.c,v 1.14 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: t_spki.c,v 1.10 2014/07/10 22:45:56 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -71,8 +71,6 @@
 #include <openssl/rsa.h>
 #endif
 
-#include "x509_local.h"
-
 /* Print out an SPKI */
 
 int
@@ -96,8 +94,7 @@ NETSCAPE_SPKI_print(BIO *out, NETSCAPE_SPKI *spki)
 	}
 	chal = spki->spkac->challenge;
 	if (chal->length)
-		BIO_printf(out, "  Challenge String: %.*s\n", chal->length,
-		    chal->data);
+		BIO_printf(out, "  Challenge String: %s\n", chal->data);
 	i = OBJ_obj2nid(spki->sig_algor->algorithm);
 	BIO_printf(out, "  Signature Algorithm: %s",
 	    (i == NID_undef) ? "UNKNOWN" : OBJ_nid2ln(i));

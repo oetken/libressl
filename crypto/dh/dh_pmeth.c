@@ -1,4 +1,4 @@
-/* $OpenBSD: dh_pmeth.c,v 1.13 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: dh_pmeth.c,v 1.8 2014/07/10 13:58:22 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -67,9 +67,7 @@
 #include <openssl/evp.h>
 #include <openssl/x509.h>
 
-#include "bn_local.h"
-#include "dh_local.h"
-#include "evp_local.h"
+#include "evp_locl.h"
 
 /* DH pkey context structure */
 
@@ -217,7 +215,7 @@ pkey_dh_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 	DH *dh = NULL;
 
 	if (ctx->pkey == NULL) {
-		DHerror(DH_R_NO_PARAMETERS_SET);
+		DHerr(DH_F_PKEY_DH_KEYGEN, DH_R_NO_PARAMETERS_SET);
 		return 0;
 	}
 	dh = DH_new();
@@ -236,7 +234,7 @@ pkey_dh_derive(EVP_PKEY_CTX *ctx, unsigned char *key, size_t *keylen)
 	int ret;
 
 	if (!ctx->pkey || !ctx->peerkey) {
-		DHerror(DH_R_KEYS_NOT_SET);
+		DHerr(DH_F_PKEY_DH_DERIVE, DH_R_KEYS_NOT_SET);
 		return 0;
 	}
 	ret = DH_compute_key(key, ctx->peerkey->pkey.dh->pub_key,

@@ -1,4 +1,4 @@
-/* $OpenBSD: hmac.h,v 1.16 2022/01/14 08:06:03 tb Exp $ */
+/* $OpenBSD: hmac.h,v 1.11 2014/06/12 15:49:29 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -72,11 +72,22 @@
 extern "C" {
 #endif
 
-#define HMAC_size(e)	(EVP_MD_size(HMAC_CTX_get_md((e))))
+typedef struct hmac_ctx_st {
+	const EVP_MD *md;
+	EVP_MD_CTX md_ctx;
+	EVP_MD_CTX i_ctx;
+	EVP_MD_CTX o_ctx;
+	unsigned int key_length;
+	unsigned char key[HMAC_MAX_MD_CBLOCK];
+} HMAC_CTX;
 
-HMAC_CTX *HMAC_CTX_new(void);
-void HMAC_CTX_free(HMAC_CTX *ctx);
-int HMAC_CTX_reset(HMAC_CTX *ctx);
+#define HMAC_size(e)	(EVP_MD_size((e)->md))
+
+
+void HMAC_CTX_init(HMAC_CTX *ctx);
+void HMAC_CTX_cleanup(HMAC_CTX *ctx);
+
+#define HMAC_cleanup(ctx) HMAC_CTX_cleanup(ctx) /* deprecated */
 
 int HMAC_Init(HMAC_CTX *ctx, const void *key, int len,
     const EVP_MD *md); /* deprecated */
@@ -89,7 +100,6 @@ unsigned char *HMAC(const EVP_MD *evp_md, const void *key, int key_len,
 int HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx);
 
 void HMAC_CTX_set_flags(HMAC_CTX *ctx, unsigned long flags);
-const EVP_MD *HMAC_CTX_get_md(const HMAC_CTX *ctx);
 
 #ifdef  __cplusplus
 }

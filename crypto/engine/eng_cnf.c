@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_cnf.c,v 1.15 2018/04/14 07:18:37 tb Exp $ */
+/* $OpenBSD: eng_cnf.c,v 1.11 2014/06/22 11:33:47 jsing Exp $ */
 /* Written by Stephen Henson (steve@openssl.org) for the OpenSSL
  * project 2001.
  */
@@ -58,8 +58,6 @@
 
 #include <string.h>
 
-#include <openssl/err.h>
-
 #include "eng_int.h"
 #include <openssl/conf.h>
 
@@ -115,7 +113,8 @@ int_engine_configure(char *name, char *value, const CONF *cnf)
 	ecmds = NCONF_get_section(cnf, value);
 
 	if (!ecmds) {
-		ENGINEerror(ENGINE_R_ENGINE_SECTION_ERROR);
+		ENGINEerr(ENGINE_F_INT_ENGINE_CONFIGURE,
+		    ENGINE_R_ENGINE_SECTION_ERROR);
 		return 0;
 	}
 
@@ -174,7 +173,8 @@ int_engine_configure(char *name, char *value, const CONF *cnf)
 					if (!int_engine_init(e))
 						goto err;
 				} else if (do_init != 0) {
-					ENGINEerror(ENGINE_R_INVALID_INIT_VALUE);
+					ENGINEerr(ENGINE_F_INT_ENGINE_CONFIGURE,
+					    ENGINE_R_INVALID_INIT_VALUE);
 					goto err;
 				}
 			}
@@ -194,13 +194,15 @@ int_engine_configure(char *name, char *value, const CONF *cnf)
 
 err:
 	if (ret != 1) {
-		ENGINEerror(ENGINE_R_ENGINE_CONFIGURATION_ERROR);
+		ENGINEerr(ENGINE_F_INT_ENGINE_CONFIGURE,
+		    ENGINE_R_ENGINE_CONFIGURATION_ERROR);
 		if (ecmd)
 			ERR_asprintf_error_data(
 			    "section=%s, name=%s, value=%s",
 			    ecmd->section, ecmd->name, ecmd->value);
 	}
-	ENGINE_free(e);
+	if (e)
+		ENGINE_free(e);
 	return ret;
 }
 
@@ -220,7 +222,8 @@ int_engine_module_init(CONF_IMODULE *md, const CONF *cnf)
 	elist = NCONF_get_section(cnf, CONF_imodule_get_value(md));
 
 	if (!elist) {
-		ENGINEerror(ENGINE_R_ENGINES_SECTION_ERROR);
+		ENGINEerr(ENGINE_F_INT_ENGINE_MODULE_INIT,
+		    ENGINE_R_ENGINES_SECTION_ERROR);
 		return 0;
 	}
 

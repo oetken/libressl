@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_gen.c,v 1.26 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: rsa_gen.c,v 1.15 2014/07/09 19:51:38 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -69,9 +69,6 @@
 #include <openssl/err.h>
 #include <openssl/rsa.h>
 
-#include "bn_local.h"
-#include "rsa_local.h"
-
 static int rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb);
 
 /*
@@ -93,7 +90,8 @@ static int
 rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 {
 	BIGNUM *r0 = NULL, *r1 = NULL, *r2 = NULL, *r3 = NULL, *tmp;
-	BIGNUM pr0, d, p;
+	BIGNUM local_r0, local_d, local_p;
+	BIGNUM *pr0, *d, *p;
 	int bitsp, bitsq, ok = -1, n = 0;
 	BN_CTX *ctx = NULL;
 
@@ -101,13 +99,11 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 	if (ctx == NULL)
 		goto err;
 	BN_CTX_start(ctx);
-	if ((r0 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((r1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((r2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((r3 = BN_CTX_get(ctx)) == NULL)
+	r0 = BN_CTX_get(ctx);
+	r1 = BN_CTX_get(ctx);
+	r2 = BN_CTX_get(ctx);
+	r3 = BN_CTX_get(ctx);
+	if (r3 == NULL)
 		goto err;
 
 	bitsp = (bits + 1) / 2;
@@ -139,7 +135,7 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 			goto err;
 		if (!BN_sub(r2, rsa->p, BN_value_one()))
 			goto err;
-		if (!BN_gcd_ct(r1, r2, rsa->e, ctx))
+		if (!BN_gcd(r1, r2, rsa->e, ctx))
 			goto err;
 		if (BN_is_one(r1))
 			break;
@@ -163,12 +159,13 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 		    ++degenerate < 3);
 		if (degenerate == 3) {
 			ok = 0; /* we set our own err */
-			RSAerror(RSA_R_KEY_SIZE_TOO_SMALL);
+			RSAerr(RSA_F_RSA_BUILTIN_KEYGEN,
+			    RSA_R_KEY_SIZE_TOO_SMALL);
 			goto err;
 		}
 		if (!BN_sub(r2, rsa->q, BN_value_one()))
 			goto err;
-		if (!BN_gcd_ct(r1, r2, rsa->e, ctx))
+		if (!BN_gcd(r1, r2, rsa->e, ctx))
 			goto err;
 		if (BN_is_one(r1))
 			break;
@@ -194,35 +191,42 @@ rsa_builtin_keygen(RSA *rsa, int bits, BIGNUM *e_value, BN_GENCB *cb)
 		goto err;
 	if (!BN_mul(r0, r1, r2, ctx))			/* (p-1)(q-1) */
 		goto err;
-
-	BN_init(&pr0);
-	BN_with_flags(&pr0, r0, BN_FLG_CONSTTIME);
-
-	if (BN_mod_inverse_ct(rsa->d, rsa->e, &pr0, ctx) == NULL) /* d */
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME)) {
+		pr0 = &local_r0;
+		BN_with_flags(pr0, r0, BN_FLG_CONSTTIME);
+	} else
+		pr0 = r0;
+	if (!BN_mod_inverse(rsa->d, rsa->e, pr0, ctx))	/* d */
 		goto err;
 
 	/* set up d for correct BN_FLG_CONSTTIME flag */
-	BN_init(&d);
-	BN_with_flags(&d, rsa->d, BN_FLG_CONSTTIME);
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME)) {
+		d = &local_d;
+		BN_with_flags(d, rsa->d, BN_FLG_CONSTTIME);
+	} else
+		d = rsa->d;
 
 	/* calculate d mod (p-1) */
-	if (!BN_mod_ct(rsa->dmp1, &d, r1, ctx))
+	if (!BN_mod(rsa->dmp1, d, r1, ctx))
 		goto err;
 
 	/* calculate d mod (q-1) */
-	if (!BN_mod_ct(rsa->dmq1, &d, r2, ctx))
+	if (!BN_mod(rsa->dmq1, d, r2, ctx))
 		goto err;
 
 	/* calculate inverse of q mod p */
-	BN_init(&p);
-	BN_with_flags(&p, rsa->p, BN_FLG_CONSTTIME);
-	if (BN_mod_inverse_ct(rsa->iqmp, rsa->q, &p, ctx) == NULL)
+	if (!(rsa->flags & RSA_FLAG_NO_CONSTTIME)) {
+		p = &local_p;
+		BN_with_flags(p, rsa->p, BN_FLG_CONSTTIME);
+	} else
+		p = rsa->p;
+	if (!BN_mod_inverse(rsa->iqmp, rsa->q, p, ctx))
 		goto err;
 
 	ok = 1;
 err:
 	if (ok == -1) {
-		RSAerror(ERR_LIB_BN);
+		RSAerr(RSA_F_RSA_BUILTIN_KEYGEN, ERR_LIB_BN);
 		ok = 0;
 	}
 	if (ctx != NULL) {

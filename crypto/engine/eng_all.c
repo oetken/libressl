@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_all.c,v 1.30 2018/03/17 16:20:01 beck Exp $ */
+/* $OpenBSD: eng_all.c,v 1.25 2014/06/12 15:49:29 deraadt Exp $ */
 /* Written by Richard Levitte <richard@levitte.org> for the OpenSSL
  * project 2000.
  */
@@ -56,16 +56,28 @@
  *
  */
 
-#include <pthread.h>
-
 #include <openssl/opensslconf.h>
 
 #include "cryptlib.h"
 #include "eng_int.h"
 
 void
-ENGINE_load_builtin_engines_internal(void)
+ENGINE_load_builtin_engines(void)
 {
+	/* Some ENGINEs need this */
+	OPENSSL_cpuid_setup();
+#if 0
+	/* There's no longer any need for an "openssl" ENGINE unless, one day,
+	 * it is the *only* way for standard builtin implementations to be be
+	 * accessed (ie. it would be possible to statically link binaries with
+	 * *no* builtin implementations). */
+	ENGINE_load_openssl();
+#endif
+
+#ifndef OPENSSL_NO_RSAX
+	ENGINE_load_rsax();
+#endif
+	ENGINE_load_dynamic();
 #ifndef OPENSSL_NO_STATIC_ENGINE
 #ifndef OPENSSL_NO_HW
 #ifndef OPENSSL_NO_HW_PADLOCK
@@ -74,15 +86,4 @@ ENGINE_load_builtin_engines_internal(void)
 #endif
 #endif
 	ENGINE_register_all_complete();
-}
-
-void
-ENGINE_load_builtin_engines(void)
-{
-	static pthread_once_t once = PTHREAD_ONCE_INIT;
-
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
-	(void) pthread_once(&once, ENGINE_load_builtin_engines_internal);
 }

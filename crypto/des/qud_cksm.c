@@ -1,4 +1,4 @@
-/* $OpenBSD: qud_cksm.c,v 1.8 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -61,7 +61,7 @@
  * This module in only based on the code in this paper and is
  * almost definitely not the same as the MIT implementation.
  */
-#include "des_local.h"
+#include "des_locl.h"
 
 /* bug fix for dos - 7/6/91 - Larry hughes@logos.ucs.indiana.edu */
 #define Q_B0(a)	(((DES_LONG)(a)))

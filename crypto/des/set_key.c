@@ -1,4 +1,4 @@
-/* $OpenBSD: set_key.c,v 1.21 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -64,7 +64,7 @@
  * 1.0 First working version
  */
 #include <openssl/crypto.h>
-#include "des_local.h"
+#include "des_locl.h"
 
 int DES_check_key = 0;	/* defaults to false */
 
@@ -106,7 +106,7 @@ int DES_check_key_parity(const_DES_cblock *key)
 	return(1);
 	}
 
-/* Weak and semi weak keys as taken from
+/* Weak and semi week keys as take from
  * %A D.W. Davies
  * %A W.L. Price
  * %T Security for Computer Networks
@@ -136,16 +136,20 @@ static const DES_cblock weak_keys[NUM_WEAK_KEY]={
 	{0xE0,0xFE,0xE0,0xFE,0xF1,0xFE,0xF1,0xFE},
 	{0xFE,0xE0,0xFE,0xE0,0xFE,0xF1,0xFE,0xF1}};
 
-int
-DES_is_weak_key(const_DES_cblock *key)
-{
-	unsigned int i;
+int DES_is_weak_key(const_DES_cblock *key)
+	{
+	int i;
 
-	for (i = 0; i < NUM_WEAK_KEY; i++)
-		if (memcmp(weak_keys[i], key, sizeof(DES_cblock)) == 0)
-			return 1;
-	return 0;
-}
+	for (i=0; i<NUM_WEAK_KEY; i++)
+		/* Added == 0 to comparison, I obviously don't run
+		 * this section very often :-(, thanks to
+		 * engineering@MorningStar.Com for the fix
+		 * eay 93/06/29
+		 * Another problem, I was comparing only the first 4
+		 * bytes, 97/03/18 */
+		if (memcmp(weak_keys[i],key,sizeof(DES_cblock)) == 0) return(1);
+	return(0);
+	}
 
 /* NOW DEFINED IN des_local.h
  * See ecb_encrypt.c for a pseudo description of these macros. 
@@ -334,10 +338,10 @@ int DES_set_key_checked(const_DES_cblock *key, DES_key_schedule *schedule)
 void DES_set_key_unchecked(const_DES_cblock *key, DES_key_schedule *schedule)
 	{
 	static const int shifts2[16]={0,0,1,1,1,1,1,1,0,1,1,1,1,1,1,0};
-	DES_LONG c,d,t,s,t2;
-	const unsigned char *in;
-	DES_LONG *k;
-	int i;
+	register DES_LONG c,d,t,s,t2;
+	register const unsigned char *in;
+	register DES_LONG *k;
+	register int i;
 
 	k = &schedule->ks->deslong[0];
 	in = &(*key)[0];

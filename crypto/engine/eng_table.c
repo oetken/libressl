@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_table.c,v 1.10 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: eng_table.c,v 1.6 2014/06/22 12:05:09 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 2001 The OpenSSL Project.  All rights reserved.
  *
@@ -53,7 +53,6 @@
  *
  */
 
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/lhash.h>
 
@@ -163,7 +162,7 @@ engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
 			fnd->funct = NULL;
 			(void)lh_ENGINE_PILE_insert(&(*table)->piles, fnd);
 		}
-		/* A registration shouldn't add duplicate entries */
+		/* A registration shouldn't add duplciate entries */
 		(void)sk_ENGINE_delete_ptr(fnd->sk, e);
 		/* if 'setdefault', this ENGINE goes to the head of the list */
 		if (!sk_ENGINE_push(fnd->sk, e))
@@ -172,7 +171,8 @@ engine_table_register(ENGINE_TABLE **table, ENGINE_CLEANUP_CB *cleanup,
 		fnd->uptodate = 0;
 		if (setdefault) {
 			if (!engine_unlocked_init(e)) {
-				ENGINEerror(ENGINE_R_INIT_FAILED);
+				ENGINEerr(ENGINE_F_ENGINE_TABLE_REGISTER,
+				    ENGINE_R_INIT_FAILED);
 				goto end;
 			}
 			if (fnd->funct)
@@ -193,7 +193,7 @@ int_unregister_cb_doall_arg(ENGINE_PILE *pile, ENGINE *e)
 {
 	int n;
 
-	/* Iterate the 'c->sk' stack removing any occurrence of 'e' */
+	/* Iterate the 'c->sk' stack removing any occurance of 'e' */
 	while ((n = sk_ENGINE_find(pile->sk, e)) >= 0) {
 		(void)sk_ENGINE_delete(pile->sk, n);
 		pile->uptodate = 0;

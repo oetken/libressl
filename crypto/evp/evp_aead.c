@@ -1,4 +1,4 @@
-/* $OpenBSD: evp_aead.c,v 1.8 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: evp_aead.c,v 1.4 2014/06/12 15:49:29 deraadt Exp $ */
 /*
  * Copyright (c) 2014, Google Inc.
  *
@@ -21,7 +21,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 
-#include "evp_local.h"
+#include "evp_locl.h"
 
 size_t
 EVP_AEAD_key_length(const EVP_AEAD *aead)
@@ -53,7 +53,7 @@ EVP_AEAD_CTX_init(EVP_AEAD_CTX *ctx, const EVP_AEAD *aead,
 {
 	ctx->aead = aead;
 	if (key_len != aead->key_len) {
-		EVPerror(EVP_R_UNSUPPORTED_KEY_SIZE);
+		EVPerr(EVP_F_EVP_AEAD_CTX_INIT, EVP_R_UNSUPPORTED_KEY_SIZE);
 		return 0;
 	}
 	return aead->init(ctx, key, key_len, tag_len);
@@ -66,22 +66,6 @@ EVP_AEAD_CTX_cleanup(EVP_AEAD_CTX *ctx)
 		return;
 	ctx->aead->cleanup(ctx);
 	ctx->aead = NULL;
-}
-
-EVP_AEAD_CTX *
-EVP_AEAD_CTX_new(void)
-{
-	return calloc(1, sizeof(EVP_AEAD_CTX));
-}
-
-void
-EVP_AEAD_CTX_free(EVP_AEAD_CTX *ctx)
-{
-	if (ctx == NULL)
-		return;
-
-	EVP_AEAD_CTX_cleanup(ctx);
-	free(ctx);
 }
 
 /* check_alias returns 0 if out points within the buffer determined by in
@@ -112,12 +96,12 @@ EVP_AEAD_CTX_seal(const EVP_AEAD_CTX *ctx, unsigned char *out, size_t *out_len,
 
 	/* Overflow. */
 	if (possible_out_len < in_len) {
-		EVPerror(EVP_R_TOO_LARGE);
+		EVPerr(EVP_F_AEAD_CTX_SEAL, EVP_R_TOO_LARGE);
 		goto error;
 	}
 
 	if (!check_alias(in, in_len, out)) {
-		EVPerror(EVP_R_OUTPUT_ALIASES_INPUT);
+		EVPerr(EVP_F_AEAD_CTX_SEAL, EVP_R_OUTPUT_ALIASES_INPUT);
 		goto error;
 	}
 
@@ -141,7 +125,7 @@ EVP_AEAD_CTX_open(const EVP_AEAD_CTX *ctx, unsigned char *out, size_t *out_len,
     size_t ad_len)
 {
 	if (!check_alias(in, in_len, out)) {
-		EVPerror(EVP_R_OUTPUT_ALIASES_INPUT);
+		EVPerr(EVP_F_AEAD_CTX_OPEN, EVP_R_OUTPUT_ALIASES_INPUT);
 		goto error;
 	}
 

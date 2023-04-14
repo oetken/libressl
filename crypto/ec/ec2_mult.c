@@ -1,4 +1,4 @@
-/* $OpenBSD: ec2_mult.c,v 1.15 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: ec2_mult.c,v 1.3 2014/06/12 15:49:29 deraadt Exp $ */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -71,8 +71,7 @@
 
 #include <openssl/err.h>
 
-#include "bn_local.h"
-#include "ec_local.h"
+#include "ec_lcl.h"
 
 #ifndef OPENSSL_NO_EC2M
 
@@ -84,7 +83,7 @@
  *     GF(2^m) without precomputation" (CHES '99, LNCS 1717).
  * modified to not require precomputation of c=b^{2^{m-1}}.
  */
-static int
+static int 
 gf2m_Mdouble(const EC_GROUP *group, BIGNUM *x, BIGNUM *z, BN_CTX *ctx)
 {
 	BIGNUM *t1;
@@ -92,7 +91,8 @@ gf2m_Mdouble(const EC_GROUP *group, BIGNUM *x, BIGNUM *z, BN_CTX *ctx)
 
 	/* Since Mdouble is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t1 = BN_CTX_get(ctx)) == NULL)
+	t1 = BN_CTX_get(ctx);
+	if (t1 == NULL)
 		goto err;
 
 	if (!group->meth->field_sqr(group, x, x, ctx))
@@ -112,7 +112,7 @@ gf2m_Mdouble(const EC_GROUP *group, BIGNUM *x, BIGNUM *z, BN_CTX *ctx)
 
 	ret = 1;
 
- err:
+err:
 	BN_CTX_end(ctx);
 	return ret;
 }
@@ -123,7 +123,7 @@ gf2m_Mdouble(const EC_GROUP *group, BIGNUM *x, BIGNUM *z, BN_CTX *ctx)
  *     Lopez, J. and Dahab, R.  "Fast multiplication on elliptic curves over
  *     GF(2^m) without precomputation" (CHES '99, LNCS 1717).
  */
-static int
+static int 
 gf2m_Madd(const EC_GROUP *group, const BIGNUM *x, BIGNUM *x1, BIGNUM *z1,
     const BIGNUM *x2, const BIGNUM *z2, BN_CTX *ctx)
 {
@@ -132,9 +132,9 @@ gf2m_Madd(const EC_GROUP *group, const BIGNUM *x, BIGNUM *x1, BIGNUM *z1,
 
 	/* Since Madd is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t2 = BN_CTX_get(ctx)) == NULL)
+	t1 = BN_CTX_get(ctx);
+	t2 = BN_CTX_get(ctx);
+	if (t2 == NULL)
 		goto err;
 
 	if (!BN_copy(t1, x))
@@ -156,7 +156,7 @@ gf2m_Madd(const EC_GROUP *group, const BIGNUM *x, BIGNUM *x1, BIGNUM *z1,
 
 	ret = 1;
 
- err:
+err:
 	BN_CTX_end(ctx);
 	return ret;
 }
@@ -170,7 +170,7 @@ gf2m_Madd(const EC_GROUP *group, const BIGNUM *x, BIGNUM *x1, BIGNUM *z1,
  *     1 if return value should be the point at infinity
  *     2 otherwise
  */
-static int
+static int 
 gf2m_Mxy(const EC_GROUP *group, const BIGNUM *x, const BIGNUM *y, BIGNUM *x1,
     BIGNUM *z1, BIGNUM *x2, BIGNUM *z2, BN_CTX *ctx)
 {
@@ -191,11 +191,10 @@ gf2m_Mxy(const EC_GROUP *group, const BIGNUM *x, const BIGNUM *y, BIGNUM *x1,
 	}
 	/* Since Mxy is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t3 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t4 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t5 = BN_CTX_get(ctx)) == NULL)
+	t3 = BN_CTX_get(ctx);
+	t4 = BN_CTX_get(ctx);
+	t5 = BN_CTX_get(ctx);
+	if (t5 == NULL)
 		goto err;
 
 	if (!BN_one(t5))
@@ -244,7 +243,7 @@ gf2m_Mxy(const EC_GROUP *group, const BIGNUM *x, const BIGNUM *y, BIGNUM *x1,
 
 	ret = 2;
 
- err:
+err:
 	BN_CTX_end(ctx);
 	return ret;
 }
@@ -259,7 +258,7 @@ gf2m_Mxy(const EC_GROUP *group, const BIGNUM *x, const BIGNUM *y, BIGNUM *x1,
  * To protect against side-channel attack the function uses constant time swap,
  * avoiding conditional branches.
  */
-static int
+static int 
 ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
     const BIGNUM *scalar, const EC_POINT *point, BN_CTX *ctx)
 {
@@ -268,12 +267,12 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 	BN_ULONG mask, word;
 
 	if (r == point) {
-		ECerror(EC_R_INVALID_ARGUMENT);
+		ECerr(EC_F_EC_GF2M_MONTGOMERY_POINT_MULTIPLY, EC_R_INVALID_ARGUMENT);
 		return 0;
 	}
 	/* if result should be point at infinity */
 	if ((scalar == NULL) || BN_is_zero(scalar) || (point == NULL) ||
-	    EC_POINT_is_at_infinity(group, point) > 0) {
+	    EC_POINT_is_at_infinity(group, point)) {
 		return EC_POINT_set_to_infinity(group, r);
 	}
 	/* only support affine coordinates */
@@ -282,22 +281,18 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 
 	/* Since point_multiply is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((x1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z1 = BN_CTX_get(ctx)) == NULL)
+	x1 = BN_CTX_get(ctx);
+	z1 = BN_CTX_get(ctx);
+	if (z1 == NULL)
 		goto err;
 
 	x2 = &r->X;
 	z2 = &r->Y;
 
-	if (!bn_wexpand(x1, group->field.top))
-                goto err;
-	if (!bn_wexpand(z1, group->field.top))
-                goto err;
-	if (!bn_wexpand(x2, group->field.top))
-                goto err;
-	if (!bn_wexpand(z2, group->field.top))
-                goto err;
+	bn_wexpand(x1, group->field.top);
+	bn_wexpand(z1, group->field.top);
+	bn_wexpand(x2, group->field.top);
+	bn_wexpand(z2, group->field.top);
 
 	if (!BN_GF2m_mod_arr(x1, &point->X, group->poly))
 		goto err;	/* x1 = x */
@@ -325,18 +320,14 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 	for (; i >= 0; i--) {
 		word = scalar->d[i];
 		while (mask) {
-			if (!BN_swap_ct(word & mask, x1, x2, group->field.top))
-				goto err;
-			if (!BN_swap_ct(word & mask, z1, z2, group->field.top))
-				goto err;
+			BN_consttime_swap(word & mask, x1, x2, group->field.top);
+			BN_consttime_swap(word & mask, z1, z2, group->field.top);
 			if (!gf2m_Madd(group, &point->X, x2, z2, x1, z1, ctx))
 				goto err;
 			if (!gf2m_Mdouble(group, x1, z1, ctx))
 				goto err;
-			if (!BN_swap_ct(word & mask, x1, x2, group->field.top))
-				goto err;
-			if (!BN_swap_ct(word & mask, z1, z2, group->field.top))
-				goto err;
+			BN_consttime_swap(word & mask, x1, x2, group->field.top);
+			BN_consttime_swap(word & mask, z1, z2, group->field.top);
 			mask >>= 1;
 		}
 		mask = BN_TBIT;
@@ -361,7 +352,7 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 
 	ret = 1;
 
- err:
+err:
 	BN_CTX_end(ctx);
 	return ret;
 }
@@ -371,7 +362,7 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
  *     scalar*group->generator + scalars[0]*points[0] + ... + scalars[num-1]*points[num-1]
  * gracefully ignoring NULL scalar values.
  */
-int
+int 
 ec_GF2m_simple_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *scalar,
     size_t num, const EC_POINT *points[], const BIGNUM *scalars[], BN_CTX *ctx)
 {
@@ -429,10 +420,13 @@ ec_GF2m_simple_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *scalar,
 
 	ret = 1;
 
- err:
-	EC_POINT_free(p);
-	EC_POINT_free(acc);
-	BN_CTX_free(new_ctx);
+err:
+	if (p)
+		EC_POINT_free(p);
+	if (acc)
+		EC_POINT_free(acc);
+	if (new_ctx != NULL)
+		BN_CTX_free(new_ctx);
 	return ret;
 }
 
@@ -440,14 +434,14 @@ ec_GF2m_simple_mul(const EC_GROUP *group, EC_POINT *r, const BIGNUM *scalar,
 /* Precomputation for point multiplication: fall back to wNAF methods
  * because ec_GF2m_simple_mul() uses ec_wNAF_mul() if appropriate */
 
-int
-ec_GF2m_precompute_mult(EC_GROUP *group, BN_CTX *ctx)
+int 
+ec_GF2m_precompute_mult(EC_GROUP * group, BN_CTX * ctx)
 {
 	return ec_wNAF_precompute_mult(group, ctx);
 }
 
-int
-ec_GF2m_have_precompute_mult(const EC_GROUP *group)
+int 
+ec_GF2m_have_precompute_mult(const EC_GROUP * group)
 {
 	return ec_wNAF_have_precompute_mult(group);
 }

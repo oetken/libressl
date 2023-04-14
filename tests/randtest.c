@@ -1,4 +1,4 @@
-/*	$OpenBSD: randtest.c,v 1.3 2018/07/17 17:06:49 tb Exp $	*/
+/* crypto/rand/randtest.c */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -58,8 +58,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
-#undef LIBRESSL_INTERNAL	/* Needed to get RAND_pseudo_bytes(). */
 #include <openssl/rand.h>
 
 /* some FIPS 140-1 random number test */

@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_lib.c,v 1.46 2023/03/11 21:14:26 tb Exp $ */
+/* $OpenBSD: rsa_lib.c,v 1.27 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,13 +62,9 @@
 
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
 #include <openssl/lhash.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
-
-#include "evp_local.h"
-#include "rsa_local.h"
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
@@ -118,8 +114,10 @@ RSA_set_method(RSA *rsa, const RSA_METHOD *meth)
 	if (mtmp->finish)
 		mtmp->finish(rsa);
 #ifndef OPENSSL_NO_ENGINE
-	ENGINE_finish(rsa->engine);
-	rsa->engine = NULL;
+	if (rsa->engine) {
+		ENGINE_finish(rsa->engine);
+		rsa->engine = NULL;
+	}
 #endif
 	rsa->meth = meth;
 	if (meth->init)
@@ -132,52 +130,70 @@ RSA_new_method(ENGINE *engine)
 {
 	RSA *ret;
 
-	if ((ret = calloc(1, sizeof(RSA))) == NULL) {
-		RSAerror(ERR_R_MALLOC_FAILURE);
+	ret = malloc(sizeof(RSA));
+	if (ret == NULL) {
+		RSAerr(RSA_F_RSA_NEW_METHOD, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
 
 	ret->meth = RSA_get_default_method();
-
 #ifndef OPENSSL_NO_ENGINE
-	if (engine != NULL) {
+	if (engine) {
 		if (!ENGINE_init(engine)) {
-			RSAerror(ERR_R_ENGINE_LIB);
-			goto err;
+			RSAerr(RSA_F_RSA_NEW_METHOD, ERR_R_ENGINE_LIB);
+			free(ret);
+			return NULL;
 		}
 		ret->engine = engine;
-	} else {
+	} else
 		ret->engine = ENGINE_get_default_RSA();
-	}
-
-	if (ret->engine != NULL) {
-		if ((ret->meth = ENGINE_get_RSA(ret->engine)) == NULL) {
-			RSAerror(ERR_R_ENGINE_LIB);
-			goto err;
+	if (ret->engine) {
+		ret->meth = ENGINE_get_RSA(ret->engine);
+		if (!ret->meth) {
+			RSAerr(RSA_F_RSA_NEW_METHOD, ERR_R_ENGINE_LIB);
+			ENGINE_finish(ret->engine);
+			free(ret);
+			return NULL;
 		}
 	}
 #endif
 
+	ret->pad = 0;
+	ret->version = 0;
+	ret->n = NULL;
+	ret->e = NULL;
+	ret->d = NULL;
+	ret->p = NULL;
+	ret->q = NULL;
+	ret->dmp1 = NULL;
+	ret->dmq1 = NULL;
+	ret->iqmp = NULL;
 	ret->references = 1;
+	ret->_method_mod_n = NULL;
+	ret->_method_mod_p = NULL;
+	ret->_method_mod_q = NULL;
+	ret->blinding = NULL;
+	ret->mt_blinding = NULL;
 	ret->flags = ret->meth->flags & ~RSA_FLAG_NON_FIPS_ALLOW;
-
-	if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_RSA, ret, &ret->ex_data))
-		goto err;
-
-	if (ret->meth->init != NULL && !ret->meth->init(ret)) {
-		CRYPTO_free_ex_data(CRYPTO_EX_INDEX_RSA, ret, &ret->ex_data);
-		goto err;
+	if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_RSA, ret, &ret->ex_data)) {
+#ifndef OPENSSL_NO_ENGINE
+		if (ret->engine)
+			ENGINE_finish(ret->engine);
+#endif
+		free(ret);
+		return NULL;
 	}
 
-	return ret;
-
- err:
+	if (ret->meth->init != NULL && !ret->meth->init(ret)) {
 #ifndef OPENSSL_NO_ENGINE
-	ENGINE_finish(ret->engine);
+		if (ret->engine)
+			ENGINE_finish(ret->engine);
 #endif
-	free(ret);
-
-	return NULL;
+		CRYPTO_free_ex_data(CRYPTO_EX_INDEX_RSA, ret, &ret->ex_data);
+		free(ret);
+		ret = NULL;
+	}
+	return ret;
 }
 
 void
@@ -195,22 +211,22 @@ RSA_free(RSA *r)
 	if (r->meth->finish)
 		r->meth->finish(r);
 #ifndef OPENSSL_NO_ENGINE
-	ENGINE_finish(r->engine);
+	if (r->engine)
+		ENGINE_finish(r->engine);
 #endif
 
 	CRYPTO_free_ex_data(CRYPTO_EX_INDEX_RSA, r, &r->ex_data);
 
-	BN_free(r->n);
-	BN_free(r->e);
-	BN_free(r->d);
-	BN_free(r->p);
-	BN_free(r->q);
-	BN_free(r->dmp1);
-	BN_free(r->dmq1);
-	BN_free(r->iqmp);
+	BN_clear_free(r->n);
+	BN_clear_free(r->e);
+	BN_clear_free(r->d);
+	BN_clear_free(r->p);
+	BN_clear_free(r->q);
+	BN_clear_free(r->dmp1);
+	BN_clear_free(r->dmq1);
+	BN_clear_free(r->iqmp);
 	BN_BLINDING_free(r->blinding);
 	BN_BLINDING_free(r->mt_blinding);
-	RSA_PSS_PARAMS_free(r->pss);
 	free(r);
 }
 
@@ -239,190 +255,4 @@ void *
 RSA_get_ex_data(const RSA *r, int idx)
 {
 	return CRYPTO_get_ex_data(&r->ex_data, idx);
-}
-
-int
-RSA_security_bits(const RSA *rsa)
-{
-	return BN_security_bits(RSA_bits(rsa), -1);
-}
-
-void
-RSA_get0_key(const RSA *r, const BIGNUM **n, const BIGNUM **e, const BIGNUM **d)
-{
-	if (n != NULL)
-		*n = r->n;
-	if (e != NULL)
-		*e = r->e;
-	if (d != NULL)
-		*d = r->d;
-}
-
-int
-RSA_set0_key(RSA *r, BIGNUM *n, BIGNUM *e, BIGNUM *d)
-{
-	if ((r->n == NULL && n == NULL) || (r->e == NULL && e == NULL))
-		return 0;
-
-	if (n != NULL) {
-		BN_free(r->n);
-		r->n = n;
-	}
-	if (e != NULL) {
-		BN_free(r->e);
-		r->e = e;
-	}
-	if (d != NULL) {
-		BN_free(r->d);
-		r->d = d;
-	}
-
-	return 1;
-}
-
-void
-RSA_get0_crt_params(const RSA *r, const BIGNUM **dmp1, const BIGNUM **dmq1,
-    const BIGNUM **iqmp)
-{
-	if (dmp1 != NULL)
-		*dmp1 = r->dmp1;
-	if (dmq1 != NULL)
-		*dmq1 = r->dmq1;
-	if (iqmp != NULL)
-		*iqmp = r->iqmp;
-}
-
-int
-RSA_set0_crt_params(RSA *r, BIGNUM *dmp1, BIGNUM *dmq1, BIGNUM *iqmp)
-{
-	if ((r->dmp1 == NULL && dmp1 == NULL) ||
-	    (r->dmq1 == NULL && dmq1 == NULL) ||
-	    (r->iqmp == NULL && iqmp == NULL))
-		return 0;
-
-	if (dmp1 != NULL) {
-		BN_free(r->dmp1);
-		r->dmp1 = dmp1;
-	}
-	if (dmq1 != NULL) {
-		BN_free(r->dmq1);
-		r->dmq1 = dmq1;
-	}
-	if (iqmp != NULL) {
-		BN_free(r->iqmp);
-		r->iqmp = iqmp;
-	}
-
-	return 1;
-}
-
-void
-RSA_get0_factors(const RSA *r, const BIGNUM **p, const BIGNUM **q)
-{
-	if (p != NULL)
-		*p = r->p;
-	if (q != NULL)
-		*q = r->q;
-}
-
-int
-RSA_set0_factors(RSA *r, BIGNUM *p, BIGNUM *q)
-{
-	if ((r->p == NULL && p == NULL) || (r->q == NULL && q == NULL))
-		return 0;
-
-	if (p != NULL) {
-		BN_free(r->p);
-		r->p = p;
-	}
-	if (q != NULL) {
-		BN_free(r->q);
-		r->q = q;
-	}
-
-	return 1;
-}
-
-const BIGNUM *
-RSA_get0_n(const RSA *r)
-{
-	return r->n;
-}
-
-const BIGNUM *
-RSA_get0_e(const RSA *r)
-{
-	return r->e;
-}
-
-const BIGNUM *
-RSA_get0_d(const RSA *r)
-{
-	return r->d;
-}
-
-const BIGNUM *
-RSA_get0_p(const RSA *r)
-{
-	return r->p;
-}
-
-const BIGNUM *
-RSA_get0_q(const RSA *r)
-{
-	return r->q;
-}
-
-const BIGNUM *
-RSA_get0_dmp1(const RSA *r)
-{
-	return r->dmp1;
-}
-
-const BIGNUM *
-RSA_get0_dmq1(const RSA *r)
-{
-	return r->dmq1;
-}
-
-const BIGNUM *
-RSA_get0_iqmp(const RSA *r)
-{
-	return r->iqmp;
-}
-
-const RSA_PSS_PARAMS *
-RSA_get0_pss_params(const RSA *r)
-{
-	return r->pss;
-}
-
-void
-RSA_clear_flags(RSA *r, int flags)
-{
-	r->flags &= ~flags;
-}
-
-int
-RSA_test_flags(const RSA *r, int flags)
-{
-	return r->flags & flags;
-}
-
-void
-RSA_set_flags(RSA *r, int flags)
-{
-	r->flags |= flags;
-}
-
-int
-RSA_pkey_ctx_ctrl(EVP_PKEY_CTX *ctx, int optype, int cmd, int p1, void *p2)
-{
-	/* Return an error if the key type is not RSA or RSA-PSS. */
-	if (ctx != NULL && ctx->pmeth != NULL &&
-	    ctx->pmeth->pkey_id != EVP_PKEY_RSA &&
-	    ctx->pmeth->pkey_id != EVP_PKEY_RSA_PSS)
-		return -1;
-
-	return EVP_PKEY_CTX_ctrl(ctx, -1, optype, cmd, p1, p2);
 }

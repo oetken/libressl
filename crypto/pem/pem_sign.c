@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_sign.c,v 1.14 2018/08/24 19:51:31 tb Exp $ */
+/* $OpenBSD: pem_sign.c,v 1.10 2014/06/12 15:49:30 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,19 +62,20 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 
-int
+void
 PEM_SignInit(EVP_MD_CTX *ctx, EVP_MD *type)
 {
-	return EVP_DigestInit_ex(ctx, type, NULL);
+	EVP_DigestInit_ex(ctx, type, NULL);
 }
 
-int
+void
 PEM_SignUpdate(EVP_MD_CTX *ctx, unsigned char *data,
     unsigned int count)
 {
-	return EVP_DigestUpdate(ctx, data, count);
+	EVP_DigestUpdate(ctx, data, count);
 }
 
 int
@@ -87,7 +88,7 @@ PEM_SignFinal(EVP_MD_CTX *ctx, unsigned char *sigret, unsigned int *siglen,
 
 	m = malloc(EVP_PKEY_size(pkey) + 2);
 	if (m == NULL) {
-		PEMerror(ERR_R_MALLOC_FAILURE);
+		PEMerr(PEM_F_PEM_SIGNFINAL, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 

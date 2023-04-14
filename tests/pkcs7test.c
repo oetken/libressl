@@ -1,4 +1,4 @@
-/*	$OpenBSD: pkcs7test.c,v 1.5 2021/04/07 17:21:40 tb Exp $	*/
+/*	$OpenBSD: pkcs7test.c,v 1.1 2014/07/02 16:29:36 jsing Exp $	*/
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -103,7 +103,7 @@ static void
 fatal(const char *msg)
 {
 	warnx("%s", msg);
-	ERR_print_errors_fp(stderr);
+	ERR_print_errors(BIO_new_fd(STDERR_FILENO, 0));
 	exit(1);
 }
 
@@ -115,7 +115,7 @@ message_compare(const char *out, size_t len)
 		    len, sizeof(message));
 		exit(1);
 	}
-	if (memcmp(out, message, len) != 0) {
+	if (bcmp(out, message, len) != 0) {
 		fprintf(stderr, "FAILURE: message mismatch\n");
 		fprintf(stderr, "Got:\n%s\n", out);
 		fprintf(stderr, "Want:\n%s\n", message);
@@ -203,12 +203,10 @@ main(int argc, char **argv)
 		fatal("PEM_read_bio_PKCS7");
 	if (PKCS7_decrypt(p7, pkey, cert, bio_out, 0) != 1)
 		fatal("PKCS7_decrypt");
-	PKCS7_free(p7);
 
 	len = BIO_get_mem_data(bio_out, &out);
 	message_compare(out, len);
 
-	BIO_free(bio_in);
 	BIO_free(bio_out);
 
 	/*
@@ -237,7 +235,6 @@ main(int argc, char **argv)
 		fatal("PEM_read_bio_PKCS7");
 	if (PKCS7_verify(p7, certs, store, NULL, bio_out, 0) != 1)
 		fatal("PKCS7_verify");
-	PKCS7_free(p7);
 
 	len = BIO_get_mem_data(bio_out, &out);
 	message_compare(out, len);
@@ -280,7 +277,6 @@ main(int argc, char **argv)
 		fatal("PEM_read_bio_PKCS7");
 	if (PKCS7_verify(p7, certs, store, bio_content, bio_out, flags) != 1)
 		fatal("PKCS7_verify");
-	PKCS7_free(p7);
 
 	len = BIO_get_mem_data(bio_out, &out);
 	message_compare(out, len);
@@ -288,14 +284,6 @@ main(int argc, char **argv)
 	BIO_free(bio_in);
 	BIO_free(bio_out);
 	BIO_free(bio_content);
-	BIO_free(bio_cert);
-	BIO_free(bio_pkey);
-
-	EVP_PKEY_free(pkey);
-
-	X509_free(cert);
-	X509_STORE_free(store);
-	sk_X509_free(certs);
 
 	return 0;
 }

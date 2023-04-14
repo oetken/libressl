@@ -1,4 +1,4 @@
-/*	$OpenBSD: igetest.c,v 1.4 2018/07/17 17:06:49 tb Exp $	*/
+/* test/igetest.c -*- mode:C; c-file-style: "eay" -*- */
 /* ====================================================================
  * Copyright (c) 2006 The OpenSSL Project.  All rights reserved.
  *
@@ -49,12 +49,11 @@
  *
  */
 
-#include <assert.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 #include <openssl/aes.h>
+#include <openssl/rand.h>
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
 
 #define TEST_SIZE	128
 #define BIG_TEST_SIZE 10240
@@ -190,10 +189,10 @@ int main(int argc, char **argv)
 
 	assert(BIG_TEST_SIZE >= TEST_SIZE);
 
-	arc4random_buf(rkey, sizeof(rkey));
-	arc4random_buf(plaintext, sizeof(plaintext));
-	arc4random_buf(iv, sizeof(iv));
-	memcpy(saved_iv, iv, sizeof(saved_iv));
+	RAND_pseudo_bytes(rkey, sizeof rkey);
+	RAND_pseudo_bytes(plaintext, sizeof plaintext);
+	RAND_pseudo_bytes(iv, sizeof iv);
+	memcpy(saved_iv, iv, sizeof saved_iv);
 
 	/* Forward IGE only... */
 

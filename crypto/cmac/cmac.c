@@ -1,4 +1,4 @@
-/* $OpenBSD: cmac.c,v 1.13 2022/12/26 07:18:51 jmc Exp $ */
+/* $OpenBSD: cmac.c,v 1.7 2014/06/21 13:42:14 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -57,8 +57,6 @@
 
 #include <openssl/cmac.h>
 
-#include "evp_local.h"
-
 struct CMAC_CTX_st {
 	/* Cipher context to use */
 	EVP_CIPHER_CTX cctx;
@@ -109,10 +107,10 @@ void
 CMAC_CTX_cleanup(CMAC_CTX *ctx)
 {
 	EVP_CIPHER_CTX_cleanup(&ctx->cctx);
-	explicit_bzero(ctx->tbl, EVP_MAX_BLOCK_LENGTH);
-	explicit_bzero(ctx->k1, EVP_MAX_BLOCK_LENGTH);
-	explicit_bzero(ctx->k2, EVP_MAX_BLOCK_LENGTH);
-	explicit_bzero(ctx->last_block, EVP_MAX_BLOCK_LENGTH);
+	OPENSSL_cleanse(ctx->tbl, EVP_MAX_BLOCK_LENGTH);
+	OPENSSL_cleanse(ctx->k1, EVP_MAX_BLOCK_LENGTH);
+	OPENSSL_cleanse(ctx->k2, EVP_MAX_BLOCK_LENGTH);
+	OPENSSL_cleanse(ctx->last_block, EVP_MAX_BLOCK_LENGTH);
 	ctx->nlast_block = -1;
 }
 
@@ -125,9 +123,6 @@ CMAC_CTX_get0_cipher_ctx(CMAC_CTX *ctx)
 void
 CMAC_CTX_free(CMAC_CTX *ctx)
 {
-	if (ctx == NULL)
-		return;
-
 	CMAC_CTX_cleanup(ctx);
 	free(ctx);
 }
@@ -167,7 +162,7 @@ CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen,
 		ctx->nlast_block = 0;
 		return 1;
 	}
-	/* Initialise context */
+	/* Initialiase context */
 	if (cipher && !EVP_EncryptInit_ex(&ctx->cctx, cipher, impl, NULL, NULL))
 		return 0;
 	/* Non-NULL key means initialisation complete */
@@ -185,7 +180,7 @@ CMAC_Init(CMAC_CTX *ctx, const void *key, size_t keylen,
 			return 0;
 		make_kn(ctx->k1, ctx->tbl, bl);
 		make_kn(ctx->k2, ctx->k1, bl);
-		explicit_bzero(ctx->tbl, bl);
+		OPENSSL_cleanse(ctx->tbl, bl);
 		/* Reset context again ready for first data block */
 		if (!EVP_EncryptInit_ex(&ctx->cctx, NULL, NULL, NULL, zero_iv))
 			return 0;
@@ -262,7 +257,7 @@ CMAC_Final(CMAC_CTX *ctx, unsigned char *out, size_t *poutlen)
 			out[i] = ctx->last_block[i] ^ ctx->k2[i];
 	}
 	if (!EVP_Cipher(&ctx->cctx, out, out, bl)) {
-		explicit_bzero(out, bl);
+		OPENSSL_cleanse(out, bl);
 		return 0;
 	}
 	return 1;

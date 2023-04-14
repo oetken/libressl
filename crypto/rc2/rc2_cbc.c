@@ -1,4 +1,4 @@
-/* $OpenBSD: rc2_cbc.c,v 1.6 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,14 +57,14 @@
  */
 
 #include <openssl/rc2.h>
-#include "rc2_local.h"
+#include "rc2_locl.h"
 
 void RC2_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
 	     RC2_KEY *ks, unsigned char *iv, int encrypt)
 	{
-	unsigned long tin0,tin1;
-	unsigned long tout0,tout1,xor0,xor1;
-	long l=length;
+	register unsigned long tin0,tin1;
+	register unsigned long tout0,tout1,xor0,xor1;
+	register long l=length;
 	unsigned long tin[2];
 
 	if (encrypt)
@@ -136,8 +136,8 @@ void RC2_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
 void RC2_encrypt(unsigned long *d, RC2_KEY *key)
 	{
 	int i,n;
-	RC2_INT *p0,*p1;
-	RC2_INT x0,x1,x2,x3,t;
+	register RC2_INT *p0,*p1;
+	register RC2_INT x0,x1,x2,x3,t;
 	unsigned long l;
 
 	l=d[0];
@@ -181,8 +181,8 @@ void RC2_encrypt(unsigned long *d, RC2_KEY *key)
 void RC2_decrypt(unsigned long *d, RC2_KEY *key)
 	{
 	int i,n;
-	RC2_INT *p0,*p1;
-	RC2_INT x0,x1,x2,x3,t;
+	register RC2_INT *p0,*p1;
+	register RC2_INT x0,x1,x2,x3,t;
 	unsigned long l;
 
 	l=d[0];

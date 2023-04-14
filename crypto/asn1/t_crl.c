@@ -1,4 +1,4 @@
-/* $OpenBSD: t_crl.c,v 1.21 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: t_crl.c,v 1.14 2014/06/12 15:49:27 deraadt Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,7 +57,6 @@
  */
 
 #include <stdio.h>
-#include <limits.h>
 
 #include <openssl/bn.h>
 #include <openssl/buffer.h>
@@ -66,8 +65,6 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-#include "x509_local.h"
-
 int
 X509_CRL_print_fp(FILE *fp, X509_CRL *x)
 {
@@ -75,7 +72,7 @@ X509_CRL_print_fp(FILE *fp, X509_CRL *x)
 	int ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		X509error(ERR_R_BUF_LIB);
+		X509err(X509_F_X509_CRL_PRINT_FP, ERR_R_BUF_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -95,15 +92,10 @@ X509_CRL_print(BIO *out, X509_CRL *x)
 
 	BIO_printf(out, "Certificate Revocation List (CRL):\n");
 	l = X509_CRL_get_version(x);
-	if (l < 0 || l == LONG_MAX)
-		goto err;
 	BIO_printf(out, "%8sVersion %lu (0x%lx)\n", "", l + 1, l);
 	i = OBJ_obj2nid(x->sig_alg->algorithm);
-	if (X509_signature_print(out, x->sig_alg, NULL) == 0)
-		goto err;
+	X509_signature_print(out, x->sig_alg, NULL);
 	p = X509_NAME_oneline(X509_CRL_get_issuer(x), NULL, 0);
-	if (p == NULL)
-		goto err;
 	BIO_printf(out, "%8sIssuer: %s\n", "", p);
 	free(p);
 	BIO_printf(out, "%8sLast Update: ", "");
@@ -135,11 +127,8 @@ X509_CRL_print(BIO *out, X509_CRL *x)
 		X509V3_extensions_print(out, "CRL entry extensions",
 		    r->extensions, 0, 8);
 	}
-	if (X509_signature_print(out, x->sig_alg, x->signature) == 0)
-		goto err;
+	X509_signature_print(out, x->sig_alg, x->signature);
 
 	return 1;
 
- err:
-	return 0;
 }
