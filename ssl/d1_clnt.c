@@ -1,4 +1,4 @@
-/* $OpenBSD: d1_clnt.c,v 1.30 2014/07/12 13:11:53 jsing Exp $ */
+/* $OpenBSD: d1_clnt.c,v 1.31 2014/07/12 22:33:39 jsing Exp $ */
 /*
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.

@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_enc.c,v 1.51 2014/07/09 11:25:42 jsing Exp $ */
+/* $OpenBSD: s3_enc.c,v 1.52 2014/07/10 08:51:14 tedu Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
