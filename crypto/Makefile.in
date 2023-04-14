@@ -84,18 +84,19 @@ DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 @NO_EXPLICIT_BZERO_TRUE@am__append_1 = compat/explicit_bzero.c
 @NO_STRLCAT_TRUE@am__append_2 = compat/strlcat.c
 @NO_STRLCPY_TRUE@am__append_3 = compat/strlcpy.c
-@NO_STRNDUP_TRUE@am__append_4 = compat/strndup.c compat/strnlen.c
-@NO_ASPRINTF_TRUE@am__append_5 = compat/bsd-asprintf.c
-@NO_REALLOCARRAY_TRUE@am__append_6 = compat/reallocarray.c
-@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_7 = compat/timingsafe_memcmp.c
-@NO_TIMINGSAFE_BCMP_TRUE@am__append_8 = compat/timingsafe_bcmp.c
-@NO_ARC4RANDOM_BUF_TRUE@am__append_9 = compat/arc4random.c
-@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_10 = compat/getentropy_linux.c
-@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_11 = compat/getentropy_osx.c
-@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_12 = compat/getentropy_solaris.c
-@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_13 = compat/getentropy_win.c
-@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__append_14 = compat/issetugid_linux.c
-@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__append_15 = compat/issetugid_win.c
+@NO_STRNDUP_TRUE@am__append_4 = compat/strndup.c
+@NO_STRNDUP_TRUE@@NO_STRNLEN_TRUE@am__append_5 = compat/strnlen.c
+@NO_ASPRINTF_TRUE@am__append_6 = compat/bsd-asprintf.c
+@NO_REALLOCARRAY_TRUE@am__append_7 = compat/reallocarray.c
+@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_8 = compat/timingsafe_memcmp.c
+@NO_TIMINGSAFE_BCMP_TRUE@am__append_9 = compat/timingsafe_bcmp.c
+@NO_ARC4RANDOM_BUF_TRUE@am__append_10 = compat/arc4random.c
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_11 = compat/getentropy_linux.c
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_12 = compat/getentropy_osx.c
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_13 = compat/getentropy_solaris.c
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_14 = compat/getentropy_win.c
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__append_15 = compat/issetugid_linux.c
+@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__append_16 = compat/issetugid_win.c
 subdir = crypto
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -148,26 +149,27 @@ am__libcompat_la_SOURCES_DIST = compat/strlcat.c compat/strlcpy.c \
 am__dirstamp = $(am__leading_dot)dirstamp
 @NO_STRLCAT_TRUE@am__objects_1 = compat/libcompat_la-strlcat.lo
 @NO_STRLCPY_TRUE@am__objects_2 = compat/libcompat_la-strlcpy.lo
-@NO_STRNDUP_TRUE@am__objects_3 = compat/libcompat_la-strndup.lo \
-@NO_STRNDUP_TRUE@	compat/libcompat_la-strnlen.lo
-@NO_ASPRINTF_TRUE@am__objects_4 = compat/libcompat_la-bsd-asprintf.lo
-@NO_REALLOCARRAY_TRUE@am__objects_5 =  \
+@NO_STRNDUP_TRUE@am__objects_3 = compat/libcompat_la-strndup.lo
+@NO_STRNDUP_TRUE@@NO_STRNLEN_TRUE@am__objects_4 = compat/libcompat_la-strnlen.lo
+@NO_ASPRINTF_TRUE@am__objects_5 = compat/libcompat_la-bsd-asprintf.lo
+@NO_REALLOCARRAY_TRUE@am__objects_6 =  \
 @NO_REALLOCARRAY_TRUE@	compat/libcompat_la-reallocarray.lo
-@NO_TIMINGSAFE_MEMCMP_TRUE@am__objects_6 = compat/libcompat_la-timingsafe_memcmp.lo
-@NO_TIMINGSAFE_BCMP_TRUE@am__objects_7 = compat/libcompat_la-timingsafe_bcmp.lo
-@NO_ARC4RANDOM_BUF_TRUE@am__objects_8 =  \
+@NO_TIMINGSAFE_MEMCMP_TRUE@am__objects_7 = compat/libcompat_la-timingsafe_memcmp.lo
+@NO_TIMINGSAFE_BCMP_TRUE@am__objects_8 = compat/libcompat_la-timingsafe_bcmp.lo
+@NO_ARC4RANDOM_BUF_TRUE@am__objects_9 =  \
 @NO_ARC4RANDOM_BUF_TRUE@	compat/libcompat_la-arc4random.lo
-@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_9 = compat/libcompat_la-getentropy_linux.lo
-@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_10 = compat/libcompat_la-getentropy_osx.lo
-@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_11 = compat/libcompat_la-getentropy_solaris.lo
-@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_12 = compat/libcompat_la-getentropy_win.lo
-@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__objects_13 = compat/libcompat_la-issetugid_linux.lo
-@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__objects_14 = compat/libcompat_la-issetugid_win.lo
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_10 = compat/libcompat_la-getentropy_linux.lo
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_11 = compat/libcompat_la-getentropy_osx.lo
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_12 = compat/libcompat_la-getentropy_solaris.lo
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_13 = compat/libcompat_la-getentropy_win.lo
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__objects_14 = compat/libcompat_la-issetugid_linux.lo
+@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__objects_15 = compat/libcompat_la-issetugid_win.lo
 am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
 	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
-	$(am__objects_12) $(am__objects_13) $(am__objects_14)
+	$(am__objects_12) $(am__objects_13) $(am__objects_14) \
+	$(am__objects_15)
 libcompat_la_OBJECTS = $(am_libcompat_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -178,8 +180,8 @@ libcompat_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 libcompatnoopt_la_LIBADD =
 am__libcompatnoopt_la_SOURCES_DIST = compat/explicit_bzero.c
-@NO_EXPLICIT_BZERO_TRUE@am__objects_15 = compat/libcompatnoopt_la-explicit_bzero.lo
-am_libcompatnoopt_la_OBJECTS = $(am__objects_15)
+@NO_EXPLICIT_BZERO_TRUE@am__objects_16 = compat/libcompatnoopt_la-explicit_bzero.lo
+am_libcompatnoopt_la_OBJECTS = $(am__objects_16)
 libcompatnoopt_la_OBJECTS = $(am_libcompatnoopt_la_OBJECTS)
 libcompatnoopt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -664,7 +666,7 @@ libcompat_la_SOURCES = $(am__append_2) $(am__append_3) $(am__append_4) \
 	$(am__append_5) $(am__append_6) $(am__append_7) \
 	$(am__append_8) $(am__append_9) $(am__append_10) \
 	$(am__append_11) $(am__append_12) $(am__append_13) \
-	$(am__append_14) $(am__append_15)
+	$(am__append_14) $(am__append_15) $(am__append_16)
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
 noinst_HEADERS = des/ncbc_enc.c compat/arc4random.h \
 	compat/arc4random_linux.h compat/arc4random_osx.h \
