@@ -7,16 +7,24 @@ AM_CFLAGS += -I$(top_srcdir)/crypto/modes
 lib_LTLIBRARIES = libcrypto.la
 
 EXTRA_DIST = VERSION
+EXTRA_DIST += CMakeLists.txt
 
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_CPPFLAGS = -DOPENSSL_NO_HW_PADLOCK
+libcrypto_la_CPPFLAGS = -DLIBRESSL_INTERNAL
+libcrypto_la_CPPFLAGS += -DOPENSSL_NO_HW_PADLOCK
 if OPENSSL_NO_ASM
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
 else
 if HOST_WIN
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
 endif
+endif
+
+if OPENSSLDIR_DEFINED
+libcrypto_la_CPPFLAGS += -DOPENSSLDIR=\"@OPENSSLDIR@\"
+else
+libcrypto_la_CPPFLAGS += -DOPENSSLDIR=\"$(sysconfdir)/ssl\"
 endif
 
 noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
@@ -26,7 +34,11 @@ libcompatnoopt_la_CFLAGS = -O0
 libcompatnoopt_la_SOURCES =
 
 if !HAVE_EXPLICIT_BZERO
+if HOST_WIN
+libcompatnoopt_la_SOURCES += compat/explicit_bzero_win.c
+else
 libcompatnoopt_la_SOURCES += compat/explicit_bzero.c
+endif
 endif
 
 # other compatibility functions
@@ -229,7 +241,9 @@ libcrypto_la_SOURCES += bio/bss_conn.c
 libcrypto_la_SOURCES += bio/bss_dgram.c
 libcrypto_la_SOURCES += bio/bss_fd.c
 libcrypto_la_SOURCES += bio/bss_file.c
+if !HOST_WIN
 libcrypto_la_SOURCES += bio/bss_log.c
+endif
 libcrypto_la_SOURCES += bio/bss_mem.c
 libcrypto_la_SOURCES += bio/bss_null.c
 libcrypto_la_SOURCES += bio/bss_sock.c
@@ -426,7 +440,6 @@ libcrypto_la_SOURCES += engine/eng_lib.c
 libcrypto_la_SOURCES += engine/eng_list.c
 libcrypto_la_SOURCES += engine/eng_openssl.c
 libcrypto_la_SOURCES += engine/eng_pkey.c
-libcrypto_la_SOURCES += engine/eng_rsax.c
 libcrypto_la_SOURCES += engine/eng_table.c
 libcrypto_la_SOURCES += engine/tb_asnmth.c
 libcrypto_la_SOURCES += engine/tb_cipher.c

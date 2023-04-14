@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_both.c,v 1.38 2015/03/27 12:29:54 jsing Exp $ */
+/* $OpenBSD: s3_both.c,v 1.42 2015/07/15 21:52:02 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -125,6 +125,8 @@
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 
+#include "bytestring.h"
+
 /* send s->init_buf in records of type 'type' (SSL3_RT_HANDSHAKE or SSL3_RT_CHANGE_CIPHER_SPEC) */
 int
 ssl3_do_write(SSL *s, int type)
@@ -222,8 +224,7 @@ ssl3_get_finished(SSL *s, int a, int b)
 {
 	int al, ok, md_len;
 	long n;
-	unsigned char *p;
-
+	CBS cbs;
 
 	n = s->method->ssl_get_message(s, a, b, SSL3_MT_FINISHED,
 	    64, /* should actually be 36+4 :-) */ &ok);
@@ -240,15 +241,23 @@ ssl3_get_finished(SSL *s, int a, int b)
 	s->s3->change_cipher_spec = 0;
 
 	md_len = s->method->ssl3_enc->finish_mac_length;
-	p = (unsigned char *)s->init_msg;
 
-	if (s->s3->tmp.peer_finish_md_len != md_len || n != md_len) {
+	if (n < 0) {
 		al = SSL_AD_DECODE_ERROR;
 		SSLerr(SSL_F_SSL3_GET_FINISHED, SSL_R_BAD_DIGEST_LENGTH);
 		goto f_err;
 	}
 
-	if (timingsafe_memcmp(p, s->s3->tmp.peer_finish_md, md_len) != 0) {
+	CBS_init(&cbs, s->init_msg, n);
+
+	if (s->s3->tmp.peer_finish_md_len != md_len ||
+	    CBS_len(&cbs) != md_len) {
+		al = SSL_AD_DECODE_ERROR;
+		SSLerr(SSL_F_SSL3_GET_FINISHED, SSL_R_BAD_DIGEST_LENGTH);
+		goto f_err;
+	}
+
+	if (!CBS_mem_equal(&cbs, s->s3->tmp.peer_finish_md, CBS_len(&cbs))) {
 		al = SSL_AD_DECRYPT_ERROR;
 		SSLerr(SSL_F_SSL3_GET_FINISHED, SSL_R_DIGEST_CHECK_FAILED);
 		goto f_err;
@@ -388,9 +397,11 @@ long
 ssl3_get_message(SSL *s, int st1, int stn, int mt, long max, int *ok)
 {
 	unsigned char *p;
-	unsigned long l;
+	uint32_t l;
 	long n;
 	int i, al;
+	CBS cbs;
+	uint8_t u8;
 
 	if (s->s3->tmp.reuse_message) {
 		s->s3->tmp.reuse_message = 0;
@@ -440,8 +451,8 @@ ssl3_get_message(SSL *s, int st1, int stn, int mt, long max, int *ok)
 						s->msg_callback(0, s->version, SSL3_RT_HANDSHAKE, p, 4, s, s->msg_callback_arg);
 				}
 			}
-		}
-		while (skip_message);
+
+		} while (skip_message);
 
 		/* s->init_num == 4 */
 
@@ -450,9 +461,16 @@ ssl3_get_message(SSL *s, int st1, int stn, int mt, long max, int *ok)
 			SSLerr(SSL_F_SSL3_GET_MESSAGE, SSL_R_UNEXPECTED_MESSAGE);
 			goto f_err;
 		}
-		s->s3->tmp.message_type= *(p++);
 
-		n2l3(p, l);
+		/* XXX remove call to n2l3 */
+		CBS_init(&cbs, p, 4);
+		if (!CBS_get_u8(&cbs, &u8) ||
+		    !CBS_get_u24(&cbs, &l)) {
+			SSLerr(SSL_F_SSL3_GET_MESSAGE, ERR_R_BUF_LIB);
+			goto err;
+		}
+		s->s3->tmp.message_type = u8;
+
 		if (l > (unsigned long)max) {
 			al = SSL_AD_ILLEGAL_PARAMETER;
 			SSLerr(SSL_F_SSL3_GET_MESSAGE, SSL_R_EXCESSIVE_MESSAGE_SIZE);
@@ -629,10 +647,6 @@ ssl3_setup_read_buffer(SSL *s)
 	if (s->s3->rbuf.buf == NULL) {
 		len = SSL3_RT_MAX_PLAIN_LENGTH +
 		    SSL3_RT_MAX_ENCRYPTED_OVERHEAD + headerlen + align;
-		if (s->options & SSL_OP_MICROSOFT_BIG_SSLV3_BUFFER) {
-			s->s3->init_extra = 1;
-			len += SSL3_RT_MAX_EXTRA;
-		}
 		if ((p = malloc(len)) == NULL)
 			goto err;
 		s->s3->rbuf.buf = p;

@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_locl.h,v 1.93 2015/06/20 16:42:48 doug Exp $ */
+/* $OpenBSD: ssl_locl.h,v 1.99 2015/07/19 07:30:06 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -694,7 +694,7 @@ int dtls1_retransmit_message(SSL *s, unsigned short seq,
 int dtls1_get_queue_priority(unsigned short seq, int is_ccs);
 int dtls1_retransmit_buffered_messages(SSL *s);
 void dtls1_clear_record_buffer(SSL *s);
-void dtls1_get_message_header(unsigned char *data,
+int dtls1_get_message_header(unsigned char *data,
     struct hm_header_st *msg_hdr);
 void dtls1_get_ccs_header(unsigned char *data, struct ccs_header_st *ccs_hdr);
 void dtls1_reset_seq_numbers(SSL *s, int rw);
@@ -757,6 +757,8 @@ int ssl23_accept(SSL *s);
 int ssl23_connect(SSL *s);
 int ssl23_read_bytes(SSL *s, int n);
 int ssl23_write_bytes(SSL *s);
+int tls_any_accept(SSL *s);
+int tls_any_connect(SSL *s);
 
 int tls1_new(SSL *s);
 void tls1_free(SSL *s);
@@ -823,9 +825,8 @@ int ssl_check_clienthello_tlsext_late(SSL *s);
 int ssl_check_serverhello_tlsext(SSL *s);
 
 #define tlsext_tick_md	EVP_sha256
-int tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
+int tls1_process_ticket(SSL *s, const unsigned char *session_id, int len,
     const unsigned char *limit, SSL_SESSION **ret);
-
 int tls12_get_sigandhash(unsigned char *p, const EVP_PKEY *pk,
     const EVP_MD *md);
 int tls12_get_sigid(const EVP_PKEY *pk);
@@ -850,11 +851,11 @@ int tls1_check_ec_tmp_key(SSL *s);
 
 int ssl_add_clienthello_use_srtp_ext(SSL *s, unsigned char *p,
     int *len, int maxlen);
-int ssl_parse_clienthello_use_srtp_ext(SSL *s, unsigned char *d,
+int ssl_parse_clienthello_use_srtp_ext(SSL *s, const unsigned char *d,
     int len, int *al);
 int ssl_add_serverhello_use_srtp_ext(SSL *s, unsigned char *p,
     int *len, int maxlen);
-int ssl_parse_serverhello_use_srtp_ext(SSL *s, unsigned char *d,
+int ssl_parse_serverhello_use_srtp_ext(SSL *s, const unsigned char *d,
     int len, int *al);
 
 /* s3_cbc.c */

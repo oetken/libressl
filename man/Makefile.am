@@ -740,7 +740,6 @@ install-data-hook:
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_md2.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_md5.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_md_null.3
-	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_mdc2.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_ripemd160.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha1.3
@@ -1904,7 +1903,6 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_md2.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_md5.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_md_null.3
-	-rm -f $(DESTDIR)$(mandir)/man3/EVP_mdc2.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_ripemd160.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha1.3

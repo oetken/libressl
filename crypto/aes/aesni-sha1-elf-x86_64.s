@@ -51,11 +51,11 @@ aesni_cbc_sha1_enc_ssse3:
 	movdqu	16(%r10),%xmm1
 	movdqu	32(%r10),%xmm2
 	movdqu	48(%r10),%xmm3
-.byte	102,15,56,0,198
+	pshufb	%xmm6,%xmm0
 	addq	$64,%r10
-.byte	102,15,56,0,206
-.byte	102,15,56,0,214
-.byte	102,15,56,0,222
+	pshufb	%xmm6,%xmm1
+	pshufb	%xmm6,%xmm2
+	pshufb	%xmm6,%xmm3
 	paddd	%xmm9,%xmm0
 	paddd	%xmm9,%xmm1
 	paddd	%xmm9,%xmm2
@@ -75,11 +75,11 @@ aesni_cbc_sha1_enc_ssse3:
 	movups	0(%r12),%xmm12
 	xorps	%xmm13,%xmm12
 	xorps	%xmm12,%xmm11
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	32(%r15),%xmm15
 	xorl	%edx,%ecx
 	movdqa	%xmm3,%xmm8
-.byte	102,15,58,15,224,8
+	palignr	$8,%xmm0,%xmm4
 	movl	%eax,%edi
 	roll	$5,%eax
 	paddd	%xmm3,%xmm9
@@ -101,7 +101,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%ecx,%ebx
 	movdqa	%xmm9,48(%rsp)
 	xorl	%ecx,%edi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	48(%r15),%xmm14
 	addl	%ebp,%edx
 	movdqa	%xmm4,%xmm10
@@ -128,7 +128,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%eax,%ebp
 	movl	%ecx,%esi
 	roll	$5,%ecx
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	64(%r15),%xmm15
 	pslld	$2,%xmm9
 	pxor	%xmm10,%xmm4
@@ -144,7 +144,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	16(%rsp),%eax
 	xorl	%ebp,%edx
 	movdqa	%xmm4,%xmm9
-.byte	102,15,58,15,233,8
+	palignr	$8,%xmm1,%xmm5
 	movl	%ebx,%edi
 	roll	$5,%ebx
 	paddd	%xmm4,%xmm10
@@ -158,7 +158,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%esi,%eax
 	pxor	%xmm3,%xmm9
 	addl	20(%rsp),%ebp
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	80(%r15),%xmm14
 	xorl	%edx,%ecx
 	movl	%eax,%esi
@@ -183,7 +183,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%ecx,%ebx
 	psrld	$31,%xmm9
 	xorl	%ecx,%esi
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	96(%r15),%xmm15
 	addl	%ebp,%edx
 	movdqa	%xmm8,%xmm10
@@ -209,10 +209,10 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	32(%rsp),%ebx
 	xorl	%eax,%ebp
 	movdqa	%xmm5,%xmm10
-.byte	102,15,58,15,242,8
+	palignr	$8,%xmm2,%xmm6
 	movl	%ecx,%edi
 	roll	$5,%ecx
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	112(%r15),%xmm14
 	paddd	%xmm5,%xmm8
 	andl	%ebp,%esi
@@ -239,7 +239,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%edi,%eax
 	addl	40(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	128(%r15),%xmm15
 	xorl	%edx,%ecx
 	pslldq	$12,%xmm9
@@ -266,7 +266,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%ecx,%ebx
 	movdqa	16(%r11),%xmm9
 	xorl	%ecx,%edi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	144(%r15),%xmm14
 	addl	%ebp,%edx
 	pxor	%xmm8,%xmm6
@@ -276,7 +276,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	48(%rsp),%ecx
 	xorl	%ebx,%eax
 	movdqa	%xmm6,%xmm8
-.byte	102,15,58,15,251,8
+	palignr	$8,%xmm3,%xmm7
 	movl	%edx,%edi
 	roll	$5,%edx
 	paddd	%xmm6,%xmm9
@@ -293,7 +293,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%eax,%ebp
 	movl	%ecx,%esi
 	roll	$5,%ecx
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	160(%r15),%xmm15
 	pxor	%xmm8,%xmm7
 	andl	%ebp,%edi
@@ -325,16 +325,16 @@ aesni_cbc_sha1_enc_ssse3:
 	cmpl	$11,%r8d
 	jb	.Laesenclast1
 	movups	176(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	192(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	je	.Laesenclast1
 	movups	208(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	224(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 .Laesenclast1:
-.byte	102,69,15,56,221,223
+	aesenclast	%xmm15,%xmm11
 	movups	16(%r15),%xmm14
 	xorl	%edx,%ecx
 	movl	%eax,%esi
@@ -352,7 +352,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movdqa	%xmm7,%xmm9
 	addl	0(%rsp),%edx
 	pxor	%xmm4,%xmm0
-.byte	102,68,15,58,15,206,8
+	palignr	$8,%xmm6,%xmm9
 	xorl	%ecx,%ebx
 	movl	%ebp,%edi
 	roll	$5,%ebp
@@ -366,7 +366,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorps	%xmm13,%xmm12
 	movups	%xmm11,0(%r13,%r12,1)
 	xorps	%xmm12,%xmm11
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	32(%r15),%xmm15
 	addl	%ebp,%edx
 	pxor	%xmm9,%xmm0
@@ -390,7 +390,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%eax,%ebp
 	movl	%ecx,%edi
 	roll	$5,%ecx
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	48(%r15),%xmm14
 	por	%xmm9,%xmm0
 	andl	%ebp,%esi
@@ -411,10 +411,10 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%edi,%eax
 	addl	16(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	64(%r15),%xmm15
 	pxor	%xmm5,%xmm1
-.byte	102,68,15,58,15,215,8
+	palignr	$8,%xmm7,%xmm10
 	xorl	%edx,%esi
 	movl	%eax,%edi
 	roll	$5,%eax
@@ -443,7 +443,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movl	%edx,%edi
 	roll	$5,%edx
 	xorl	%eax,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	80(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -460,7 +460,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%ebx
 	addl	32(%rsp),%eax
 	pxor	%xmm6,%xmm2
-.byte	102,68,15,58,15,192,8
+	palignr	$8,%xmm0,%xmm8
 	xorl	%ebp,%esi
 	movl	%ebx,%edi
 	roll	$5,%ebx
@@ -473,7 +473,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%esi,%eax
 	pxor	%xmm8,%xmm2
 	addl	36(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	96(%r15),%xmm15
 	xorl	%edx,%edi
 	movl	%eax,%esi
@@ -501,14 +501,14 @@ aesni_cbc_sha1_enc_ssse3:
 	movl	%edx,%esi
 	roll	$5,%edx
 	xorl	%eax,%edi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	112(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
 	addl	%edi,%ecx
 	addl	48(%rsp),%ebx
 	pxor	%xmm7,%xmm3
-.byte	102,68,15,58,15,201,8
+	palignr	$8,%xmm1,%xmm9
 	xorl	%eax,%esi
 	movl	%ecx,%edi
 	roll	$5,%ecx
@@ -532,7 +532,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%eax
 	pslld	$2,%xmm3
 	addl	56(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	128(%r15),%xmm15
 	xorl	%edx,%esi
 	psrld	$30,%xmm9
@@ -554,13 +554,13 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%edx
 	addl	0(%rsp),%ecx
 	pxor	%xmm0,%xmm4
-.byte	102,68,15,58,15,210,8
+	palignr	$8,%xmm2,%xmm10
 	xorl	%ebx,%esi
 	movl	%edx,%edi
 	roll	$5,%edx
 	pxor	%xmm5,%xmm4
 	xorl	%eax,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	144(%r15),%xmm14
 	addl	%edx,%ecx
 	movdqa	%xmm8,%xmm9
@@ -590,7 +590,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%esi,%eax
 	por	%xmm10,%xmm4
 	addl	12(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	160(%r15),%xmm15
 	xorl	%edx,%edi
 	movdqa	%xmm4,%xmm8
@@ -602,7 +602,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%ebp
 	addl	16(%rsp),%edx
 	pxor	%xmm1,%xmm5
-.byte	102,68,15,58,15,195,8
+	palignr	$8,%xmm3,%xmm8
 	xorl	%ecx,%esi
 	movl	%ebp,%edi
 	roll	$5,%ebp
@@ -624,16 +624,16 @@ aesni_cbc_sha1_enc_ssse3:
 	cmpl	$11,%r8d
 	jb	.Laesenclast2
 	movups	176(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	192(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	je	.Laesenclast2
 	movups	208(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	224(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 .Laesenclast2:
-.byte	102,69,15,56,221,223
+	aesenclast	%xmm15,%xmm11
 	movups	16(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -663,10 +663,10 @@ aesni_cbc_sha1_enc_ssse3:
 	xorps	%xmm13,%xmm12
 	movups	%xmm11,16(%r13,%r12,1)
 	xorps	%xmm12,%xmm11
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	32(%r15),%xmm15
 	pxor	%xmm2,%xmm6
-.byte	102,68,15,58,15,204,8
+	palignr	$8,%xmm4,%xmm9
 	xorl	%edx,%ecx
 	addl	32(%rsp),%ebp
 	andl	%edx,%edi
@@ -695,7 +695,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%esi,%edx
 	movl	%ebp,%esi
 	roll	$5,%ebp
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	48(%r15),%xmm14
 	addl	%edi,%edx
 	xorl	%ecx,%ebx
@@ -719,7 +719,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	44(%rsp),%ebx
 	andl	%eax,%esi
 	andl	%ebp,%edi
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	64(%r15),%xmm15
 	rorl	$7,%edx
 	addl	%esi,%ebx
@@ -730,7 +730,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%ecx,%ebx
 	movl	%edx,%edi
 	pxor	%xmm3,%xmm7
-.byte	102,68,15,58,15,213,8
+	palignr	$8,%xmm5,%xmm10
 	xorl	%ebp,%edx
 	addl	48(%rsp),%eax
 	andl	%ebp,%edi
@@ -749,7 +749,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movdqa	%xmm7,%xmm10
 	movdqa	%xmm8,32(%rsp)
 	movl	%ecx,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	80(%r15),%xmm14
 	xorl	%edx,%ecx
 	addl	52(%rsp),%ebp
@@ -775,7 +775,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%edx
 	movl	%ebp,%edi
 	roll	$5,%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	96(%r15),%xmm15
 	addl	%esi,%edx
 	xorl	%ecx,%ebx
@@ -794,13 +794,13 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edx,%ecx
 	movl	%ebp,%edi
 	pxor	%xmm4,%xmm0
-.byte	102,68,15,58,15,198,8
+	palignr	$8,%xmm6,%xmm8
 	xorl	%eax,%ebp
 	addl	0(%rsp),%ebx
 	andl	%eax,%edi
 	pxor	%xmm1,%xmm0
 	andl	%ebp,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	112(%r15),%xmm14
 	rorl	$7,%edx
 	movdqa	%xmm9,%xmm10
@@ -830,7 +830,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%ebx,%eax
 	por	%xmm8,%xmm0
 	movl	%ecx,%edi
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	128(%r15),%xmm15
 	xorl	%edx,%ecx
 	movdqa	%xmm0,%xmm9
@@ -853,14 +853,14 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%esi,%edx
 	movl	%ebp,%esi
 	roll	$5,%ebp
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	144(%r15),%xmm14
 	addl	%edi,%edx
 	xorl	%ecx,%ebx
 	addl	%ebp,%edx
 	movl	%eax,%edi
 	pxor	%xmm5,%xmm1
-.byte	102,68,15,58,15,207,8
+	palignr	$8,%xmm7,%xmm9
 	xorl	%ebx,%eax
 	addl	16(%rsp),%ecx
 	andl	%ebx,%edi
@@ -884,7 +884,7 @@ aesni_cbc_sha1_enc_ssse3:
 	andl	%eax,%esi
 	pslld	$2,%xmm1
 	andl	%ebp,%edi
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	160(%r15),%xmm15
 	rorl	$7,%edx
 	psrld	$30,%xmm9
@@ -912,16 +912,16 @@ aesni_cbc_sha1_enc_ssse3:
 	cmpl	$11,%r8d
 	jb	.Laesenclast3
 	movups	176(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	192(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	je	.Laesenclast3
 	movups	208(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	224(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 .Laesenclast3:
-.byte	102,69,15,56,221,223
+	aesenclast	%xmm15,%xmm11
 	movups	16(%r15),%xmm14
 	xorl	%edx,%ecx
 	addl	28(%rsp),%ebp
@@ -936,7 +936,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%eax,%ebp
 	movl	%ebx,%edi
 	pxor	%xmm6,%xmm2
-.byte	102,68,15,58,15,208,8
+	palignr	$8,%xmm0,%xmm10
 	xorl	%ecx,%ebx
 	addl	32(%rsp),%edx
 	andl	%ecx,%edi
@@ -953,7 +953,7 @@ aesni_cbc_sha1_enc_ssse3:
 	xorps	%xmm13,%xmm12
 	movups	%xmm11,32(%r13,%r12,1)
 	xorps	%xmm12,%xmm11
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	32(%r15),%xmm15
 	addl	%esi,%edx
 	xorl	%ecx,%ebx
@@ -981,7 +981,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	40(%rsp),%ebx
 	andl	%eax,%edi
 	andl	%ebp,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	48(%r15),%xmm14
 	rorl	$7,%edx
 	addl	%edi,%ebx
@@ -1003,10 +1003,10 @@ aesni_cbc_sha1_enc_ssse3:
 	xorl	%ebp,%edx
 	addl	%ebx,%eax
 	addl	48(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	64(%r15),%xmm15
 	pxor	%xmm7,%xmm3
-.byte	102,68,15,58,15,193,8
+	palignr	$8,%xmm1,%xmm8
 	xorl	%edx,%esi
 	movl	%eax,%edi
 	roll	$5,%eax
@@ -1035,7 +1035,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movl	%edx,%edi
 	roll	$5,%edx
 	xorl	%eax,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	80(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -1060,7 +1060,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%esi,%eax
 	addl	4(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	96(%r15),%xmm15
 	xorl	%edx,%edi
 	movl	%eax,%esi
@@ -1082,7 +1082,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movl	%edx,%esi
 	roll	$5,%edx
 	xorl	%eax,%edi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	112(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -1095,11 +1095,11 @@ aesni_cbc_sha1_enc_ssse3:
 	movdqu	16(%r10),%xmm1
 	movdqu	32(%r10),%xmm2
 	movdqu	48(%r10),%xmm3
-.byte	102,15,56,0,198
+	pshufb	%xmm6,%xmm0
 	addq	$64,%r10
 	addl	16(%rsp),%ebx
 	xorl	%eax,%esi
-.byte	102,15,56,0,206
+	pshufb	%xmm6,%xmm1
 	movl	%ecx,%edi
 	roll	$5,%ecx
 	paddd	%xmm9,%xmm0
@@ -1118,7 +1118,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%edi,%eax
 	addl	24(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	128(%r15),%xmm15
 	xorl	%edx,%esi
 	movl	%eax,%edi
@@ -1137,12 +1137,12 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%edx
 	addl	32(%rsp),%ecx
 	xorl	%ebx,%esi
-.byte	102,15,56,0,214
+	pshufb	%xmm6,%xmm2
 	movl	%edx,%edi
 	roll	$5,%edx
 	paddd	%xmm9,%xmm1
 	xorl	%eax,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	144(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -1166,7 +1166,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%esi,%eax
 	addl	44(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	160(%r15),%xmm15
 	xorl	%edx,%edi
 	movl	%eax,%esi
@@ -1177,7 +1177,7 @@ aesni_cbc_sha1_enc_ssse3:
 	addl	%edi,%ebp
 	addl	48(%rsp),%edx
 	xorl	%ecx,%esi
-.byte	102,15,56,0,222
+	pshufb	%xmm6,%xmm3
 	movl	%ebp,%edi
 	roll	$5,%ebp
 	paddd	%xmm9,%xmm2
@@ -1195,16 +1195,16 @@ aesni_cbc_sha1_enc_ssse3:
 	cmpl	$11,%r8d
 	jb	.Laesenclast4
 	movups	176(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	192(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	je	.Laesenclast4
 	movups	208(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	224(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 .Laesenclast4:
-.byte	102,69,15,56,221,223
+	aesenclast	%xmm15,%xmm11
 	movups	16(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -1260,7 +1260,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%edi,%eax
 	addl	24(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	128(%r15),%xmm15
 	xorl	%edx,%esi
 	movl	%eax,%edi
@@ -1282,7 +1282,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movl	%edx,%edi
 	roll	$5,%edx
 	xorl	%eax,%esi
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	144(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp
@@ -1304,7 +1304,7 @@ aesni_cbc_sha1_enc_ssse3:
 	rorl	$7,%ecx
 	addl	%esi,%eax
 	addl	44(%rsp),%ebp
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	movups	160(%r15),%xmm15
 	xorl	%edx,%edi
 	movl	%eax,%esi
@@ -1329,16 +1329,16 @@ aesni_cbc_sha1_enc_ssse3:
 	cmpl	$11,%r8d
 	jb	.Laesenclast5
 	movups	176(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	192(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 	je	.Laesenclast5
 	movups	208(%r15),%xmm14
-.byte	102,69,15,56,220,223
+	aesenc	%xmm15,%xmm11
 	movups	224(%r15),%xmm15
-.byte	102,69,15,56,220,222
+	aesenc	%xmm14,%xmm11
 .Laesenclast5:
-.byte	102,69,15,56,221,223
+	aesenclast	%xmm15,%xmm11
 	movups	16(%r15),%xmm14
 	addl	%edx,%ecx
 	rorl	$7,%ebp

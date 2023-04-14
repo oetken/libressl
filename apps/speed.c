@@ -1,4 +1,4 @@
-/* $OpenBSD: speed.c,v 1.5 2015/02/08 10:22:45 doug Exp $ */
+/* $OpenBSD: speed.c,v 1.7 2015/07/03 21:45:10 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -176,13 +176,13 @@ static int do_multi(int multi);
 #define MAX_ECDH_SIZE 256
 
 static const char *names[ALGOR_NUM] = {
-	"md2", "md4", "md5", "hmac(md5)", "sha1", "rmd160", "rc4",
-	"des cbc", "des ede3", "idea cbc", "seed cbc",
+	"md2", NULL /* was mdc2 */, "md4", "md5", "hmac(md5)", "sha1", "rmd160",
+	"rc4", "des cbc", "des ede3", "idea cbc", "seed cbc",
 	"rc2 cbc", "rc5-32/12 cbc", "blowfish cbc", "cast cbc",
 	"aes-128 cbc", "aes-192 cbc", "aes-256 cbc",
 	"camellia-128 cbc", "camellia-192 cbc", "camellia-256 cbc",
 	"evp", "sha256", "sha512", "whirlpool",
-"aes-128 ige", "aes-192 ige", "aes-256 ige", "ghash"};
+	"aes-128 ige", "aes-192 ige", "aes-256 ige", "ghash" };
 static double results[ALGOR_NUM][SIZE_NUM];
 static int lengths[SIZE_NUM] = {16, 64, 256, 1024, 8 * 1024};
 static double rsa_results[RSA_NUM][2];
@@ -1707,25 +1707,31 @@ speed_main(int argc, char **argv)
 				}
 
 				if (ecdh_checks == 0) {
-					BIO_printf(bio_err, "ECDH computations don't match.\n");
+					BIO_printf(bio_err,
+					    "ECDH computations don't match.\n");
 					ERR_print_errors(bio_err);
 					rsa_count = 1;
+				} else {
+					pkey_print_message("", "ecdh",
+					    ecdh_c[j][0],
+					    test_curves_bits[j],
+					    ECDH_SECONDS);
+					Time_F(START);
+					for (count = 0, run = 1;
+					     COND(ecdh_c[j][0]); count++) {
+						ECDH_compute_key(secret_a,
+						    outlen,
+						    EC_KEY_get0_public_key(ecdh_b[j]),
+						    ecdh_a[j], kdf);
+					}
+					d = Time_F(STOP);
+					BIO_printf(bio_err, mr
+					    ? "+R7:%ld:%d:%.2f\n"
+					    : "%ld %d-bit ECDH ops in %.2fs\n",
+					    count, test_curves_bits[j], d);
+					ecdh_results[j][0] = d / (double) count;
+					rsa_count = count;
 				}
-				pkey_print_message("", "ecdh",
-				    ecdh_c[j][0],
-				    test_curves_bits[j],
-				    ECDH_SECONDS);
-				Time_F(START);
-				for (count = 0, run = 1; COND(ecdh_c[j][0]); count++) {
-					ECDH_compute_key(secret_a, outlen,
-					    EC_KEY_get0_public_key(ecdh_b[j]),
-					    ecdh_a[j], kdf);
-				}
-				d = Time_F(STOP);
-				BIO_printf(bio_err, mr ? "+R7:%ld:%d:%.2f\n" : "%ld %d-bit ECDH ops in %.2fs\n",
-				    count, test_curves_bits[j], d);
-				ecdh_results[j][0] = d / (double) count;
-				rsa_count = count;
 			}
 		}
 

@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "EVP_PKEY_verify 3"
-.TH EVP_PKEY_verify 3 "2015-07-02" "LibreSSL " "LibreSSL"
+.TH EVP_PKEY_verify 3 "2015-08-04" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -172,7 +172,7 @@ context if several operations are performed using the same parameters.
 .IX Header "RETURN VALUES"
 \&\fIEVP_PKEY_verify_init()\fR and \fIEVP_PKEY_verify()\fR return 1 if the verification was
 successful and 0 if it failed. Unlike other functions the return value 0 from
-\&\fIEVP_PKEY_verify()\fR only indicates that the signature did not not verify
+\&\fIEVP_PKEY_verify()\fR only indicates that the signature did not verify
 successfully (that is tbs did not match the original data or the signature was
 of invalid form) it is not an indication of a more serious error.
 .PP

@@ -1,13 +1,13 @@
 # This must be called before AC_PROG_CC
 AC_DEFUN([CHECK_OS_OPTIONS], [
 
-CFLAGS="$CFLAGS -Wall -std=gnu99"
+CFLAGS="$CFLAGS -Wall -std=gnu99 -fno-strict-aliasing"
 
 case $host_os in
 	*aix*)
 		HOST_OS=aix
 		if test "`echo $CC | cut -d ' ' -f 1`" != "gcc" ; then
-			CFLAGS="$USER_CFLAGS"
+			CFLAGS="-qnoansialias $USER_CFLAGS"
 		fi
 		AC_SUBST([PLATFORM_LDADD], ['-lperfstat -lpthread'])
 		;;
@@ -28,7 +28,7 @@ case $host_os in
 		if test "`echo $CC | cut -d ' ' -f 1`" = "gcc" ; then
 			CFLAGS="$CFLAGS -mlp64"
 		else
-			CFLAGS="-g -O2 +DD64 $USER_CFLAGS"
+			CFLAGS="-g -O2 +DD64 +Otype_safety=off $USER_CFLAGS"
 		fi
 		CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=600 -D__STRICT_ALIGNMENT"
 		AC_SUBST([PLATFORM_LDADD], ['-lpthread'])
@@ -51,7 +51,7 @@ case $host_os in
 		CPPFLAGS="$CPPFLAGS -D_GNU_SOURCE -D_POSIX -D_POSIX_SOURCE -D__USE_MINGW_ANSI_STDIO"
 		CPPFLAGS="$CPPFLAGS -D_REENTRANT -D_POSIX_THREAD_SAFE_FUNCTIONS"
 		CPPFLAGS="$CPPFLAGS -DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0501"
-		CPPFLAGS="$CPPFLAGS -DOPENSSL_NO_SPEED -DNO_SYSLOG"
+		CPPFLAGS="$CPPFLAGS -DOPENSSL_NO_SPEED"
 		CFLAGS="$CFLAGS -static-libgcc"
 		LDFLAGS="$LDFLAGS -static-libgcc"
 		AC_SUBST([PLATFORM_LDADD], ['-lws2_32'])

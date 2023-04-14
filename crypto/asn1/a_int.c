@@ -1,4 +1,4 @@
-/* $OpenBSD: a_int.c,v 1.25 2015/02/10 08:33:10 jsing Exp $ */
+/* $OpenBSD: a_int.c,v 1.27 2015/07/19 18:29:31 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,7 +66,7 @@
 ASN1_INTEGER *
 ASN1_INTEGER_dup(const ASN1_INTEGER *x)
 {
-	return M_ASN1_INTEGER_dup(x);
+	return ASN1_STRING_dup(x);
 }
 
 int
@@ -310,7 +310,7 @@ d2i_ASN1_UINTEGER(ASN1_INTEGER **a, const unsigned char **pp, long length)
 
 	/* We must malloc stuff, even for 0 bytes otherwise it
 	 * signifies a missing NULL parameter. */
-	s = malloc((int)len + 1);
+	s = malloc(len + 1);
 	if (s == NULL) {
 		i = ERR_R_MALLOC_FAILURE;
 		goto err;

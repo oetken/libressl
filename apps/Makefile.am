@@ -84,4 +84,35 @@ noinst_HEADERS += s_apps.h
 noinst_HEADERS += testdsa.h
 noinst_HEADERS += testrsa.h
 noinst_HEADERS += timeouts.h
-noinst_HEADERS += openssl.cnf
+
+EXTRA_DIST = cert.pem
+EXTRA_DIST += openssl.cnf
+EXTRA_DIST += x509v3.cnf
+EXTRA_DIST += CMakeLists.txt
+
+install-exec-hook:
+	@if [ "@OPENSSLDIR@x" != "x" ]; then \
+		OPENSSLDIR="$(DESTDIR)/@OPENSSLDIR@"; \
+	else \
+		OPENSSLDIR="$(DESTDIR)/$(sysconfdir)/ssl"; \
+	fi; \
+	mkdir -p "$$OPENSSLDIR/certs"; \
+	for i in cert.pem openssl.cnf x509v3.cnf; do \
+		if [ ! -f "$$OPENSSLDIR/$i" ]; then \
+			$(INSTALL) -m 644 "$(srcdir)/$$i" "$$OPENSSLDIR/$$i"; \
+		else \
+			echo " $$OPENSSLDIR/$$i already exists, install will not overwrite"; \
+		fi \
+	done
+
+uninstall-local:
+	@if [ "@OPENSSLDIR@x" != "x" ]; then \
+		OPENSSLDIR="$(DESTDIR)/@OPENSSLDIR@"; \
+	else \
+		OPENSSLDIR="$(DESTDIR)/$(sysconfdir)/ssl"; \
+	fi; \
+	for i in cert.pem openssl.cnf x509v3.cnf; do \
+		if cmp -s "$$OPENSSLDIR/$$i" "$(srcdir)/$$i"; then \
+			rm -f "$$OPENSSLDIR/$$i"; \
+		fi \
+	done

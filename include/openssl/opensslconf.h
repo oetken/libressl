@@ -1,6 +1,10 @@
 #include <openssl/opensslfeatures.h>
 /* crypto/opensslconf.h.in */
 
+#if defined(_MSC_VER) && !defined(__attribute__)
+#define __attribute__(a)
+#endif
+
 /* Generate 80386 code? */
 #undef I386_ONLY
 

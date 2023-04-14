@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_lib.c,v 1.77 2015/06/17 07:52:22 doug Exp $ */
+/* $OpenBSD: t1_lib.c,v 1.81 2015/07/24 03:50:12 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -198,6 +198,9 @@ tls1_new(SSL *s)
 void
 tls1_free(SSL *s)
 {
+	if (s == NULL)
+		return;
+
 	free(s->tlsext_session_ticket);
 	ssl3_free(s);
 }
@@ -1204,87 +1207,6 @@ parse_error:
 	return (0);
 }
 
-/* ssl_check_for_safari attempts to fingerprint Safari using OS X
- * SecureTransport using the TLS extension block in |d|, of length |n|.
- * Safari, since 10.6, sends exactly these extensions, in this order:
- *   SNI,
- *   elliptic_curves
- *   ec_point_formats
- *
- * We wish to fingerprint Safari because they broke ECDHE-ECDSA support in 10.8,
- * but they advertise support. So enabling ECDHE-ECDSA ciphers breaks them.
- * Sadly we cannot differentiate 10.6, 10.7 and 10.8.4 (which work), from
- * 10.8..10.8.3 (which don't work).
- */
-static void
-ssl_check_for_safari(SSL *s, const unsigned char *data, const unsigned char *d,
-    int n)
-{
-	unsigned short type, size;
-	static const unsigned char kSafariExtensionsBlock[] = {
-		0x00, 0x0a,  /* elliptic_curves extension */
-		0x00, 0x08,  /* 8 bytes */
-		0x00, 0x06,  /* 6 bytes of curve ids */
-		0x00, 0x17,  /* P-256 */
-		0x00, 0x18,  /* P-384 */
-		0x00, 0x19,  /* P-521 */
-
-		0x00, 0x0b,  /* ec_point_formats */
-		0x00, 0x02,  /* 2 bytes */
-		0x01,        /* 1 point format */
-		0x00,        /* uncompressed */
-	};
-
-	/* The following is only present in TLS 1.2 */
-	static const unsigned char kSafariTLS12ExtensionsBlock[] = {
-		0x00, 0x0d,  /* signature_algorithms */
-		0x00, 0x0c,  /* 12 bytes */
-		0x00, 0x0a,  /* 10 bytes */
-		0x05, 0x01,  /* SHA-384/RSA */
-		0x04, 0x01,  /* SHA-256/RSA */
-		0x02, 0x01,  /* SHA-1/RSA */
-		0x04, 0x03,  /* SHA-256/ECDSA */
-		0x02, 0x03,  /* SHA-1/ECDSA */
-	};
-
-	if (data >= (d + n - 2))
-		return;
-	data += 2;
-
-	if (data > (d + n - 4))
-		return;
-	n2s(data, type);
-	n2s(data, size);
-
-	if (type != TLSEXT_TYPE_server_name)
-		return;
-
-	if (data + size > d + n)
-		return;
-	data += size;
-
-	if (TLS1_get_client_version(s) >= TLS1_2_VERSION) {
-		const size_t len1 = sizeof(kSafariExtensionsBlock);
-		const size_t len2 = sizeof(kSafariTLS12ExtensionsBlock);
-
-		if (data + len1 + len2 != d + n)
-			return;
-		if (memcmp(data, kSafariExtensionsBlock, len1) != 0)
-			return;
-		if (memcmp(data + len1, kSafariTLS12ExtensionsBlock, len2) != 0)
-			return;
-	} else {
-		const size_t len = sizeof(kSafariExtensionsBlock);
-
-		if (data + len != d + n)
-			return;
-		if (memcmp(data, kSafariExtensionsBlock, len) != 0)
-			return;
-	}
-
-	s->s3->is_probably_safari = 1;
-}
-
 int
 ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
     int n, int *al)
@@ -1301,9 +1223,6 @@ ssl_parse_clienthello_tlsext(SSL *s, unsigned char **p, unsigned char *d,
 	s->s3->next_proto_neg_seen = 0;
 	free(s->s3->alpn_selected);
 	s->s3->alpn_selected = NULL;
-
-	if (s->options & SSL_OP_SAFARI_ECDHE_ECDSA_BUG)
-		ssl_check_for_safari(s, data, d, n);
 
 	if (data >= (d + n - 2))
 		goto ri_check;
@@ -2127,12 +2046,11 @@ ssl_check_serverhello_tlsext(SSL *s)
  *   Otherwise, s->tlsext_ticket_expected is set to 0.
  */
 int
-tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
+tls1_process_ticket(SSL *s, const unsigned char *session, int session_len,
     const unsigned char *limit, SSL_SESSION **ret)
 {
 	/* Point after session ID in client hello */
-	const unsigned char *p = session_id + len;
-	unsigned short i;
+	CBS session_id, cookie, cipher_list, compress_algo, extensions;
 
 	*ret = NULL;
 	s->tlsext_ticket_expected = 0;
@@ -2142,40 +2060,47 @@ tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
 	 */
 	if (SSL_get_options(s) & SSL_OP_NO_TICKET)
 		return 0;
-	if ((s->version <= SSL3_VERSION) || !limit)
+	if (s->version <= SSL3_VERSION || !limit)
 		return 0;
-	if (p >= limit)
+
+	if (limit < session)
 		return -1;
+
+	CBS_init(&session_id, session, limit - session);
+
+	/* Skip past the session id */
+	if (!CBS_skip(&session_id, session_len))
+		return -1;
+
 	/* Skip past DTLS cookie */
 	if (SSL_IS_DTLS(s)) {
-		i = *(p++);
-		p += i;
-		if (p >= limit)
+		if (!CBS_get_u8_length_prefixed(&session_id, &cookie))
 			return -1;
 	}
+
 	/* Skip past cipher list */
-	n2s(p, i);
-	p += i;
-	if (p >= limit)
+	if (!CBS_get_u16_length_prefixed(&session_id, &cipher_list))
 		return -1;
+
 	/* Skip past compression algorithm list */
-	i = *(p++);
-	p += i;
-	if (p > limit)
+	if (!CBS_get_u8_length_prefixed(&session_id, &compress_algo))
 		return -1;
+
 	/* Now at start of extensions */
-	if ((p + 2) >= limit)
-		return 0;
-	n2s(p, i);
-	while ((p + 4) <= limit) {
-		unsigned short type, size;
-		n2s(p, type);
-		n2s(p, size);
-		if (p + size > limit)
-			return 0;
-		if (type == TLSEXT_TYPE_session_ticket) {
+	if (!CBS_get_u16_length_prefixed(&session_id, &extensions))
+		return -1;
+
+	while (CBS_len(&extensions) > 0) {
+		CBS ext_data;
+		uint16_t ext_type;
+
+		if (!CBS_get_u16(&extensions, &ext_type) ||
+		    !CBS_get_u16_length_prefixed(&extensions, &ext_data))
+			return -1;
+
+		if (ext_type == TLSEXT_TYPE_session_ticket) {
 			int r;
-			if (size == 0) {
+			if (CBS_len(&ext_data) == 0) {
 				/* The client will accept a ticket but doesn't
 				 * currently have one. */
 				s->tlsext_ticket_expected = 1;
@@ -2189,7 +2114,10 @@ tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
 				 * calculate the master secret later. */
 				return 2;
 			}
-			r = tls_decrypt_ticket(s, p, size, session_id, len, ret);
+
+			r = tls_decrypt_ticket(s, CBS_data(&ext_data),
+			    CBS_len(&ext_data), session, session_len, ret);
+
 			switch (r) {
 			case 2: /* ticket couldn't be decrypted */
 				s->tlsext_ticket_expected = 1;
@@ -2203,7 +2131,6 @@ tls1_process_ticket(SSL *s, unsigned char *session_id, int len,
 				return -1;
 			}
 		}
-		p += size;
 	}
 	return 0;
 }
@@ -2417,17 +2344,20 @@ tls12_get_hash(unsigned char hash_alg)
 int
 tls1_process_sigalgs(SSL *s, const unsigned char *data, int dsize)
 {
-	int i, idx;
+	int idx;
 	const EVP_MD *md;
 	CERT *c = s->cert;
+	CBS cbs;
 
 	/* Extension ignored for inappropriate versions */
 	if (!SSL_USE_SIGALGS(s))
 		return 1;
 
 	/* Should never happen */
-	if (!c)
+	if (!c || dsize < 0)
 		return 0;
+
+	CBS_init(&cbs, data, dsize);
 
 	c->pkeys[SSL_PKEY_DSA_SIGN].digest = NULL;
 	c->pkeys[SSL_PKEY_RSA_SIGN].digest = NULL;
@@ -2435,8 +2365,14 @@ tls1_process_sigalgs(SSL *s, const unsigned char *data, int dsize)
 	c->pkeys[SSL_PKEY_ECC].digest = NULL;
 	c->pkeys[SSL_PKEY_GOST01].digest = NULL;
 
-	for (i = 0; i < dsize; i += 2) {
-		unsigned char hash_alg = data[i], sig_alg = data[i + 1];
+	while (CBS_len(&cbs) > 0) {
+		uint8_t hash_alg, sig_alg;
+
+		if (!CBS_get_u8(&cbs, &hash_alg) ||
+		    !CBS_get_u8(&cbs, &sig_alg)) {
+			/* Should never happen */
+			return 0;
+		}
 
 		switch (sig_alg) {
 		case TLSEXT_signature_rsa:

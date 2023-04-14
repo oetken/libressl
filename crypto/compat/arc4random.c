@@ -36,8 +36,11 @@
 #define KEYSTREAM_ONLY
 #include "chacha_private.h"
 
+#ifndef min
 #define min(a, b) ((a) < (b) ? (a) : (b))
-#ifdef __GNUC__
+#endif
+
+#if defined(__GNUC__) || defined(_MSC_VER)
 #define inline __inline
 #else				/* !__GNUC__ */
 #define inline
