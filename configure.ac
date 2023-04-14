@@ -1,4 +1,4 @@
-AC_INIT([libressl], [2.0.5])
+AC_INIT([libressl], [2.0.6])
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
