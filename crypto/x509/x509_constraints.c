@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_constraints.c,v 1.17 2021/09/23 15:49:48 jsing Exp $ */
+/* $OpenBSD: x509_constraints.c,v 1.19 2021/12/26 15:44:29 tb Exp $ */
 /*
  * Copyright (c) 2020 Bob Beck <beck@openbsd.org>
  *
@@ -390,7 +390,7 @@ x509_constraints_parse_mailbox(uint8_t *candidate, size_t len,
 		}
 		if (c == '@') {
 			if (wi == 0)
-				goto bad;;
+				goto bad;
 			if (candidate_local != NULL)
 				goto bad;
 			candidate_local = strdup(working);
@@ -424,9 +424,14 @@ x509_constraints_parse_mailbox(uint8_t *candidate, size_t len,
 	    strlen(candidate_domain)))
 		goto bad;
 
-	name->local = candidate_local;
-	name->name = candidate_domain;
-	name->type = GEN_EMAIL;
+	if (name != NULL) {
+		name->local = candidate_local;
+		name->name = candidate_domain;
+		name->type = GEN_EMAIL;
+	} else {
+		free(candidate_local);
+		free(candidate_domain);
+	}
 	return 1;
  bad:
 	free(candidate_local);
@@ -511,7 +516,8 @@ x509_constraints_uri_host(uint8_t *uri, size_t len, char **hostpart)
 		host = authority;
 	if (!x509_constraints_valid_host(host, hostlen))
 		return 0;
-	*hostpart = strndup(host, hostlen);
+	if (hostpart != NULL)
+		*hostpart = strndup(host, hostlen);
 	return 1;
 }
 

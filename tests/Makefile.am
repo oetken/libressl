@@ -1,13 +1,15 @@
 include $(top_srcdir)/Makefile.am.common
 
-AM_CPPFLAGS += -I $(top_srcdir)/crypto/modes
+AM_CPPFLAGS += -DLIBRESSL_CRYPTO_INTERNAL
+
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/asn1
+AM_CPPFLAGS += -I $(top_srcdir)/crypto/bio
+AM_CPPFLAGS += -I $(top_srcdir)/crypto/modes
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/x509
 AM_CPPFLAGS += -I $(top_srcdir)/ssl
-AM_CPPFLAGS += -I $(top_srcdir)/tls
 AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl
 AM_CPPFLAGS += -I $(top_srcdir)/apps/openssl/compat
-AM_CPPFLAGS += -D_PATH_SSL_CA_FILE=\"$(top_srcdir)/apps/openssl/cert.pem\"
+AM_CPPFLAGS += -D_PATH_SSL_CA_FILE=\"$(top_srcdir)/cert.pem\"
 
 LDADD = $(abs_top_builddir)/tls/.libs/libtls.a
 LDADD += $(abs_top_builddir)/ssl/.libs/libssl.a
@@ -45,10 +47,30 @@ arc4randomforktest_SOURCES = arc4randomforktest.c
 endif
 EXTRA_DIST += arc4randomforktest.sh
 
+# asn1api
+TESTS += asn1api
+check_PROGRAMS += asn1api
+asn1api_SOURCES = asn1api.c
+
+# asn1basic
+TESTS += asn1basic
+check_PROGRAMS += asn1basic
+asn1basic_SOURCES = asn1basic.c
+
+# asn1complex
+TESTS += asn1complex
+check_PROGRAMS += asn1complex
+asn1complex_SOURCES = asn1complex.c
+
 # asn1evp
 TESTS += asn1evp
 check_PROGRAMS += asn1evp
 asn1evp_SOURCES = asn1evp.c
+
+# asn1string_copy
+TESTS += asn1string_copy
+check_PROGRAMS += asn1string_copy
+asn1string_copy_SOURCES = asn1string_copy.c
 
 # asn1test
 TESTS += asn1test
@@ -59,6 +81,11 @@ asn1test_SOURCES = asn1test.c
 TESTS += asn1time
 check_PROGRAMS += asn1time
 asn1time_SOURCES = asn1time.c
+
+# asn1x509
+TESTS += asn1x509
+check_PROGRAMS += asn1x509
+asn1x509_SOURCES = asn1x509.c
 
 # base64test
 TESTS += base64test
@@ -101,7 +128,6 @@ bn_to_string_SOURCES = bn_to_string.c
 
 # buffertest
 TESTS += buffertest
-buffertest_CPPFLAGS = $(AM_CPPFLAGS)
 check_PROGRAMS += buffertest
 buffertest_SOURCES = buffertest.c
 
@@ -179,6 +205,11 @@ dtlstest_SOURCES = dtlstest.c
 endif
 EXTRA_DIST += dtlstest.sh
 
+# ec_asn1_test
+TESTS += ec_asn1_test
+check_PROGRAMS += ec_asn1_test
+ec_asn1_test_SOURCES = ec_asn1_test.c
+
 # ec_point_conversion
 TESTS += ec_point_conversion
 check_PROGRAMS += ec_point_conversion
@@ -203,6 +234,11 @@ ectest_SOURCES = ectest.c
 TESTS += enginetest
 check_PROGRAMS += enginetest
 enginetest_SOURCES = enginetest.c
+
+# evp_pkey_check
+TESTS += evp_pkey_check
+check_PROGRAMS += evp_pkey_check
+evp_pkey_check_SOURCES = evp_pkey_check.c
 
 # evptest
 TESTS += evptest.sh
@@ -270,16 +306,17 @@ TESTS += igetest
 check_PROGRAMS += igetest
 igetest_SOURCES = igetest.c
 
-# keypairtest
-TESTS += keypairtest.sh
-check_PROGRAMS += keypairtest
-keypairtest_SOURCES = keypairtest.c
-EXTRA_DIST += keypairtest.sh
-
 # key_schedule
 TESTS += key_schedule
 check_PROGRAMS += key_schedule
 key_schedule_SOURCES = key_schedule.c
+
+# keypairtest
+TESTS += keypairtest.sh
+keypairtest_CPPFLAGS = -I $(top_srcdir)/tls $(AM_CPPFLAGS)
+check_PROGRAMS += keypairtest
+keypairtest_SOURCES = keypairtest.c
+EXTRA_DIST += keypairtest.sh
 
 # md4test
 TESTS += md4test
@@ -365,6 +402,12 @@ recordtest_SOURCES = recordtest.c
 TESTS += record_layer_test
 check_PROGRAMS += record_layer_test
 record_layer_test_SOURCES = record_layer_test.c
+
+# rfc3779
+TESTS += rfc3779
+rfc3779_CPPFLAGS = $(AM_CPPFLAGS) -D__unused=
+check_PROGRAMS += rfc3779
+rfc3779_SOURCES = rfc3779.c
 
 # rfc5280time
 check_PROGRAMS += rfc5280time
@@ -521,3 +564,8 @@ x509_info_SOURCES = x509_info.c
 TESTS += x509name
 check_PROGRAMS += x509name
 x509name_SOURCES = x509name.c
+
+# x509req_ext
+TESTS += x509req_ext
+check_PROGRAMS += x509req_ext
+x509req_ext_SOURCES = x509req_ext.c
