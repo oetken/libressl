@@ -7,7 +7,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
 lib_LTLIBRARIES = libcrypto.la
 
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_LDFLAGS = -version-info 29:0:0
+libcrypto_la_LDFLAGS = -version-info 30:0:0
 libcrypto_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS) -DOPENSSL_NO_HW_PADLOCK
 
 noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
@@ -19,6 +19,7 @@ libcompatnoopt_la_SOURCES = compat/explicit_bzero.c
 # other compatibility functions
 libcompat_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS)
 libcompat_la_SOURCES =
+libcompat_la_LIBADD = $(PLATFORM_LDADD)
 
 if NO_STRLCAT
 libcompat_la_SOURCES += compat/strlcat.c
@@ -511,7 +512,6 @@ libcrypto_la_SOURCES += rc2/rc2ofb64.c
 noinst_HEADERS += rc2/rc2_locl.h
 libcrypto_la_SOURCES += rc4/rc4_enc.c
 libcrypto_la_SOURCES += rc4/rc4_skey.c
-libcrypto_la_SOURCES += rc4/rc4_utl.c
 noinst_HEADERS += rc4/rc4_locl.h
 libcrypto_la_SOURCES += ripemd/rmd_dgst.c
 libcrypto_la_SOURCES += ripemd/rmd_one.c

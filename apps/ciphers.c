@@ -1,4 +1,4 @@
-/* $OpenBSD$ */
+/* $OpenBSD: ciphers.c,v 1.24 2014/07/12 17:54:31 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -95,8 +95,6 @@ ciphers_main(int argc, char **argv)
 	meth = SSLv3_server_method();
 
 	STDout = BIO_new_fp(stdout, BIO_NOCLOSE);
-	if (!load_config(bio_err, NULL))
-		goto end;
 
 	argc--;
 	argv++;
@@ -125,7 +123,6 @@ ciphers_main(int argc, char **argv)
 			BIO_printf(bio_err, "%s", *pp);
 		goto end;
 	}
-	OpenSSL_add_ssl_algorithms();
 
 	ctx = SSL_CTX_new(meth);
 	if (ctx == NULL)
@@ -139,7 +136,6 @@ ciphers_main(int argc, char **argv)
 	ssl = SSL_new(ctx);
 	if (ssl == NULL)
 		goto err;
-
 
 	if (!verbose) {
 		for (i = 0; ; i++) {
@@ -181,7 +177,6 @@ ciphers_main(int argc, char **argv)
 	ret = 0;
 	if (0) {
 err:
-		SSL_load_error_strings();
 		ERR_print_errors(bio_err);
 	}
 

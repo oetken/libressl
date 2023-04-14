@@ -132,7 +132,8 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
-libcompat_la_LIBADD =
+am__DEPENDENCIES_1 =
+libcompat_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libcompat_la_SOURCES_DIST = compat/strlcat.c compat/strlcpy.c \
 	compat/reallocarray.c compat/timingsafe_memcmp.c \
 	compat/timingsafe_bcmp.c compat/arc4random.c \
@@ -391,23 +392,23 @@ am_libcrypto_la_OBJECTS = libcrypto_la-cpt_err.lo \
 	rc2/libcrypto_la-rc2_ecb.lo rc2/libcrypto_la-rc2_skey.lo \
 	rc2/libcrypto_la-rc2cfb64.lo rc2/libcrypto_la-rc2ofb64.lo \
 	rc4/libcrypto_la-rc4_enc.lo rc4/libcrypto_la-rc4_skey.lo \
-	rc4/libcrypto_la-rc4_utl.lo ripemd/libcrypto_la-rmd_dgst.lo \
-	ripemd/libcrypto_la-rmd_one.lo rsa/libcrypto_la-rsa_ameth.lo \
-	rsa/libcrypto_la-rsa_asn1.lo rsa/libcrypto_la-rsa_chk.lo \
-	rsa/libcrypto_la-rsa_crpt.lo rsa/libcrypto_la-rsa_depr.lo \
-	rsa/libcrypto_la-rsa_eay.lo rsa/libcrypto_la-rsa_err.lo \
-	rsa/libcrypto_la-rsa_gen.lo rsa/libcrypto_la-rsa_lib.lo \
-	rsa/libcrypto_la-rsa_none.lo rsa/libcrypto_la-rsa_oaep.lo \
-	rsa/libcrypto_la-rsa_pk1.lo rsa/libcrypto_la-rsa_pmeth.lo \
-	rsa/libcrypto_la-rsa_prn.lo rsa/libcrypto_la-rsa_pss.lo \
-	rsa/libcrypto_la-rsa_saos.lo rsa/libcrypto_la-rsa_sign.lo \
-	rsa/libcrypto_la-rsa_ssl.lo rsa/libcrypto_la-rsa_x931.lo \
-	sha/libcrypto_la-sha1_one.lo sha/libcrypto_la-sha1dgst.lo \
-	sha/libcrypto_la-sha256.lo sha/libcrypto_la-sha512.lo \
-	sha/libcrypto_la-sha_dgst.lo sha/libcrypto_la-sha_one.lo \
-	stack/libcrypto_la-stack.lo ts/libcrypto_la-ts_asn1.lo \
-	ts/libcrypto_la-ts_conf.lo ts/libcrypto_la-ts_err.lo \
-	ts/libcrypto_la-ts_lib.lo ts/libcrypto_la-ts_req_print.lo \
+	ripemd/libcrypto_la-rmd_dgst.lo ripemd/libcrypto_la-rmd_one.lo \
+	rsa/libcrypto_la-rsa_ameth.lo rsa/libcrypto_la-rsa_asn1.lo \
+	rsa/libcrypto_la-rsa_chk.lo rsa/libcrypto_la-rsa_crpt.lo \
+	rsa/libcrypto_la-rsa_depr.lo rsa/libcrypto_la-rsa_eay.lo \
+	rsa/libcrypto_la-rsa_err.lo rsa/libcrypto_la-rsa_gen.lo \
+	rsa/libcrypto_la-rsa_lib.lo rsa/libcrypto_la-rsa_none.lo \
+	rsa/libcrypto_la-rsa_oaep.lo rsa/libcrypto_la-rsa_pk1.lo \
+	rsa/libcrypto_la-rsa_pmeth.lo rsa/libcrypto_la-rsa_prn.lo \
+	rsa/libcrypto_la-rsa_pss.lo rsa/libcrypto_la-rsa_saos.lo \
+	rsa/libcrypto_la-rsa_sign.lo rsa/libcrypto_la-rsa_ssl.lo \
+	rsa/libcrypto_la-rsa_x931.lo sha/libcrypto_la-sha1_one.lo \
+	sha/libcrypto_la-sha1dgst.lo sha/libcrypto_la-sha256.lo \
+	sha/libcrypto_la-sha512.lo sha/libcrypto_la-sha_dgst.lo \
+	sha/libcrypto_la-sha_one.lo stack/libcrypto_la-stack.lo \
+	ts/libcrypto_la-ts_asn1.lo ts/libcrypto_la-ts_conf.lo \
+	ts/libcrypto_la-ts_err.lo ts/libcrypto_la-ts_lib.lo \
+	ts/libcrypto_la-ts_req_print.lo \
 	ts/libcrypto_la-ts_req_utils.lo \
 	ts/libcrypto_la-ts_rsp_print.lo ts/libcrypto_la-ts_rsp_sign.lo \
 	ts/libcrypto_la-ts_rsp_utils.lo \
@@ -650,7 +651,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -DOPENSSL_NO_ASM \
 	-I$(top_srcdir)/crypto/modes
 lib_LTLIBRARIES = libcrypto.la
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_LDFLAGS = -version-info 29:0:0
+libcrypto_la_LDFLAGS = -version-info 30:0:0
 libcrypto_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS) -DOPENSSL_NO_HW_PADLOCK
 noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
 
@@ -664,6 +665,7 @@ libcompat_la_SOURCES = $(am__append_1) $(am__append_2) $(am__append_3) \
 	$(am__append_4) $(am__append_5) $(am__append_6) \
 	$(am__append_7) $(am__append_8) $(am__append_9) \
 	$(am__append_10)
+libcompat_la_LIBADD = $(PLATFORM_LDADD)
 noinst_HEADERS = des/ncbc_enc.c compat/thread_private.h \
 	compat/chacha_private.h cryptlib.h md32_common.h o_time.h \
 	aes/aes_locl.h asn1/asn1_locl.h asn1/charmap.h bf/bf_locl.h \
@@ -786,15 +788,15 @@ libcrypto_la_SOURCES = cpt_err.c cryptlib.c cversion.c ex_data.c \
 	poly1305/poly1305.c rand/rand_err.c rand/rand_lib.c \
 	rand/randfile.c rc2/rc2_cbc.c rc2/rc2_ecb.c rc2/rc2_skey.c \
 	rc2/rc2cfb64.c rc2/rc2ofb64.c rc4/rc4_enc.c rc4/rc4_skey.c \
-	rc4/rc4_utl.c ripemd/rmd_dgst.c ripemd/rmd_one.c \
-	rsa/rsa_ameth.c rsa/rsa_asn1.c rsa/rsa_chk.c rsa/rsa_crpt.c \
-	rsa/rsa_depr.c rsa/rsa_eay.c rsa/rsa_err.c rsa/rsa_gen.c \
-	rsa/rsa_lib.c rsa/rsa_none.c rsa/rsa_oaep.c rsa/rsa_pk1.c \
-	rsa/rsa_pmeth.c rsa/rsa_prn.c rsa/rsa_pss.c rsa/rsa_saos.c \
-	rsa/rsa_sign.c rsa/rsa_ssl.c rsa/rsa_x931.c sha/sha1_one.c \
-	sha/sha1dgst.c sha/sha256.c sha/sha512.c sha/sha_dgst.c \
-	sha/sha_one.c stack/stack.c ts/ts_asn1.c ts/ts_conf.c \
-	ts/ts_err.c ts/ts_lib.c ts/ts_req_print.c ts/ts_req_utils.c \
+	ripemd/rmd_dgst.c ripemd/rmd_one.c rsa/rsa_ameth.c \
+	rsa/rsa_asn1.c rsa/rsa_chk.c rsa/rsa_crpt.c rsa/rsa_depr.c \
+	rsa/rsa_eay.c rsa/rsa_err.c rsa/rsa_gen.c rsa/rsa_lib.c \
+	rsa/rsa_none.c rsa/rsa_oaep.c rsa/rsa_pk1.c rsa/rsa_pmeth.c \
+	rsa/rsa_prn.c rsa/rsa_pss.c rsa/rsa_saos.c rsa/rsa_sign.c \
+	rsa/rsa_ssl.c rsa/rsa_x931.c sha/sha1_one.c sha/sha1dgst.c \
+	sha/sha256.c sha/sha512.c sha/sha_dgst.c sha/sha_one.c \
+	stack/stack.c ts/ts_asn1.c ts/ts_conf.c ts/ts_err.c \
+	ts/ts_lib.c ts/ts_req_print.c ts/ts_req_utils.c \
 	ts/ts_rsp_print.c ts/ts_rsp_sign.c ts/ts_rsp_utils.c \
 	ts/ts_rsp_verify.c ts/ts_verify_ctx.c txt_db/txt_db.c \
 	ui/ui_err.c ui/ui_lib.c ui/ui_openssl.c ui/ui_util.c \
@@ -1976,8 +1978,6 @@ rc4/libcrypto_la-rc4_enc.lo: rc4/$(am__dirstamp) \
 	rc4/$(DEPDIR)/$(am__dirstamp)
 rc4/libcrypto_la-rc4_skey.lo: rc4/$(am__dirstamp) \
 	rc4/$(DEPDIR)/$(am__dirstamp)
-rc4/libcrypto_la-rc4_utl.lo: rc4/$(am__dirstamp) \
-	rc4/$(DEPDIR)/$(am__dirstamp)
 ripemd/$(am__dirstamp):
 	@$(MKDIR_P) ripemd
 	@: > ripemd/$(am__dirstamp)
@@ -2791,7 +2791,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@rc2/$(DEPDIR)/libcrypto_la-rc2ofb64.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rc4/$(DEPDIR)/libcrypto_la-rc4_enc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rc4/$(DEPDIR)/libcrypto_la-rc4_skey.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@rc4/$(DEPDIR)/libcrypto_la-rc4_utl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ripemd/$(DEPDIR)/libcrypto_la-rmd_dgst.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@ripemd/$(DEPDIR)/libcrypto_la-rmd_one.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@rsa/$(DEPDIR)/libcrypto_la-rsa_ameth.Plo@am__quote@
@@ -5916,13 +5915,6 @@ rc4/libcrypto_la-rc4_skey.lo: rc4/rc4_skey.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rc4/rc4_skey.c' object='rc4/libcrypto_la-rc4_skey.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcrypto_la_CFLAGS) $(CFLAGS) -c -o rc4/libcrypto_la-rc4_skey.lo `test -f 'rc4/rc4_skey.c' || echo '$(srcdir)/'`rc4/rc4_skey.c
-
-rc4/libcrypto_la-rc4_utl.lo: rc4/rc4_utl.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcrypto_la_CFLAGS) $(CFLAGS) -MT rc4/libcrypto_la-rc4_utl.lo -MD -MP -MF rc4/$(DEPDIR)/libcrypto_la-rc4_utl.Tpo -c -o rc4/libcrypto_la-rc4_utl.lo `test -f 'rc4/rc4_utl.c' || echo '$(srcdir)/'`rc4/rc4_utl.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) rc4/$(DEPDIR)/libcrypto_la-rc4_utl.Tpo rc4/$(DEPDIR)/libcrypto_la-rc4_utl.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='rc4/rc4_utl.c' object='rc4/libcrypto_la-rc4_utl.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcrypto_la_CFLAGS) $(CFLAGS) -c -o rc4/libcrypto_la-rc4_utl.lo `test -f 'rc4/rc4_utl.c' || echo '$(srcdir)/'`rc4/rc4_utl.c
 
 ripemd/libcrypto_la-rmd_dgst.lo: ripemd/rmd_dgst.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcrypto_la_CFLAGS) $(CFLAGS) -MT ripemd/libcrypto_la-rmd_dgst.lo -MD -MP -MF ripemd/$(DEPDIR)/libcrypto_la-rmd_dgst.Tpo -c -o ripemd/libcrypto_la-rmd_dgst.lo `test -f 'ripemd/rmd_dgst.c' || echo '$(srcdir)/'`ripemd/rmd_dgst.c

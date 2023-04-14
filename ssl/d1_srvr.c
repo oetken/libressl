@@ -1,4 +1,4 @@
-/* $OpenBSD: d1_srvr.c,v 1.29 2014/07/10 08:51:14 tedu Exp $ */
+/* $OpenBSD: d1_srvr.c,v 1.32 2014/07/12 13:11:53 jsing Exp $ */
 /* 
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.  
@@ -427,9 +427,9 @@ dtls1_accept(SSL *s)
 
 		case SSL3_ST_SW_CERT_A:
 		case SSL3_ST_SW_CERT_B:
-			/* Check if it is anon DH or normal PSK */
-			if (!(s->s3->tmp.new_cipher->algorithm_auth & SSL_aNULL) &&
-			    !(s->s3->tmp.new_cipher->algorithm_mkey & SSL_kPSK)) {
+			/* Check if it is anon DH. */
+			if (!(s->s3->tmp.new_cipher->algorithm_auth &
+			    SSL_aNULL)) {
 				dtls1_start_timer(s);
 				ret = dtls1_send_server_certificate(s);
 				if (ret <= 0)
@@ -464,8 +464,8 @@ dtls1_accept(SSL *s)
 			/* only send if a DH key exchange or
 			 * RSA but we have a sign only certificate */
 			if (s->s3->tmp.use_rsa_tmp
-			|| (alg_k & (SSL_kEDH|SSL_kDHr|SSL_kDHd))
-			|| (alg_k & SSL_kEECDH)
+			|| (alg_k & (SSL_kDHE|SSL_kDHr|SSL_kDHd))
+			|| (alg_k & SSL_kECDHE)
 			|| ((alg_k & SSL_kRSA)
 			&& (s->cert->pkeys[SSL_PKEY_RSA_ENC].privatekey == NULL
 			)
@@ -484,24 +484,29 @@ dtls1_accept(SSL *s)
 
 		case SSL3_ST_SW_CERT_REQ_A:
 		case SSL3_ST_SW_CERT_REQ_B:
-			if (/* don't request cert unless asked for it: */
-			    !(s->verify_mode & SSL_VERIFY_PEER) ||
-				/* if SSL_VERIFY_CLIENT_ONCE is set,
-				 * don't request cert during re-negotiation: */
+			/*
+			 * Determine whether or not we need to request a
+			 * certificate.
+			 *
+			 * Do not request a certificate if:
+			 *
+			 * - We did not ask for it (SSL_VERIFY_PEER is unset).
+			 *
+			 * - SSL_VERIFY_CLIENT_ONCE is set and we are
+			 *   renegotiating.
+			 *
+			 * - We are using an anonymous ciphersuites
+			 *   (see section "Certificate request" in SSL 3 drafts
+			 *   and in RFC 2246) ... except when the application
+			 *   insists on verification (against the specs, but
+			 *   s3_clnt.c accepts this for SSL 3).
+			 */
+			if (!(s->verify_mode & SSL_VERIFY_PEER) ||
 			    ((s->session->peer != NULL) &&
-			    (s->verify_mode & SSL_VERIFY_CLIENT_ONCE)) ||
-				/* never request cert in anonymous ciphersuites
-				 * (see section "Certificate request" in SSL 3 drafts
-				 * and in RFC 2246): */
-			    ((s->s3->tmp.new_cipher->algorithm_auth & SSL_aNULL) &&
-				 /* ... except when the application insists on verification
-				  * (against the specs, but s3_clnt.c accepts this for SSL 3) */
-			    !(s->verify_mode & SSL_VERIFY_FAIL_IF_NO_PEER_CERT)) ||
-				/* never request cert in Kerberos ciphersuites */
-			    (s->s3->tmp.new_cipher->algorithm_auth & SSL_aKRB5)
-				/* With normal PSK Certificates and
-				 * Certificate Requests are omitted */
-			    || (s->s3->tmp.new_cipher->algorithm_mkey & SSL_kPSK)) {
+			     (s->verify_mode & SSL_VERIFY_CLIENT_ONCE)) ||
+			    ((s->s3->tmp.new_cipher->algorithm_auth &
+			     SSL_aNULL) && !(s->verify_mode &
+			     SSL_VERIFY_FAIL_IF_NO_PEER_CERT))) {
 				/* no cert request */
 				skip = 1;
 				s->s3->tmp.cert_request = 0;
@@ -1047,7 +1052,7 @@ dtls1_send_server_key_exchange(SSL *s)
 			r[1] = rsa->e;
 			s->s3->tmp.use_rsa_tmp = 1;
 		} else
-		if (type & SSL_kEDH) {
+		if (type & SSL_kDHE) {
 			dhp = cert->dh_tmp;
 			if ((dhp == NULL) && (s->cert->dh_tmp_cb != NULL))
 				dhp = s->cert->dh_tmp_cb(s, 0, 0);
@@ -1089,7 +1094,7 @@ dtls1_send_server_key_exchange(SSL *s)
 			r[1] = dh->g;
 			r[2] = dh->pub_key;
 		} else
-		if (type & SSL_kEECDH) {
+		if (type & SSL_kECDHE) {
 			const EC_GROUP *group;
 
 			ecdhp = cert->ecdh_tmp;
@@ -1202,8 +1207,7 @@ dtls1_send_server_key_exchange(SSL *s)
 			n += 2 + nr[i];
 		}
 
-		if (!(s->s3->tmp.new_cipher->algorithm_auth & SSL_aNULL)
-		    && !(s->s3->tmp.new_cipher->algorithm_mkey & SSL_kPSK)) {
+		if (!(s->s3->tmp.new_cipher->algorithm_auth & SSL_aNULL)) {
 			if ((pkey = ssl_get_sign_pkey(s,
 			    s->s3->tmp.new_cipher, NULL)) == NULL) {
 				al = SSL_AD_DECODE_ERROR;
@@ -1228,7 +1232,7 @@ dtls1_send_server_key_exchange(SSL *s)
 			p += nr[i];
 		}
 
-		if (type & SSL_kEECDH) {
+		if (type & SSL_kECDHE) {
 			/* XXX: For now, we only support named (not generic) curves.
 			 * In this situation, the serverKeyExchange message has:
 			 * [1 byte CurveType], [2 byte CurveName]
@@ -1449,12 +1453,9 @@ dtls1_send_server_certificate(SSL *s)
 	if (s->state == SSL3_ST_SW_CERT_A) {
 		x = ssl_get_server_send_cert(s);
 		if (x == NULL) {
-			/* VRS: allow null cert if auth == KRB5 */
-			if ((s->s3->tmp.new_cipher->algorithm_mkey != SSL_kKRB5) ||
-				(s->s3->tmp.new_cipher->algorithm_auth != SSL_aKRB5)) {
-				SSLerr(SSL_F_DTLS1_SEND_SERVER_CERTIFICATE, ERR_R_INTERNAL_ERROR);
-				return (0);
-			}
+			SSLerr(SSL_F_DTLS1_SEND_SERVER_CERTIFICATE,
+			    ERR_R_INTERNAL_ERROR);
+			return (0);
 		}
 
 		l = dtls1_output_cert_chain(s, x);
