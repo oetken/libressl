@@ -104,9 +104,8 @@ main(int argc, char **argv) {
 		fflush(stdout);
 		fprintf(stderr, "\nTEST 1 of 3 failed.\n");
 		return 1;
-	}
-	fprintf(stdout, ".");
-	fflush(stdout);
+	} else
+		fprintf(stdout, "."); fflush(stdout);
 
 	EVP_Digest(
 	    "abcdefgh""bcdefghi""cdefghij""defghijk"
@@ -147,8 +146,7 @@ main(int argc, char **argv) {
 	fprintf(stdout, ".");
 	fflush(stdout);
 
-	fprintf(stdout, " passed.\n");
-	fflush(stdout);
+	fprintf(stdout, " passed.\n"); fflush(stdout);
 
 	fprintf(stdout, "Testing SHA-384 ");
 
@@ -193,8 +191,7 @@ main(int argc, char **argv) {
 	fprintf(stdout, ".");
 	fflush(stdout);
 
-	fprintf(stdout, " passed.\n");
-	fflush(stdout);
+	fprintf(stdout, " passed.\n"); fflush(stdout);
 
 	return 0;
 }

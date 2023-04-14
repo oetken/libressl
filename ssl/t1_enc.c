@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_enc.c,v 1.76 2015/02/07 18:53:55 doug Exp $ */
+/* $OpenBSD: t1_enc.c,v 1.72 2014/11/16 14:12:47 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -605,7 +605,7 @@ tls1_setup_key_block(SSL *s)
 		key_len = EVP_CIPHER_key_length(cipher);
 		iv_len = EVP_CIPHER_iv_length(cipher);
 
-		/* If GCM mode only part of IV comes from PRF. */
+		/* If GCM mode only part of IV comes from PRF. */ 
 		if (EVP_CIPHER_mode(cipher) == EVP_CIPH_GCM_MODE)
 			iv_len = EVP_GCM_TLS_FIXED_IV_LEN;
 	}
@@ -823,7 +823,7 @@ tls1_enc(SSL *s, int send)
 					fprintf(stderr,
 					    "%s:%d: rec->data != rec->input\n",
 					    __FILE__, __LINE__);
-				else
+				else 
 					arc4random_buf(rec->input, ivlen);
 			}
 		}
@@ -1054,13 +1054,12 @@ tls1_mac(SSL *ssl, unsigned char *md, int send)
 		 * timing-side channel information about how many blocks of
 		 * data we are hashing because that gives an attacker a
 		 * timing-oracle. */
-		if (!ssl3_cbc_digest_record(mac_ctx,
+		ssl3_cbc_digest_record(mac_ctx,
 		    md, &md_size, header, rec->input,
 		    rec->length + md_size, orig_len,
 		    ssl->s3->read_mac_secret,
 		    ssl->s3->read_mac_secret_size,
-		    0 /* not SSLv3 */))
-			return -1;
+		    0 /* not SSLv3 */);
 	} else {
 		EVP_DigestSignUpdate(mac_ctx, header, sizeof(header));
 		EVP_DigestSignUpdate(mac_ctx, rec->input, rec->length);
@@ -1082,11 +1081,13 @@ tls1_generate_master_secret(SSL *s, unsigned char *out, unsigned char *p,
     int len)
 {
 	unsigned char buff[SSL_MAX_MASTER_KEY_LENGTH];
+	const void *co = NULL, *so = NULL;
+	int col = 0, sol = 0;
 
 	tls1_PRF(ssl_get_algorithm2(s),
 	    TLS_MD_MASTER_SECRET_CONST, TLS_MD_MASTER_SECRET_CONST_SIZE,
-	    s->s3->client_random, SSL3_RANDOM_SIZE, NULL, 0,
-	    s->s3->server_random, SSL3_RANDOM_SIZE, NULL, 0,
+	    s->s3->client_random, SSL3_RANDOM_SIZE, co, col,
+	    s->s3->server_random, SSL3_RANDOM_SIZE, so, sol,
 	    p, len, s->session->master_key, buff, sizeof buff);
 
 	return (SSL3_MASTER_SECRET_SIZE);
@@ -1240,8 +1241,6 @@ tls1_alert_code(int code)
 		return (TLS1_AD_BAD_CERTIFICATE_HASH_VALUE);
 	case SSL_AD_UNKNOWN_PSK_IDENTITY:
 		return (TLS1_AD_UNKNOWN_PSK_IDENTITY);
-	case SSL_AD_INAPPROPRIATE_FALLBACK:
-		return(TLS1_AD_INAPPROPRIATE_FALLBACK);
 	default:
 		return (-1);
 	}

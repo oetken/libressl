@@ -1,4 +1,4 @@
-/* $OpenBSD: p5_crpt2.c,v 1.19 2015/02/14 15:45:21 miod Exp $ */
+/* $OpenBSD: p5_crpt2.c,v 1.16 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -70,6 +70,13 @@
 #include <openssl/x509.h>
 
 #include "evp_locl.h"
+
+/* set this to print out info about the keygen algorithm */
+/* #define DEBUG_PKCS5V2 */
+
+#ifdef DEBUG_PKCS5V2
+static void h__dump (const unsigned char *p, int len);
+#endif
 
 /* This is an implementation of PKCS#5 v2.0 password based encryption key
  * derivation function PBKDF2.
@@ -146,6 +153,15 @@ PKCS5_PBKDF2_HMAC(const char *pass, int passlen, const unsigned char *salt,
 		p += cplen;
 	}
 	HMAC_CTX_cleanup(&hctx_tpl);
+#ifdef DEBUG_PKCS5V2
+	fprintf(stderr, "Password:\n");
+	h__dump (pass, passlen);
+	fprintf(stderr, "Salt:\n");
+	h__dump (salt, saltlen);
+	fprintf(stderr, "Iteration count %d\n", iter);
+	fprintf(stderr, "Key:\n");
+	h__dump (out, keylen);
+#endif
 	return 1;
 }
 
@@ -236,19 +252,16 @@ PKCS5_v2_PBKDF2_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 
 	if (EVP_CIPHER_CTX_cipher(ctx) == NULL) {
 		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_NO_CIPHER_SET);
-		return 0;
+		goto err;
 	}
 	keylen = EVP_CIPHER_CTX_key_length(ctx);
-	if (keylen > sizeof key) {
-		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_BAD_KEY_LENGTH);
-		return 0;
-	}
+	OPENSSL_assert(keylen <= sizeof key);
 
 	/* Decode parameter */
 
 	if (!param || (param->type != V_ASN1_SEQUENCE)) {
 		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_DECODE_ERROR);
-		return 0;
+		goto err;
 	}
 
 	pbuf = param->value.sequence->data;
@@ -256,8 +269,10 @@ PKCS5_v2_PBKDF2_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 
 	if (!(kdf = d2i_PBKDF2PARAM(NULL, &pbuf, plen)) ) {
 		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_DECODE_ERROR);
-		return 0;
+		goto err;
 	}
+
+	keylen = EVP_CIPHER_CTX_key_length(ctx);
 
 	/* Now check the parameters of the kdf */
 
@@ -305,4 +320,12 @@ err:
 	return rv;
 }
 
+#ifdef DEBUG_PKCS5V2
+static void h__dump (const unsigned char *p, int len)
+{
+	for (; len --; p++)
+		fprintf(stderr, "%02X ", *p);
+	fprintf(stderr, "\n");
+}
+#endif
 #endif

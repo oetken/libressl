@@ -1,4 +1,4 @@
-/* $OpenBSD: dsa_gen.c,v 1.19 2015/02/15 08:48:24 miod Exp $ */
+/* $OpenBSD: dsa_gen.c,v 1.16 2014/07/12 16:03:37 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -126,10 +126,12 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 
 	bits = (bits + 63) / 64 * 64;
 
-	if (seed_len < (size_t)qsize) {
+	/*
+	 * NB: seed_len == 0 is special case: copy generated seed to
+ 	 * seed_in if it is not NULL.
+ 	 */
+	if (seed_len && seed_len < (size_t)qsize)
 		seed_in = NULL;		/* seed buffer too small -- ignore */
-		seed_len = 0;
-	}
 	/*
 	 * App. 2.2 of FIPS PUB 186 allows larger SEED,
 	 * but our internal buffers are restricted to 160 bits
@@ -139,29 +141,21 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 	if (seed_in != NULL)
 		memcpy(seed, seed_in, seed_len);
 
+	if ((ctx=BN_CTX_new()) == NULL)
+		goto err;
+
 	if ((mont=BN_MONT_CTX_new()) == NULL)
 		goto err;
 
-	if ((ctx=BN_CTX_new()) == NULL)
-		goto err;
 	BN_CTX_start(ctx);
-
-	if ((r0 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((g = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((W = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((q = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((X = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((c = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((p = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((test = BN_CTX_get(ctx)) == NULL)
-		goto err;
+	r0 = BN_CTX_get(ctx);
+	g = BN_CTX_get(ctx);
+	W = BN_CTX_get(ctx);
+	q = BN_CTX_get(ctx);
+	X = BN_CTX_get(ctx);
+	c = BN_CTX_get(ctx);
+	p = BN_CTX_get(ctx);
+	test = BN_CTX_get(ctx);
 
 	if (!BN_lshift(test, BN_value_one(), bits - 1))
 		goto err;
@@ -174,7 +168,7 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 			if (!BN_GENCB_call(cb, 0, m++))
 				goto err;
 
-			if (seed_len == 0) {
+			if (!seed_len) {
 				arc4random_buf(seed, qsize);
 				seed_is_random = 1;
 			} else {
@@ -342,7 +336,7 @@ err:
 			*counter_ret = counter;
 		if (h_ret != NULL)
 			*h_ret = h;
-		if (seed_out != NULL)
+		if (seed_out)
 			memcpy(seed_out, seed, qsize);
 	}
 	if (ctx) {

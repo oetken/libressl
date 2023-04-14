@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_gf2m.c,v 1.18 2015/02/10 09:50:12 miod Exp $ */
+/* $OpenBSD: bn_gf2m.c,v 1.15 2014/07/11 08:44:47 jsing Exp $ */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -88,6 +88,7 @@
  *
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -745,13 +746,8 @@ BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 				ubits--;
 			}
 
-			if (ubits <= BN_BITS2) {
-				/* See if poly was reducible. */
-				if (udp[0] == 0)
-					goto err;
-				if (udp[0] == 1)
-					break;
-			}
+			if (ubits <= BN_BITS2 && udp[0] == 1)
+				break;
 
 			if (ubits < vbits) {
 				i = ubits;
@@ -844,7 +840,8 @@ BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x, const BIGNUM *p,
 	bn_check_top(p);
 
 	BN_CTX_start(ctx);
-	if ((xinv = BN_CTX_get(ctx)) == NULL)
+	xinv = BN_CTX_get(ctx);
+	if (xinv == NULL)
 		goto err;
 
 	if (!BN_GF2m_mod_inv(xinv, x, p, ctx))
@@ -878,13 +875,11 @@ BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x, const BIGNUM *p,
 
 	BN_CTX_start(ctx);
 
-	if ((a = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((u = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((v = BN_CTX_get(ctx)) == NULL)
+	a = BN_CTX_get(ctx);
+	b = BN_CTX_get(ctx);
+	u = BN_CTX_get(ctx);
+	v = BN_CTX_get(ctx);
+	if (v == NULL)
 		goto err;
 
 	/* reduce x and y mod p */
@@ -1142,11 +1137,10 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	}
 
 	BN_CTX_start(ctx);
-	if ((a = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((w = BN_CTX_get(ctx)) == NULL)
+	a = BN_CTX_get(ctx);
+	z = BN_CTX_get(ctx);
+	w = BN_CTX_get(ctx);
+	if (w == NULL)
 		goto err;
 
 	if (!BN_GF2m_mod_arr(a, a_, p))
@@ -1175,11 +1169,10 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	}
 	else /* m is even */
 	{
-		if ((rho = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((w2 = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((tmp = BN_CTX_get(ctx)) == NULL)
+		rho = BN_CTX_get(ctx);
+		w2 = BN_CTX_get(ctx);
+		tmp = BN_CTX_get(ctx);
+		if (tmp == NULL)
 			goto err;
 		do {
 			if (!BN_rand(rho, p[0], 0, 0))

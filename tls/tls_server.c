@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_server.c,v 1.4 2015/02/07 06:19:26 jsing Exp $ */
+/* $OpenBSD: tls_server.c,v 1.11 2014/10/15 14:08:26 jsing Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -51,7 +51,6 @@ int
 tls_configure_server(struct tls *ctx)
 {
 	EC_KEY *ecdh_key;
-	unsigned char sid[SSL_MAX_SSL_SESSION_ID_LENGTH];
 
 	if ((ctx->ssl_ctx = SSL_CTX_new(SSLv23_server_method())) == NULL) {
 		tls_set_error(ctx, "ssl context failure");
@@ -63,33 +62,17 @@ tls_configure_server(struct tls *ctx)
 	if (tls_configure_keypair(ctx) != 0)
 		goto err;
 
-	if (ctx->config->dheparams == -1)
-		SSL_CTX_set_dh_auto(ctx->ssl_ctx, 1);
-	else if (ctx->config->dheparams == 1024)
-		SSL_CTX_set_dh_auto(ctx->ssl_ctx, 2);
-
-	if (ctx->config->ecdhecurve == -1) {
+	if (ctx->config->ecdhcurve == -1) {
 		SSL_CTX_set_ecdh_auto(ctx->ssl_ctx, 1);
-	} else if (ctx->config->ecdhecurve != NID_undef) {
+	} else if (ctx->config->ecdhcurve != NID_undef) {
 		if ((ecdh_key = EC_KEY_new_by_curve_name(
-		    ctx->config->ecdhecurve)) == NULL) {
-			tls_set_error(ctx, "failed to set ECDHE curve");
+		    ctx->config->ecdhcurve)) == NULL) {
+			tls_set_error(ctx, "failed to set ECDH curve");
 			goto err;
 		}
 		SSL_CTX_set_options(ctx->ssl_ctx, SSL_OP_SINGLE_ECDH_USE);
 		SSL_CTX_set_tmp_ecdh(ctx->ssl_ctx, ecdh_key);
 		EC_KEY_free(ecdh_key);
-	}
-
-	/*
-	 * Set session ID context to a random value.  We don't support
-	 * persistent caching of sessions so it is OK to set a temporary
-	 * session ID context that is valid during run time.
-	 */
-	arc4random_buf(sid, sizeof(sid));
-	if (!SSL_CTX_set_session_id_context(ctx->ssl_ctx, sid, sizeof(sid))) {
-		tls_set_error(ctx, "failed to set session id context");
-		goto err;
 	}
 
 	return (0);
@@ -102,7 +85,7 @@ int
 tls_accept_socket(struct tls *ctx, struct tls **cctx, int socket)
 {
 	struct tls *conn_ctx = *cctx;
-	int ret, err;
+	int ret, ssl_err;
 	
 	if ((ctx->flags & TLS_SERVER) == 0) {
 		tls_set_error(ctx, "not a server context");
@@ -131,11 +114,17 @@ tls_accept_socket(struct tls *ctx, struct tls **cctx, int socket)
 	}
 
 	if ((ret = SSL_accept(conn_ctx->ssl_conn)) != 1) {
-		err = tls_ssl_error(conn_ctx, ret, "accept");
-		if (err == TLS_READ_AGAIN || err == TLS_WRITE_AGAIN) {
-			return (err);
+		ssl_err = SSL_get_error(conn_ctx->ssl_conn, ret);
+		switch (ssl_err) {
+		case SSL_ERROR_WANT_READ:
+			return (TLS_READ_AGAIN);
+		case SSL_ERROR_WANT_WRITE:
+			return (TLS_WRITE_AGAIN);
+		default:
+			tls_set_error(ctx, "ssl accept failure (%i)",
+			    ssl_err);
+			goto err;
 		}
-		goto err;
 	}
 
 	return (0);

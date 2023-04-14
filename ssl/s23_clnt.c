@@ -1,4 +1,4 @@
-/* $OpenBSD: s23_clnt.c,v 1.35 2014/12/10 15:43:31 jsing Exp $ */
+/* $OpenBSD: s23_clnt.c,v 1.33 2014/10/18 16:13:16 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -140,8 +140,6 @@ const SSL_METHOD SSLv23_client_method_data = {
 	.ssl_dispatch_alert = ssl3_dispatch_alert,
 	.ssl_ctrl = ssl3_ctrl,
 	.ssl_ctx_ctrl = ssl3_ctx_ctrl,
-	.get_cipher_by_char = ssl3_get_cipher_by_char,
-	.put_cipher_by_char = ssl3_put_cipher_by_char,
 	.ssl_pending = ssl_undefined_const_function,
 	.num_ciphers = ssl3_num_ciphers,
 	.get_cipher = ssl3_get_cipher,
@@ -232,10 +230,7 @@ ssl23_connect(SSL *s)
 				goto end;
 			}
 
-			if (!ssl3_init_finished_mac(s)) {
-				ret = -1;
-				goto end;
-			}
+			ssl3_init_finished_mac(s);
 
 			s->state = SSL23_ST_CW_CLNT_HELLO_A;
 			s->ctx->stats.sess_connect++;

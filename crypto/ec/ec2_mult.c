@@ -1,4 +1,4 @@
-/* $OpenBSD: ec2_mult.c,v 1.6 2015/02/08 22:25:03 miod Exp $ */
+/* $OpenBSD: ec2_mult.c,v 1.4 2014/07/10 22:45:56 jsing Exp $ */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -91,7 +91,8 @@ gf2m_Mdouble(const EC_GROUP *group, BIGNUM *x, BIGNUM *z, BN_CTX *ctx)
 
 	/* Since Mdouble is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t1 = BN_CTX_get(ctx)) == NULL)
+	t1 = BN_CTX_get(ctx);
+	if (t1 == NULL)
 		goto err;
 
 	if (!group->meth->field_sqr(group, x, x, ctx))
@@ -131,9 +132,9 @@ gf2m_Madd(const EC_GROUP *group, const BIGNUM *x, BIGNUM *x1, BIGNUM *z1,
 
 	/* Since Madd is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t2 = BN_CTX_get(ctx)) == NULL)
+	t1 = BN_CTX_get(ctx);
+	t2 = BN_CTX_get(ctx);
+	if (t2 == NULL)
 		goto err;
 
 	if (!BN_copy(t1, x))
@@ -190,11 +191,10 @@ gf2m_Mxy(const EC_GROUP *group, const BIGNUM *x, const BIGNUM *y, BIGNUM *x1,
 	}
 	/* Since Mxy is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((t3 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t4 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((t5 = BN_CTX_get(ctx)) == NULL)
+	t3 = BN_CTX_get(ctx);
+	t4 = BN_CTX_get(ctx);
+	t5 = BN_CTX_get(ctx);
+	if (t5 == NULL)
 		goto err;
 
 	if (!BN_one(t5))
@@ -272,7 +272,7 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 	}
 	/* if result should be point at infinity */
 	if ((scalar == NULL) || BN_is_zero(scalar) || (point == NULL) ||
-	    EC_POINT_is_at_infinity(group, point) > 0) {
+	    EC_POINT_is_at_infinity(group, point)) {
 		return EC_POINT_set_to_infinity(group, r);
 	}
 	/* only support affine coordinates */
@@ -281,9 +281,9 @@ ec_GF2m_montgomery_point_multiply(const EC_GROUP *group, EC_POINT *r,
 
 	/* Since point_multiply is static we can guarantee that ctx != NULL. */
 	BN_CTX_start(ctx);
-	if ((x1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z1 = BN_CTX_get(ctx)) == NULL)
+	x1 = BN_CTX_get(ctx);
+	z1 = BN_CTX_get(ctx);
+	if (z1 == NULL)
 		goto err;
 
 	x2 = &r->X;

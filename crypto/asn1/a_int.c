@@ -1,4 +1,4 @@
-/* $OpenBSD: a_int.c,v 1.25 2015/02/10 08:33:10 jsing Exp $ */
+/* $OpenBSD: a_int.c,v 1.23 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -268,7 +268,7 @@ c2i_ASN1_INTEGER(ASN1_INTEGER **a, const unsigned char **pp, long len)
 
 err:
 	ASN1err(ASN1_F_C2I_ASN1_INTEGER, i);
-	if (a == NULL || *a != ret)
+	if ((ret != NULL) && ((a == NULL) || (*a != ret)))
 		M_ASN1_INTEGER_free(ret);
 	return (NULL);
 }
@@ -335,7 +335,7 @@ d2i_ASN1_UINTEGER(ASN1_INTEGER **a, const unsigned char **pp, long length)
 
 err:
 	ASN1err(ASN1_F_D2I_ASN1_UINTEGER, i);
-	if (a == NULL || *a != ret)
+	if ((ret != NULL) && ((a == NULL) || (*a != ret)))
 		M_ASN1_INTEGER_free(ret);
 	return (NULL);
 }
@@ -461,3 +461,6 @@ ASN1_INTEGER_to_BN(const ASN1_INTEGER *ai, BIGNUM *bn)
 		BN_set_negative(ret, 1);
 	return (ret);
 }
+
+IMPLEMENT_STACK_OF(ASN1_INTEGER)
+IMPLEMENT_ASN1_SET_OF(ASN1_INTEGER)

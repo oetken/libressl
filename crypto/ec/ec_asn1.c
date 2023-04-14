@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_asn1.c,v 1.12 2015/02/10 05:43:09 jsing Exp $ */
+/* $OpenBSD: ec_asn1.c,v 1.9 2014/07/10 22:45:57 jsing Exp $ */
 /*
  * Written by Nils Larsch for the OpenSSL project.
  */
@@ -205,18 +205,7 @@ ASN1_SEQUENCE(X9_62_PENTANOMIAL) = {
 } ASN1_SEQUENCE_END(X9_62_PENTANOMIAL)
 
 DECLARE_ASN1_ALLOC_FUNCTIONS(X9_62_PENTANOMIAL)
-
-X9_62_PENTANOMIAL *
-X9_62_PENTANOMIAL_new(void)
-{
-	return (X9_62_PENTANOMIAL*)ASN1_item_new(&X9_62_PENTANOMIAL_it);
-}
-
-void
-X9_62_PENTANOMIAL_free(X9_62_PENTANOMIAL *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &X9_62_PENTANOMIAL_it);
-}
+IMPLEMENT_ASN1_ALLOC_FUNCTIONS(X9_62_PENTANOMIAL)
 
 ASN1_ADB_TEMPLATE(char_two_def) = ASN1_SIMPLE(X9_62_CHARACTERISTIC_TWO, p.other, ASN1_ANY);
 
@@ -232,18 +221,7 @@ ASN1_SEQUENCE(X9_62_CHARACTERISTIC_TWO) = {
 	ASN1_ADB_OBJECT(X9_62_CHARACTERISTIC_TWO)
 } ASN1_SEQUENCE_END(X9_62_CHARACTERISTIC_TWO)
 DECLARE_ASN1_ALLOC_FUNCTIONS(X9_62_CHARACTERISTIC_TWO)
-
-X9_62_CHARACTERISTIC_TWO *
-X9_62_CHARACTERISTIC_TWO_new(void)
-{
-	return (X9_62_CHARACTERISTIC_TWO*)ASN1_item_new(&X9_62_CHARACTERISTIC_TWO_it);
-}
-
-void
-X9_62_CHARACTERISTIC_TWO_free(X9_62_CHARACTERISTIC_TWO *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &X9_62_CHARACTERISTIC_TWO_it);
-}
+IMPLEMENT_ASN1_ALLOC_FUNCTIONS(X9_62_CHARACTERISTIC_TWO)
 ASN1_ADB_TEMPLATE(fieldID_def) = ASN1_SIMPLE(X9_62_FIELDID, p.other, ASN1_ANY);
 
 ASN1_ADB(X9_62_FIELDID) = {
@@ -271,18 +249,7 @@ ASN1_SEQUENCE(ECPARAMETERS) = {
 	ASN1_OPT(ECPARAMETERS, cofactor, ASN1_INTEGER)
 } ASN1_SEQUENCE_END(ECPARAMETERS)
 DECLARE_ASN1_ALLOC_FUNCTIONS(ECPARAMETERS)
-
-ECPARAMETERS *
-ECPARAMETERS_new(void)
-{
-	return (ECPARAMETERS*)ASN1_item_new(&ECPARAMETERS_it);
-}
-
-void
-ECPARAMETERS_free(ECPARAMETERS *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &ECPARAMETERS_it);
-}
+IMPLEMENT_ASN1_ALLOC_FUNCTIONS(ECPARAMETERS)
 
 ASN1_CHOICE(ECPKPARAMETERS) = {
 	ASN1_SIMPLE(ECPKPARAMETERS, value.named_curve, ASN1_OBJECT),
@@ -291,31 +258,7 @@ ASN1_CHOICE(ECPKPARAMETERS) = {
 } ASN1_CHOICE_END(ECPKPARAMETERS)
 DECLARE_ASN1_FUNCTIONS_const(ECPKPARAMETERS)
 DECLARE_ASN1_ENCODE_FUNCTIONS_const(ECPKPARAMETERS, ECPKPARAMETERS)
-
-ECPKPARAMETERS *
-d2i_ECPKPARAMETERS(ECPKPARAMETERS **a, const unsigned char **in, long len)
-{
-	return (ECPKPARAMETERS *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
-	    &ECPKPARAMETERS_it);
-}
-
-int
-i2d_ECPKPARAMETERS(const ECPKPARAMETERS *a, unsigned char **out)
-{
-	return ASN1_item_i2d((ASN1_VALUE *)a, out, &ECPKPARAMETERS_it);
-}
-
-ECPKPARAMETERS *
-ECPKPARAMETERS_new(void)
-{
-	return (ECPKPARAMETERS *)ASN1_item_new(&ECPKPARAMETERS_it);
-}
-
-void
-ECPKPARAMETERS_free(ECPKPARAMETERS *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &ECPKPARAMETERS_it);
-}
+IMPLEMENT_ASN1_FUNCTIONS_const(ECPKPARAMETERS)
 
 ASN1_SEQUENCE(EC_PRIVATEKEY) = {
 	ASN1_SIMPLE(EC_PRIVATEKEY, version, LONG),
@@ -325,31 +268,7 @@ ASN1_SEQUENCE(EC_PRIVATEKEY) = {
 } ASN1_SEQUENCE_END(EC_PRIVATEKEY)
 DECLARE_ASN1_FUNCTIONS_const(EC_PRIVATEKEY)
 DECLARE_ASN1_ENCODE_FUNCTIONS_const(EC_PRIVATEKEY, EC_PRIVATEKEY)
-
-EC_PRIVATEKEY *
-d2i_EC_PRIVATEKEY(EC_PRIVATEKEY **a, const unsigned char **in, long len)
-{
-	return (EC_PRIVATEKEY *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
-	    &EC_PRIVATEKEY_it);
-}
-
-int
-i2d_EC_PRIVATEKEY(const EC_PRIVATEKEY *a, unsigned char **out)
-{
-	return ASN1_item_i2d((ASN1_VALUE *)a, out, &EC_PRIVATEKEY_it);
-}
-
-EC_PRIVATEKEY *
-EC_PRIVATEKEY_new(void)
-{
-	return (EC_PRIVATEKEY *)ASN1_item_new(&EC_PRIVATEKEY_it);
-}
-
-void
-EC_PRIVATEKEY_free(EC_PRIVATEKEY *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &EC_PRIVATEKEY_it);
-}
+IMPLEMENT_ASN1_FUNCTIONS_const(EC_PRIVATEKEY)
 /* some declarations of internal function */
 
 /* ec_asn1_group2field() sets the values in a X9_62_FIELDID object */
@@ -999,19 +918,19 @@ d2i_ECPKParameters(EC_GROUP ** a, const unsigned char **in, long len)
 
 	if ((params = d2i_ECPKPARAMETERS(NULL, in, len)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_D2I_ECPKPARAMETERS_FAILURE);
-		goto err;
+		ECPKPARAMETERS_free(params);
+		return NULL;
 	}
 	if ((group = ec_asn1_pkparameters2group(params)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_PKPARAMETERS2GROUP_FAILURE);
-		goto err;
+		ECPKPARAMETERS_free(params);
+		return NULL;
 	}
-
-	if (a != NULL) {
+	if (a && *a)
 		EC_GROUP_clear_free(*a);
+	if (a)
 		*a = group;
-	}
 
-err:
 	ECPKPARAMETERS_free(params);
 	return (group);
 }
@@ -1039,6 +958,7 @@ i2d_ECPKParameters(const EC_GROUP * a, unsigned char **out)
 EC_KEY *
 d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 {
+	int ok = 0;
 	EC_KEY *ret = NULL;
 	EC_PRIVATEKEY *priv_key = NULL;
 
@@ -1053,9 +973,12 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 	}
 	if (a == NULL || *a == NULL) {
 		if ((ret = EC_KEY_new()) == NULL) {
-			ECerr(EC_F_D2I_ECPRIVATEKEY, ERR_R_MALLOC_FAILURE);
+			ECerr(EC_F_D2I_ECPRIVATEKEY,
+			    ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
+		if (a)
+			*a = ret;
 	} else
 		ret = *a;
 
@@ -1105,19 +1028,17 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 			goto err;
 		}
 	}
-
-	EC_PRIVATEKEY_free(priv_key);
-	if (a != NULL)
-		*a = ret;
-	return (ret);
-
+	ok = 1;
 err:
-	if (a == NULL || *a != ret)
-		EC_KEY_free(ret);
+	if (!ok) {
+		if (ret)
+			EC_KEY_free(ret);
+		ret = NULL;
+	}
 	if (priv_key)
 		EC_PRIVATEKEY_free(priv_key);
 
-	return (NULL);
+	return (ret);
 }
 
 int 
@@ -1230,6 +1151,8 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 			ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_MALLOC_FAILURE);
 			return NULL;
 		}
+		if (a)
+			*a = ret;
 	} else
 		ret = *a;
 
@@ -1237,9 +1160,6 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 		ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_EC_LIB);
 		return NULL;
 	}
-
-	if (a != NULL)
-		*a = ret;
 	return ret;
 }
 

@@ -44,8 +44,6 @@ conn_has_oob_data(int fd)
 static int
 is_socket(int fd)
 {
-	if (fd < 3)
-		return 0;
 	WSANETWORKEVENTS events;
 	return (WSAEnumNetworkEvents((SOCKET)fd, NULL, &events) == 0);
 }
@@ -162,6 +160,10 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 	nfds_t i;
 	int timespent_ms, looptime_ms;
 
+#define FD_IS_SOCKET (1 << 0)
+	int fd_state[FD_SETSIZE];
+	int num_fds;
+
 	/*
 	 * select machinery
 	 */
@@ -188,18 +190,22 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 	FD_ZERO(&rfds);
 	FD_ZERO(&wfds);
 	FD_ZERO(&efds);
+	num_fds = 0;
 	num_sockets = 0;
 	num_handles = 0;
 
 	for (i = 0; i < nfds; i++) {
-		if ((int)pfds[i].fd < 0)
+		if ((int)pfds[i].fd < 0) {
 			continue;
+		}
 
 		if (is_socket(pfds[i].fd)) {
 			if (num_sockets >= FD_SETSIZE) {
 				errno = EINVAL;
 				return -1;
 			}
+
+			fd_state[num_fds] = FD_IS_SOCKET;
 
 			FD_SET(pfds[i].fd, &efds);
 
@@ -223,6 +229,8 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 			handles[num_handles++] =
 			    (HANDLE)_get_osfhandle(pfds[i].fd);
 		}
+
+		num_fds++;
 	}
 
 	/*
@@ -246,22 +254,21 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 	 * than simply triggering if there is space available.
 	 */
 	timespent_ms = 0;
-	wait_rc = WAIT_FAILED;
+	wait_rc = 0;
 
-	if (timeout_ms < 0)
+	if (timeout_ms < 0) {
 		timeout_ms = INFINITE;
+	}
 	looptime_ms = timeout_ms > 100 ? 100 : timeout_ms;
 
 	do {
 		struct timeval tv = {0, looptime_ms * 1000};
-		int handle_signaled = 0;
 
 		/*
 		 * Check if any file handles have signaled
 		 */
 		if (num_handles) {
-			wait_rc = WaitForMultipleObjects(num_handles, handles,
-					FALSE, 0);
+			wait_rc = WaitForMultipleObjects(num_handles, handles, FALSE, 0);
 			if (wait_rc == WAIT_FAILED) {
 				/*
 				 * The documentation for WaitForMultipleObjects
@@ -278,20 +285,18 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 		/*
 		 * If we signaled on a file handle, don't wait on the sockets.
 		 */
-		if (wait_rc >= WAIT_OBJECT_0 &&
-		    (wait_rc <= WAIT_OBJECT_0 + num_handles - 1)) {
+		if (wait_rc >= WAIT_OBJECT_0)
 			tv.tv_usec = 0;
-			handle_signaled = 1;
-		}
 
 		/*
 		 * Check if any sockets have signaled
 		 */
 		rc = select(0, &rfds, &wfds, &efds, &tv);
-		if (!handle_signaled && rc == SOCKET_ERROR)
+		if (rc == SOCKET_ERROR) {
 			return wsa_select_errno(WSAGetLastError());
+		}
 
-		if (handle_signaled || (num_sockets && rc > 0))
+		if (wait_rc >= WAIT_OBJECT_0 || (num_sockets && rc > 0))
 			break;
 
 		timespent_ms += looptime_ms;
@@ -300,14 +305,14 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 
 	rc = 0;
 	num_handles = 0;
+	num_fds = 0;
 	for (i = 0; i < nfds; i++) {
 		pfds[i].revents = 0;
 
 		if ((int)pfds[i].fd < 0)
 			continue;
 
-		if (is_socket(pfds[i].fd)) {
-
+		if (fd_state[num_fds] & FD_IS_SOCKET) {
 			pfds[i].revents = compute_select_revents(pfds[i].fd,
 			    pfds[i].events, &rfds, &wfds, &efds);
 
@@ -317,6 +322,8 @@ poll(struct pollfd *pfds, nfds_t nfds, int timeout_ms)
 			    wait_rc);
 			num_handles++;
 		}
+
+		num_fds++;
 
 		if (pfds[i].revents)
 			rc++;

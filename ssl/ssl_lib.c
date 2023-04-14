@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_lib.c,v 1.100 2015/02/22 15:29:39 jsing Exp $ */
+/* $OpenBSD: ssl_lib.c,v 1.89 2014/10/31 15:25:55 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -144,7 +144,6 @@
 
 #include "ssl_locl.h"
 
-#include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/lhash.h>
 #include <openssl/objects.h>
@@ -334,19 +333,9 @@ SSL_new(SSL_CTX *ctx)
 	s->tlsext_ocsp_resplen = -1;
 	CRYPTO_add(&ctx->references, 1, CRYPTO_LOCK_SSL_CTX);
 	s->initial_ctx = ctx;
+# ifndef OPENSSL_NO_NEXTPROTONEG
 	s->next_proto_negotiated = NULL;
-
-	if (s->ctx->alpn_client_proto_list != NULL) {
-		s->alpn_client_proto_list =
-		    malloc(s->ctx->alpn_client_proto_list_len);
-		if (s->alpn_client_proto_list == NULL)
-			goto err;
-		memcpy(s->alpn_client_proto_list,
-		    s->ctx->alpn_client_proto_list,
-		    s->ctx->alpn_client_proto_list_len);
-		s->alpn_client_proto_list_len =
-		    s->ctx->alpn_client_proto_list_len;
-	}
+# endif
 
 	s->verify_result = X509_V_OK;
 
@@ -559,8 +548,9 @@ SSL_free(SSL *s)
 	SSL_CTX_free(s->ctx);
 
 
+#ifndef OPENSSL_NO_NEXTPROTONEG
 	free(s->next_proto_negotiated);
-	free(s->alpn_client_proto_list);
+#endif
 
 #ifndef OPENSSL_NO_SRTP
 	if (s->srtp_profiles)
@@ -1356,13 +1346,11 @@ SSL_get_shared_ciphers(const SSL *s, char *buf, int len)
 	size_t			 curlen = 0;
 	int			 i;
 
-	if (s->session == NULL || s->session->ciphers == NULL || len < 2)
-		return (NULL);
+	if ((s->session == NULL) || (s->session->ciphers == NULL) ||
+		(len < 2))
+	return (NULL);
 
 	sk = s->session->ciphers;
-	if (sk_SSL_CIPHER_num(sk) == 0)
-		return (NULL);
-
 	buf[0] = '\0';
 	for (i = 0; i < sk_SSL_CIPHER_num(sk); i++) {
 		c = sk_SSL_CIPHER_value(sk, i);
@@ -1406,8 +1394,12 @@ ssl_cipher_list_to_bytes(SSL *s, STACK_OF(SSL_CIPHER) *sk, unsigned char *p)
 	 * If p == q, no ciphers and caller indicates an error. Otherwise
 	 * add SCSV if not renegotiating.
 	 */
-	if (p != q && !s->renegotiate)
-		s2n(SSL3_CK_SCSV & SSL3_CK_VALUE_MASK, p);
+	if (p != q && !s->renegotiate) {
+		static SSL_CIPHER scsv = {
+			0, NULL, SSL3_CK_SCSV, 0, 0, 0, 0, 0, 0, 0, 0, 0
+		};
+		s2n(ssl3_cipher_get_value(&scsv), p);
+	}
 
 	return (p - q);
 }
@@ -1419,9 +1411,8 @@ ssl_bytes_to_cipher_list(SSL *s, unsigned char *p, int num,
 	const SSL_CIPHER	*c;
 	STACK_OF(SSL_CIPHER)	*sk;
 	int			 i;
-	unsigned long		 cipher_id;
+	unsigned int		 cipher_id;
 	uint16_t		 cipher_value;
-	uint16_t		 max_version;
 
 	if (s->s3)
 		s->s3->send_connection_binding = 0;
@@ -1444,11 +1435,9 @@ ssl_bytes_to_cipher_list(SSL *s, unsigned char *p, int num,
 		n2s(p, cipher_value);
 		cipher_id = SSL3_CK_ID | cipher_value;
 
-		if (s->s3 != NULL && cipher_id == SSL3_CK_SCSV) {
-			/*
-			 * TLS_EMPTY_RENEGOTIATION_INFO_SCSV is fatal if
-			 * renegotiating.
-			 */
+		/* Check for SCSV */
+		if (s->s3 && cipher_id == SSL3_CK_SCSV) {
+			/* SCSV is fatal if renegotiating. */
 			if (s->renegotiate) {
 				SSLerr(SSL_F_SSL_BYTES_TO_CIPHER_LIST,
 				    SSL_R_SCSV_RECEIVED_WHEN_RENEGOTIATING);
@@ -1461,26 +1450,8 @@ ssl_bytes_to_cipher_list(SSL *s, unsigned char *p, int num,
 			continue;
 		}
 
-		if (cipher_id == SSL3_CK_FALLBACK_SCSV) {
-			/*
-			 * TLS_FALLBACK_SCSV indicates that the client
-			 * previously tried a higher protocol version.
-			 * Fail if the current version is an unexpected
-			 * downgrade.
-			 */
-			max_version = ssl_max_server_version(s);
-			if (max_version == 0 || s->version < max_version) {
-				SSLerr(SSL_F_SSL_BYTES_TO_CIPHER_LIST,
-				    SSL_R_INAPPROPRIATE_FALLBACK);
-				if (s->s3 != NULL)
-					ssl3_send_alert(s, SSL3_AL_FATAL,
-					    SSL_AD_INAPPROPRIATE_FALLBACK);
-				goto err;
-			}
-			continue;
-		}
-
-		if ((c = ssl3_get_cipher_by_value(cipher_value)) != NULL) {
+		c = ssl3_get_cipher_by_id(cipher_id);
+		if (c != NULL) {
 			if (!sk_SSL_CIPHER_push(sk, c)) {
 				SSLerr(SSL_F_SSL_BYTES_TO_CIPHER_LIST,
 				    ERR_R_MALLOC_FAILURE);
@@ -1525,6 +1496,7 @@ SSL_get_servername_type(const SSL *s)
 	return (-1);
 }
 
+# ifndef OPENSSL_NO_NEXTPROTONEG
 /*
  * SSL_select_next_proto implements the standard protocol selection. It is
  * expected that this function is called from the callback set by
@@ -1655,75 +1627,7 @@ SSL_CTX_set_next_proto_select_cb(SSL_CTX *ctx, int (*cb) (SSL *s,
 	ctx->next_proto_select_cb = cb;
 	ctx->next_proto_select_cb_arg = arg;
 }
-
-/*
- * SSL_CTX_set_alpn_protos sets the ALPN protocol list to the specified
- * protocols, which must be in wire-format (i.e. a series of non-empty,
- * 8-bit length-prefixed strings). Returns 0 on success.
- */
-int
-SSL_CTX_set_alpn_protos(SSL_CTX *ctx, const unsigned char *protos,
-    unsigned int protos_len)
-{
-	free(ctx->alpn_client_proto_list);
-	if ((ctx->alpn_client_proto_list = malloc(protos_len)) == NULL)
-		return (1);
-	memcpy(ctx->alpn_client_proto_list, protos, protos_len);
-	ctx->alpn_client_proto_list_len = protos_len;
-
-	return (0);
-}
-
-/*
- * SSL_set_alpn_protos sets the ALPN protocol list to the specified
- * protocols, which must be in wire-format (i.e. a series of non-empty,
- * 8-bit length-prefixed strings). Returns 0 on success.
- */
-int
-SSL_set_alpn_protos(SSL *ssl, const unsigned char* protos,
-    unsigned int protos_len)
-{
-	free(ssl->alpn_client_proto_list);
-	if ((ssl->alpn_client_proto_list = malloc(protos_len)) == NULL)
-		return (1);
-	memcpy(ssl->alpn_client_proto_list, protos, protos_len);
-	ssl->alpn_client_proto_list_len = protos_len;
-
-	return (0);
-}
-
-/*
- * SSL_CTX_set_alpn_select_cb sets a callback function that is called during
- * ClientHello processing in order to select an ALPN protocol from the
- * client's list of offered protocols.
- */
-void
-SSL_CTX_set_alpn_select_cb(SSL_CTX* ctx,
-    int (*cb) (SSL *ssl, const unsigned char **out, unsigned char *outlen,
-    const unsigned char *in, unsigned int inlen, void *arg), void *arg)
-{
-	ctx->alpn_select_cb = cb;
-	ctx->alpn_select_cb_arg = arg;
-}
-
-/*
- * SSL_get0_alpn_selected gets the selected ALPN protocol (if any). On return
- * it sets data to point to len bytes of protocol name (not including the
- * leading length-prefix byte). If the server didn't respond with* a negotiated
- * protocol then len will be zero.
- */
-void
-SSL_get0_alpn_selected(const SSL *ssl, const unsigned char **data,
-    unsigned *len)
-{
-	*data = NULL;
-	*len = 0;
-
-	if (ssl->s3 != NULL) {
-		*data = ssl->s3->alpn_selected;
-		*len = ssl->s3->alpn_selected_len;
-	}
-}
+# endif
 
 int
 SSL_export_keying_material(SSL *s, unsigned char *out, size_t olen,
@@ -1893,8 +1797,10 @@ SSL_CTX_new(const SSL_METHOD *meth)
 	ret->tlsext_status_cb = 0;
 	ret->tlsext_status_arg = NULL;
 
+# ifndef OPENSSL_NO_NEXTPROTONEG
 	ret->next_protos_advertised_cb = 0;
 	ret->next_proto_select_cb = 0;
+# endif
 #ifndef OPENSSL_NO_ENGINE
 	ret->client_cert_engine = NULL;
 #ifdef OPENSSL_SSL_CLIENT_ENGINE_AUTO
@@ -1988,8 +1894,6 @@ SSL_CTX_free(SSL_CTX *a)
 		ENGINE_finish(a->client_cert_engine);
 #endif
 
-	free(a->alpn_client_proto_list);
-
 	free(a);
 }
 
@@ -2062,6 +1966,11 @@ ssl_set_cert_masks(CERT *c, const SSL_CIPHER *cipher)
 	if (cpk->x509 != NULL && cpk->privatekey !=NULL) {
 		mask_k |= SSL_kGOST;
 		mask_a |= SSL_aGOST01;
+	}
+	cpk = &(c->pkeys[SSL_PKEY_GOST94]);
+	if (cpk->x509 != NULL && cpk->privatekey !=NULL) {
+		mask_k |= SSL_kGOST;
+		mask_a |= SSL_aGOST94;
 	}
 
 	if (rsa_enc)
@@ -2218,6 +2127,8 @@ ssl_get_server_send_pkey(const SSL *s)
 			i = SSL_PKEY_RSA_SIGN;
 		else
 			i = SSL_PKEY_RSA_ENC;
+	} else if (alg_a & SSL_aGOST94) {
+		i = SSL_PKEY_GOST94;
 	} else if (alg_a & SSL_aGOST01) {
 		i = SSL_PKEY_GOST01;
 	} else { /* if (alg_a & SSL_aNULL) */
@@ -2567,36 +2478,6 @@ SSL_get_version(const SSL *s)
 	return ssl_version_string(s->version);
 }
 
-uint16_t
-ssl_max_server_version(SSL *s)
-{
-	uint16_t max_version;
-
-	/*
-	 * The SSL method will be changed during version negotiation, as such
-	 * we want to use the SSL method from the context.
-	 */
-	max_version = s->ctx->method->version;
-
-	if (SSL_IS_DTLS(s))
-		return (DTLS1_VERSION);
-
-	if ((s->options & SSL_OP_NO_TLSv1_2) == 0 &&
-	    max_version >= TLS1_2_VERSION)
-		return (TLS1_2_VERSION);
-	if ((s->options & SSL_OP_NO_TLSv1_1) == 0 &&
-	    max_version >= TLS1_1_VERSION)
-		return (TLS1_1_VERSION);
-	if ((s->options & SSL_OP_NO_TLSv1) == 0 &&
-	    max_version >= TLS1_VERSION)
-		return (TLS1_VERSION);
-	if ((s->options & SSL_OP_NO_SSLv3) == 0 &&
-	    max_version >= SSL3_VERSION)
-		return (SSL3_VERSION);
-
-	return (0);
-}
-
 SSL *
 SSL_dup(SSL *s)
 {
@@ -2912,12 +2793,6 @@ SSL_CTX_load_verify_locations(SSL_CTX *ctx, const char *CAfile,
 	return (X509_STORE_load_locations(ctx->cert_store, CAfile, CApath));
 }
 
-int
-SSL_CTX_load_verify_mem(SSL_CTX *ctx, void *buf, int len)
-{
-	return (X509_STORE_load_mem(ctx->cert_store, buf, len));
-}
-
 void
 SSL_set_info_callback(SSL *ssl, void (*cb)(const SSL *ssl, int type, int val))
 {
@@ -3089,12 +2964,8 @@ ssl_replace_hash(EVP_MD_CTX **hash, const EVP_MD *md)
 {
 	ssl_clear_hash_ctx(hash);
 	*hash = EVP_MD_CTX_create();
-	if (*hash != NULL && md != NULL) {
-		if (!EVP_DigestInit_ex(*hash, md, NULL)) {
-			ssl_clear_hash_ctx(hash);
-			return (NULL);
-		}
-	}
+	if (*hash != NULL && md != NULL)
+		EVP_DigestInit_ex(*hash, md, NULL);
 	return (*hash);
 }
 
@@ -3118,4 +2989,5 @@ SSL_cache_hit(SSL *s)
 	return (s->hit);
 }
 
+IMPLEMENT_STACK_OF(SSL_CIPHER)
 IMPLEMENT_OBJ_BSEARCH_GLOBAL_CMP_FN(SSL_CIPHER, SSL_CIPHER, ssl_cipher_id);
