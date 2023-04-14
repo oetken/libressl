@@ -334,7 +334,7 @@ EVP_EncryptUpdate(EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl,
 		return 0;
 	}
 	if (i != 0) {
-		if (bl - i > inl) {
+		if (i + inl < bl) {
 			memcpy(&(ctx->buf[i]), in, inl);
 			ctx->buf_len += inl;
 			*outl = 0;
@@ -562,7 +562,7 @@ EVP_CIPHER_CTX_cleanup(EVP_CIPHER_CTX *c)
 			return 0;
 		/* Cleanse cipher context data */
 		if (c->cipher_data)
-			OPENSSL_cleanse(c->cipher_data, c->cipher->ctx_size);
+			explicit_bzero(c->cipher_data, c->cipher->ctx_size);
 	}
 	free(c->cipher_data);
 #ifndef OPENSSL_NO_ENGINE

@@ -263,7 +263,6 @@ set(
 	ecdh/ech_err.c
 	ecdh/ech_key.c
 	ecdh/ech_lib.c
-	ecdh/ech_ossl.c
 	ecdsa/ecs_asn1.c
 	ecdsa/ecs_err.c
 	ecdsa/ecs_lib.c
@@ -335,7 +334,6 @@ set(
 	evp/m_md5.c
 	evp/m_null.c
 	evp/m_ripemd.c
-	evp/m_sha.c
 	evp/m_sha1.c
 	evp/m_sigver.c
 	evp/m_streebog.c
@@ -473,8 +471,6 @@ set(
 	sha/sha1dgst.c
 	sha/sha256.c
 	sha/sha512.c
-	sha/sha_dgst.c
-	sha/sha_one.c
 	stack/stack.c
 	ts/ts_asn1.c
 	ts/ts_conf.c
