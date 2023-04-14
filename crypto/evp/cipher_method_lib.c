@@ -1,6 +1,10 @@
-/* $OpenBSD: bn_depr.c,v 1.8 2022/11/26 16:08:51 tb Exp $ */
+/*	$OpenBSD: cipher_method_lib.c,v 1.8 2023/03/01 11:27:37 tb Exp $ */
+/*
+ * Written by Richard Levitte (levitte@openssl.org) for the OpenSSL project
+ * 2015.
+ */
 /* ====================================================================
- * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 2015 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -17,12 +21,12 @@
  * 3. All advertising materials mentioning features or use of this
  *    software must display the following acknowledgment:
  *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit. (http://www.openssl.org/)"
+ *    for use in the OpenSSL Toolkit. (http://www.OpenSSL.org/)"
  *
  * 4. The names "OpenSSL Toolkit" and "OpenSSL Project" must not be used to
  *    endorse or promote products derived from this software without
  *    prior written permission. For written permission, please contact
- *    openssl-core@openssl.org.
+ *    licensing@OpenSSL.org.
  *
  * 5. Products derived from this software may not be called "OpenSSL"
  *    nor may "OpenSSL" appear in their names without prior written
@@ -31,7 +35,7 @@
  * 6. Redistributions of any form whatsoever must retain the following
  *    acknowledgment:
  *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit (http://www.openssl.org/)"
+ *    for use in the OpenSSL Toolkit (http://www.OpenSSL.org/)"
  *
  * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY
  * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
@@ -53,63 +57,122 @@
  *
  */
 
-/* Support for deprecated functions goes here - static linkage will only slurp
- * this code if applications are using them directly. */
+#include <stdlib.h>
 
-#include <stdio.h>
-#include <time.h>
+#include <openssl/evp.h>
 
-#include <openssl/opensslconf.h>
+#include "evp_local.h"
 
-#include "bn_local.h"
-
-#ifndef OPENSSL_NO_DEPRECATED
-BIGNUM *
-BN_generate_prime(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
-    const BIGNUM *rem, void (*callback)(int, int, void *), void *cb_arg)
+EVP_CIPHER *
+EVP_CIPHER_meth_new(int cipher_type, int block_size, int key_len)
 {
-	BN_GENCB cb;
-	BIGNUM *rnd = NULL;
-	int found = 0;
+	EVP_CIPHER *cipher;
 
-	BN_GENCB_set_old(&cb, callback, cb_arg);
+	if ((cipher = calloc(1, sizeof(*cipher))) == NULL)
+		return NULL;
 
-	if (ret == NULL) {
-		if ((rnd = BN_new()) == NULL)
-			goto err;
-	} else
-		rnd = ret;
-	if (!BN_generate_prime_ex(rnd, bits, safe, add, rem, &cb))
-		goto err;
+	cipher->nid = cipher_type;
+	cipher->block_size = block_size;
+	cipher->key_len = key_len;
 
-	/* we have a prime :-) */
-	found = 1;
+	return cipher;
+}
 
-err:
-	if (!found && (ret == NULL) && (rnd != NULL))
-		BN_free(rnd);
-	return (found ? rnd : NULL);
+EVP_CIPHER *
+EVP_CIPHER_meth_dup(const EVP_CIPHER *cipher)
+{
+	EVP_CIPHER *copy;
+
+	if ((copy = calloc(1, sizeof(*copy))) == NULL)
+		return NULL;
+
+	*copy = *cipher;
+
+	return copy;
+}
+
+void
+EVP_CIPHER_meth_free(EVP_CIPHER *cipher)
+{
+	free(cipher);
 }
 
 int
-BN_is_prime(const BIGNUM *a, int checks, void (*callback)(int, int, void *),
-    BN_CTX *ctx_passed, void *cb_arg)
+EVP_CIPHER_meth_set_iv_length(EVP_CIPHER *cipher, int iv_len)
 {
-	BN_GENCB cb;
+	cipher->iv_len = iv_len;
 
-	BN_GENCB_set_old(&cb, callback, cb_arg);
-	return BN_is_prime_ex(a, checks, ctx_passed, &cb);
+	return 1;
 }
 
 int
-BN_is_prime_fasttest(const BIGNUM *a, int checks,
-    void (*callback)(int, int, void *), BN_CTX *ctx_passed, void *cb_arg,
-    int do_trial_division)
+EVP_CIPHER_meth_set_flags(EVP_CIPHER *cipher, unsigned long flags)
 {
-	BN_GENCB cb;
+	cipher->flags = flags;
 
-	BN_GENCB_set_old(&cb, callback, cb_arg);
-	return BN_is_prime_fasttest_ex(a, checks, ctx_passed,
-	    do_trial_division, &cb);
+	return 1;
 }
-#endif
+
+int
+EVP_CIPHER_meth_set_impl_ctx_size(EVP_CIPHER *cipher, int ctx_size)
+{
+	cipher->ctx_size = ctx_size;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_init(EVP_CIPHER *cipher,
+    int (*init)(EVP_CIPHER_CTX *ctx, const unsigned char *key,
+    const unsigned char *iv, int enc))
+{
+	cipher->init = init;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_do_cipher(EVP_CIPHER *cipher,
+    int (*do_cipher)(EVP_CIPHER_CTX *ctx, unsigned char *out,
+    const unsigned char *in, size_t inl))
+{
+	cipher->do_cipher = do_cipher;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_cleanup(EVP_CIPHER *cipher,
+    int (*cleanup)(EVP_CIPHER_CTX *))
+{
+	cipher->cleanup = cleanup;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_set_asn1_params(EVP_CIPHER *cipher,
+    int (*set_asn1_parameters)(EVP_CIPHER_CTX *, ASN1_TYPE *))
+{
+	cipher->set_asn1_parameters = set_asn1_parameters;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_get_asn1_params(EVP_CIPHER *cipher,
+    int (*get_asn1_parameters)(EVP_CIPHER_CTX *, ASN1_TYPE *))
+{
+	cipher->get_asn1_parameters = get_asn1_parameters;
+
+	return 1;
+}
+
+int
+EVP_CIPHER_meth_set_ctrl(EVP_CIPHER *cipher,
+    int (*ctrl)(EVP_CIPHER_CTX *, int type, int arg, void *ptr))
+{
+	cipher->ctrl = ctrl;
+
+	return 1;
+}

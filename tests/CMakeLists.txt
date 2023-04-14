@@ -180,6 +180,11 @@ add_executable(bn_rand_interval bn_rand_interval.c)
 target_link_libraries(bn_rand_interval ${OPENSSL_TEST_LIBS})
 add_test(bn_rand_interval bn_rand_interval)
 
+# bn_shift
+add_executable(bn_shift bn_shift.c)
+target_link_libraries(bn_shift ${OPENSSL_TEST_LIBS})
+add_test(bn_shift bn_shift)
+
 # bn_test
 add_executable(bn_test bn_test.c)
 set_source_files_properties(bn_test.c PROPERTIES COMPILE_FLAGS
@@ -196,6 +201,11 @@ add_test(bn_to_string bn_to_string)
 add_executable(bn_unit bn_unit.c)
 target_link_libraries(bn_unit ${OPENSSL_TEST_LIBS})
 add_test(bn_unit bn_unit)
+
+# bn_word
+add_executable(bn_word bn_word.c)
+target_link_libraries(bn_word ${OPENSSL_TEST_LIBS})
+add_test(bn_word bn_word)
 
 # buffertest
 add_executable(buffertest buffertest.c)
@@ -345,6 +355,8 @@ endif()
 
 # freenull
 add_executable(freenull freenull.c)
+set_source_files_properties(freenull.c PROPERTIES COMPILE_FLAGS
+	-ULIBRESSL_INTERNAL)
 target_link_libraries(freenull ${OPENSSL_TEST_LIBS})
 add_test(freenull freenull)
 
