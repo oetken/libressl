@@ -279,6 +279,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
+EXTRA_DIST = CMakeLists.txt
 dist_man_MANS = openssl.1 tls_init.3 BIO_f_ssl.3 SSL_CIPHER_get_name.3 \
 	SSL_COMP_add_compression_method.3 \
 	SSL_CTX_add_extra_chain_cert.3 SSL_CTX_add_session.3 \

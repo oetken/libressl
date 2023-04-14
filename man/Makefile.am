@@ -1,4 +1,5 @@
-dist_man_MANS=
+EXTRA_DIST = CMakeLists.txt
+dist_man_MANS =
 dist_man_MANS += openssl.1
 dist_man_MANS += tls_init.3
 dist_man_MANS += BIO_f_ssl.3
