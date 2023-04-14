@@ -2,18 +2,11 @@ EXTRA_DIST = CMakeLists.txt
 dist_man3_MANS =
 dist_man5_MANS =
 dist_man3_MANS += BIO_f_ssl.3
-dist_man3_MANS += d2i_SSL_SESSION.3
 dist_man3_MANS += DTLSv1_listen.3
 dist_man3_MANS += OPENSSL_init_ssl.3
 dist_man3_MANS += PEM_read_SSL_SESSION.3
-dist_man3_MANS += ssl.3
-dist_man3_MANS += SSL_accept.3
-dist_man3_MANS += SSL_alert_type_string.3
 dist_man3_MANS += SSL_CIPHER_get_name.3
-dist_man3_MANS += SSL_clear.3
 dist_man3_MANS += SSL_COMP_add_compression_method.3
-dist_man3_MANS += SSL_connect.3
-dist_man3_MANS += SSL_copy_session_id.3
 dist_man3_MANS += SSL_CTX_add_extra_chain_cert.3
 dist_man3_MANS += SSL_CTX_add_session.3
 dist_man3_MANS += SSL_CTX_ctrl.3
@@ -24,10 +17,10 @@ dist_man3_MANS += SSL_CTX_get_ex_new_index.3
 dist_man3_MANS += SSL_CTX_get_verify_mode.3
 dist_man3_MANS += SSL_CTX_load_verify_locations.3
 dist_man3_MANS += SSL_CTX_new.3
-dist_man3_MANS += SSL_CTX_sessions.3
 dist_man3_MANS += SSL_CTX_sess_number.3
 dist_man3_MANS += SSL_CTX_sess_set_cache_size.3
 dist_man3_MANS += SSL_CTX_sess_set_get_cb.3
+dist_man3_MANS += SSL_CTX_sessions.3
 dist_man3_MANS += SSL_CTX_set1_groups.3
 dist_man3_MANS += SSL_CTX_set_alpn_select_cb.3
 dist_man3_MANS += SSL_CTX_set_cert_store.3
@@ -57,11 +50,28 @@ dist_man3_MANS += SSL_CTX_set_tmp_dh_callback.3
 dist_man3_MANS += SSL_CTX_set_tmp_rsa_callback.3
 dist_man3_MANS += SSL_CTX_set_verify.3
 dist_man3_MANS += SSL_CTX_use_certificate.3
+dist_man3_MANS += SSL_SESSION_free.3
+dist_man3_MANS += SSL_SESSION_get0_peer.3
+dist_man3_MANS += SSL_SESSION_get_compress_id.3
+dist_man3_MANS += SSL_SESSION_get_ex_new_index.3
+dist_man3_MANS += SSL_SESSION_get_id.3
+dist_man3_MANS += SSL_SESSION_get_protocol_version.3
+dist_man3_MANS += SSL_SESSION_get_time.3
+dist_man3_MANS += SSL_SESSION_has_ticket.3
+dist_man3_MANS += SSL_SESSION_new.3
+dist_man3_MANS += SSL_SESSION_print.3
+dist_man3_MANS += SSL_SESSION_set1_id_context.3
+dist_man3_MANS += SSL_accept.3
+dist_man3_MANS += SSL_alert_type_string.3
+dist_man3_MANS += SSL_clear.3
+dist_man3_MANS += SSL_connect.3
+dist_man3_MANS += SSL_copy_session_id.3
 dist_man3_MANS += SSL_do_handshake.3
 dist_man3_MANS += SSL_dup.3
 dist_man3_MANS += SSL_dup_CA_list.3
 dist_man3_MANS += SSL_export_keying_material.3
 dist_man3_MANS += SSL_free.3
+dist_man3_MANS += SSL_get_SSL_CTX.3
 dist_man3_MANS += SSL_get_certificate.3
 dist_man3_MANS += SSL_get_ciphers.3
 dist_man3_MANS += SSL_get_client_CA_list.3
@@ -78,7 +88,6 @@ dist_man3_MANS += SSL_get_rbio.3
 dist_man3_MANS += SSL_get_server_tmp_key.3
 dist_man3_MANS += SSL_get_session.3
 dist_man3_MANS += SSL_get_shared_ciphers.3
-dist_man3_MANS += SSL_get_SSL_CTX.3
 dist_man3_MANS += SSL_get_state.3
 dist_man3_MANS += SSL_get_verify_result.3
 dist_man3_MANS += SSL_get_version.3
@@ -90,18 +99,7 @@ dist_man3_MANS += SSL_pending.3
 dist_man3_MANS += SSL_read.3
 dist_man3_MANS += SSL_renegotiate.3
 dist_man3_MANS += SSL_rstate_string.3
-dist_man3_MANS += SSL_SESSION_free.3
-dist_man3_MANS += SSL_SESSION_get0_peer.3
-dist_man3_MANS += SSL_SESSION_get_compress_id.3
-dist_man3_MANS += SSL_SESSION_get_ex_new_index.3
-dist_man3_MANS += SSL_SESSION_get_id.3
-dist_man3_MANS += SSL_SESSION_get_protocol_version.3
-dist_man3_MANS += SSL_SESSION_get_time.3
-dist_man3_MANS += SSL_SESSION_has_ticket.3
-dist_man3_MANS += SSL_SESSION_new.3
-dist_man3_MANS += SSL_SESSION_print.3
 dist_man3_MANS += SSL_session_reused.3
-dist_man3_MANS += SSL_SESSION_set1_id_context.3
 dist_man3_MANS += SSL_set1_param.3
 dist_man3_MANS += SSL_set_bio.3
 dist_man3_MANS += SSL_set_connect_state.3
@@ -115,18 +113,21 @@ dist_man3_MANS += SSL_shutdown.3
 dist_man3_MANS += SSL_state_string.3
 dist_man3_MANS += SSL_want.3
 dist_man3_MANS += SSL_write.3
+dist_man3_MANS += d2i_SSL_SESSION.3
+dist_man3_MANS += ssl.3
 dist_man3_MANS += ACCESS_DESCRIPTION_new.3
-dist_man3_MANS += ASN1_generate_nconf.3
-dist_man3_MANS += ASN1_item_d2i.3
-dist_man3_MANS += ASN1_item_new.3
+dist_man3_MANS += ASN1_INTEGER_get.3
 dist_man3_MANS += ASN1_OBJECT_new.3
+dist_man3_MANS += ASN1_STRING_TABLE_add.3
 dist_man3_MANS += ASN1_STRING_length.3
 dist_man3_MANS += ASN1_STRING_new.3
 dist_man3_MANS += ASN1_STRING_print_ex.3
-dist_man3_MANS += ASN1_STRING_TABLE_add.3
-dist_man3_MANS += ASN1_time_parse.3
 dist_man3_MANS += ASN1_TIME_set.3
 dist_man3_MANS += ASN1_TYPE_get.3
+dist_man3_MANS += ASN1_generate_nconf.3
+dist_man3_MANS += ASN1_item_d2i.3
+dist_man3_MANS += ASN1_item_new.3
+dist_man3_MANS += ASN1_time_parse.3
 dist_man3_MANS += AUTHORITY_KEYID_new.3
 dist_man3_MANS += BASIC_CONSTRAINTS_new.3
 dist_man3_MANS += BF_set_key.3
@@ -134,9 +135,9 @@ dist_man3_MANS += BIO_ctrl.3
 dist_man3_MANS += BIO_f_base64.3
 dist_man3_MANS += BIO_f_buffer.3
 dist_man3_MANS += BIO_f_cipher.3
-dist_man3_MANS += BIO_find_type.3
 dist_man3_MANS += BIO_f_md.3
 dist_man3_MANS += BIO_f_null.3
+dist_man3_MANS += BIO_find_type.3
 dist_man3_MANS += BIO_get_data.3
 dist_man3_MANS += BIO_get_ex_new_index.3
 dist_man3_MANS += BIO_meth_new.3
@@ -147,22 +148,21 @@ dist_man3_MANS += BIO_read.3
 dist_man3_MANS += BIO_s_accept.3
 dist_man3_MANS += BIO_s_bio.3
 dist_man3_MANS += BIO_s_connect.3
-dist_man3_MANS += BIO_set_callback.3
 dist_man3_MANS += BIO_s_fd.3
 dist_man3_MANS += BIO_s_file.3
-dist_man3_MANS += BIO_should_retry.3
 dist_man3_MANS += BIO_s_mem.3
 dist_man3_MANS += BIO_s_null.3
 dist_man3_MANS += BIO_s_socket.3
+dist_man3_MANS += BIO_set_callback.3
+dist_man3_MANS += BIO_should_retry.3
+dist_man3_MANS += BN_BLINDING_new.3
+dist_man3_MANS += BN_CTX_new.3
+dist_man3_MANS += BN_CTX_start.3
 dist_man3_MANS += BN_add.3
 dist_man3_MANS += BN_add_word.3
-dist_man3_MANS += BN_BLINDING_new.3
 dist_man3_MANS += BN_bn2bin.3
 dist_man3_MANS += BN_cmp.3
 dist_man3_MANS += BN_copy.3
-dist_man3_MANS += BN_CTX_new.3
-dist_man3_MANS += BN_CTX_start.3
-dist_man3_MANS += bn_dump.3
 dist_man3_MANS += BN_generate_prime.3
 dist_man3_MANS += BN_get0_nist_prime_521.3
 dist_man3_MANS += BN_mod_inverse.3
@@ -179,10 +179,210 @@ dist_man3_MANS += BN_zero.3
 dist_man3_MANS += BUF_MEM_new.3
 dist_man3_MANS += CONF_modules_free.3
 dist_man3_MANS += CONF_modules_load_file.3
-dist_man3_MANS += crypto.3
 dist_man3_MANS += CRYPTO_get_mem_functions.3
 dist_man3_MANS += CRYPTO_set_ex_data.3
 dist_man3_MANS += CRYPTO_set_locking_callback.3
+dist_man3_MANS += DES_set_key.3
+dist_man3_MANS += DH_generate_key.3
+dist_man3_MANS += DH_generate_parameters.3
+dist_man3_MANS += DH_get0_pqg.3
+dist_man3_MANS += DH_get_ex_new_index.3
+dist_man3_MANS += DH_new.3
+dist_man3_MANS += DH_set_method.3
+dist_man3_MANS += DH_size.3
+dist_man3_MANS += DIST_POINT_new.3
+dist_man3_MANS += DSA_SIG_new.3
+dist_man3_MANS += DSA_do_sign.3
+dist_man3_MANS += DSA_dup_DH.3
+dist_man3_MANS += DSA_generate_key.3
+dist_man3_MANS += DSA_generate_parameters.3
+dist_man3_MANS += DSA_get0_pqg.3
+dist_man3_MANS += DSA_get_ex_new_index.3
+dist_man3_MANS += DSA_meth_new.3
+dist_man3_MANS += DSA_new.3
+dist_man3_MANS += DSA_set_method.3
+dist_man3_MANS += DSA_sign.3
+dist_man3_MANS += DSA_size.3
+dist_man3_MANS += ECDSA_SIG_new.3
+dist_man3_MANS += EC_GFp_simple_method.3
+dist_man3_MANS += EC_GROUP_copy.3
+dist_man3_MANS += EC_GROUP_new.3
+dist_man3_MANS += EC_KEY_new.3
+dist_man3_MANS += EC_POINT_add.3
+dist_man3_MANS += EC_POINT_new.3
+dist_man3_MANS += ENGINE_add.3
+dist_man3_MANS += ENGINE_ctrl.3
+dist_man3_MANS += ENGINE_get_default_RSA.3
+dist_man3_MANS += ENGINE_init.3
+dist_man3_MANS += ENGINE_new.3
+dist_man3_MANS += ENGINE_register_RSA.3
+dist_man3_MANS += ENGINE_register_all_RSA.3
+dist_man3_MANS += ENGINE_set_RSA.3
+dist_man3_MANS += ENGINE_set_default.3
+dist_man3_MANS += ENGINE_set_flags.3
+dist_man3_MANS += ENGINE_unregister_RSA.3
+dist_man3_MANS += ERR.3
+dist_man3_MANS += ERR_GET_LIB.3
+dist_man3_MANS += ERR_asprintf_error_data.3
+dist_man3_MANS += ERR_clear_error.3
+dist_man3_MANS += ERR_error_string.3
+dist_man3_MANS += ERR_get_error.3
+dist_man3_MANS += ERR_load_crypto_strings.3
+dist_man3_MANS += ERR_load_strings.3
+dist_man3_MANS += ERR_print_errors.3
+dist_man3_MANS += ERR_put_error.3
+dist_man3_MANS += ERR_remove_state.3
+dist_man3_MANS += ERR_set_mark.3
+dist_man3_MANS += ESS_SIGNING_CERT_new.3
+dist_man3_MANS += EVP_AEAD_CTX_init.3
+dist_man3_MANS += EVP_BytesToKey.3
+dist_man3_MANS += EVP_DigestInit.3
+dist_man3_MANS += EVP_DigestSignInit.3
+dist_man3_MANS += EVP_DigestVerifyInit.3
+dist_man3_MANS += EVP_EncodeInit.3
+dist_man3_MANS += EVP_EncryptInit.3
+dist_man3_MANS += EVP_OpenInit.3
+dist_man3_MANS += EVP_PKEY_CTX_ctrl.3
+dist_man3_MANS += EVP_PKEY_CTX_new.3
+dist_man3_MANS += EVP_PKEY_asn1_get_count.3
+dist_man3_MANS += EVP_PKEY_asn1_new.3
+dist_man3_MANS += EVP_PKEY_cmp.3
+dist_man3_MANS += EVP_PKEY_decrypt.3
+dist_man3_MANS += EVP_PKEY_derive.3
+dist_man3_MANS += EVP_PKEY_encrypt.3
+dist_man3_MANS += EVP_PKEY_get_default_digest_nid.3
+dist_man3_MANS += EVP_PKEY_keygen.3
+dist_man3_MANS += EVP_PKEY_meth_get0_info.3
+dist_man3_MANS += EVP_PKEY_meth_new.3
+dist_man3_MANS += EVP_PKEY_new.3
+dist_man3_MANS += EVP_PKEY_print_private.3
+dist_man3_MANS += EVP_PKEY_set1_RSA.3
+dist_man3_MANS += EVP_PKEY_sign.3
+dist_man3_MANS += EVP_PKEY_verify.3
+dist_man3_MANS += EVP_PKEY_verify_recover.3
+dist_man3_MANS += EVP_SealInit.3
+dist_man3_MANS += EVP_SignInit.3
+dist_man3_MANS += EVP_VerifyInit.3
+dist_man3_MANS += EXTENDED_KEY_USAGE_new.3
+dist_man3_MANS += GENERAL_NAME_new.3
+dist_man3_MANS += HMAC.3
+dist_man3_MANS += MD5.3
+dist_man3_MANS += NAME_CONSTRAINTS_new.3
+dist_man3_MANS += OBJ_nid2obj.3
+dist_man3_MANS += OCSP_CRLID_new.3
+dist_man3_MANS += OCSP_REQUEST_new.3
+dist_man3_MANS += OCSP_SERVICELOC_new.3
+dist_man3_MANS += OCSP_cert_to_id.3
+dist_man3_MANS += OCSP_request_add1_nonce.3
+dist_man3_MANS += OCSP_resp_find_status.3
+dist_man3_MANS += OCSP_response_status.3
+dist_man3_MANS += OCSP_sendreq_new.3
+dist_man3_MANS += OPENSSL_VERSION_NUMBER.3
+dist_man3_MANS += OPENSSL_cleanse.3
+dist_man3_MANS += OPENSSL_config.3
+dist_man3_MANS += OPENSSL_init_crypto.3
+dist_man3_MANS += OPENSSL_load_builtin_modules.3
+dist_man3_MANS += OPENSSL_malloc.3
+dist_man3_MANS += OPENSSL_sk_new.3
+dist_man3_MANS += OpenSSL_add_all_algorithms.3
+dist_man3_MANS += PEM_bytes_read_bio.3
+dist_man3_MANS += PEM_read.3
+dist_man3_MANS += PEM_read_bio_PrivateKey.3
+dist_man3_MANS += PEM_write_bio_PKCS7_stream.3
+dist_man3_MANS += PKCS12_SAFEBAG_new.3
+dist_man3_MANS += PKCS12_create.3
+dist_man3_MANS += PKCS12_new.3
+dist_man3_MANS += PKCS12_newpass.3
+dist_man3_MANS += PKCS12_parse.3
+dist_man3_MANS += PKCS5_PBKDF2_HMAC.3
+dist_man3_MANS += PKCS7_decrypt.3
+dist_man3_MANS += PKCS7_encrypt.3
+dist_man3_MANS += PKCS7_new.3
+dist_man3_MANS += PKCS7_sign.3
+dist_man3_MANS += PKCS7_sign_add_signer.3
+dist_man3_MANS += PKCS7_verify.3
+dist_man3_MANS += PKCS8_PRIV_KEY_INFO_new.3
+dist_man3_MANS += PKEY_USAGE_PERIOD_new.3
+dist_man3_MANS += POLICYINFO_new.3
+dist_man3_MANS += PROXY_POLICY_new.3
+dist_man3_MANS += RAND_add.3
+dist_man3_MANS += RAND_bytes.3
+dist_man3_MANS += RAND_load_file.3
+dist_man3_MANS += RAND_set_rand_method.3
+dist_man3_MANS += RC4.3
+dist_man3_MANS += RIPEMD160.3
+dist_man3_MANS += RSA_PSS_PARAMS_new.3
+dist_man3_MANS += RSA_blinding_on.3
+dist_man3_MANS += RSA_check_key.3
+dist_man3_MANS += RSA_generate_key.3
+dist_man3_MANS += RSA_get0_key.3
+dist_man3_MANS += RSA_get_ex_new_index.3
+dist_man3_MANS += RSA_meth_new.3
+dist_man3_MANS += RSA_new.3
+dist_man3_MANS += RSA_padding_add_PKCS1_type_1.3
+dist_man3_MANS += RSA_print.3
+dist_man3_MANS += RSA_private_encrypt.3
+dist_man3_MANS += RSA_public_encrypt.3
+dist_man3_MANS += RSA_set_method.3
+dist_man3_MANS += RSA_sign.3
+dist_man3_MANS += RSA_sign_ASN1_OCTET_STRING.3
+dist_man3_MANS += RSA_size.3
+dist_man3_MANS += SHA1.3
+dist_man3_MANS += SMIME_read_PKCS7.3
+dist_man3_MANS += SMIME_write_PKCS7.3
+dist_man3_MANS += STACK_OF.3
+dist_man3_MANS += SXNET_new.3
+dist_man3_MANS += TS_REQ_new.3
+dist_man3_MANS += UI_UTIL_read_pw.3
+dist_man3_MANS += UI_create_method.3
+dist_man3_MANS += UI_get_string_type.3
+dist_man3_MANS += UI_new.3
+dist_man3_MANS += X25519.3
+dist_man3_MANS += X509V3_get_d2i.3
+dist_man3_MANS += X509_ALGOR_dup.3
+dist_man3_MANS += X509_ATTRIBUTE_new.3
+dist_man3_MANS += X509_CINF_new.3
+dist_man3_MANS += X509_CRL_get0_by_serial.3
+dist_man3_MANS += X509_CRL_new.3
+dist_man3_MANS += X509_EXTENSION_set_object.3
+dist_man3_MANS += X509_LOOKUP_hash_dir.3
+dist_man3_MANS += X509_NAME_ENTRY_get_object.3
+dist_man3_MANS += X509_NAME_add_entry_by_txt.3
+dist_man3_MANS += X509_NAME_get_index_by_NID.3
+dist_man3_MANS += X509_NAME_new.3
+dist_man3_MANS += X509_NAME_print_ex.3
+dist_man3_MANS += X509_OBJECT_get0_X509.3
+dist_man3_MANS += X509_PUBKEY_new.3
+dist_man3_MANS += X509_REQ_new.3
+dist_man3_MANS += X509_REVOKED_new.3
+dist_man3_MANS += X509_SIG_new.3
+dist_man3_MANS += X509_STORE_CTX_get_error.3
+dist_man3_MANS += X509_STORE_CTX_get_ex_new_index.3
+dist_man3_MANS += X509_STORE_CTX_new.3
+dist_man3_MANS += X509_STORE_CTX_set_verify_cb.3
+dist_man3_MANS += X509_STORE_load_locations.3
+dist_man3_MANS += X509_STORE_new.3
+dist_man3_MANS += X509_STORE_set1_param.3
+dist_man3_MANS += X509_STORE_set_verify_cb_func.3
+dist_man3_MANS += X509_VERIFY_PARAM_set_flags.3
+dist_man3_MANS += X509_check_ca.3
+dist_man3_MANS += X509_check_host.3
+dist_man3_MANS += X509_check_issued.3
+dist_man3_MANS += X509_check_private_key.3
+dist_man3_MANS += X509_cmp_time.3
+dist_man3_MANS += X509_digest.3
+dist_man3_MANS += X509_get0_notBefore.3
+dist_man3_MANS += X509_get0_signature.3
+dist_man3_MANS += X509_get_pubkey.3
+dist_man3_MANS += X509_get_serialNumber.3
+dist_man3_MANS += X509_get_subject_name.3
+dist_man3_MANS += X509_get_version.3
+dist_man3_MANS += X509_new.3
+dist_man3_MANS += X509_sign.3
+dist_man3_MANS += X509_verify_cert.3
+dist_man3_MANS += X509v3_get_ext_by_NID.3
+dist_man3_MANS += bn_dump.3
+dist_man3_MANS += crypto.3
 dist_man3_MANS += d2i_ASN1_NULL.3
 dist_man3_MANS += d2i_ASN1_OBJECT.3
 dist_man3_MANS += d2i_ASN1_OCTET_STRING.3
@@ -203,8 +403,8 @@ dist_man3_MANS += d2i_PKCS8PrivateKey_bio.3
 dist_man3_MANS += d2i_PKCS8_PRIV_KEY_INFO.3
 dist_man3_MANS += d2i_PKEY_USAGE_PERIOD.3
 dist_man3_MANS += d2i_POLICYINFO.3
-dist_man3_MANS += d2i_PrivateKey.3
 dist_man3_MANS += d2i_PROXY_POLICY.3
+dist_man3_MANS += d2i_PrivateKey.3
 dist_man3_MANS += d2i_RSAPublicKey.3
 dist_man3_MANS += d2i_TS_REQ.3
 dist_man3_MANS += d2i_X509.3
@@ -216,208 +416,19 @@ dist_man3_MANS += d2i_X509_NAME.3
 dist_man3_MANS += d2i_X509_REQ.3
 dist_man3_MANS += d2i_X509_SIG.3
 dist_man3_MANS += des_read_pw.3
-dist_man3_MANS += DES_set_key.3
-dist_man3_MANS += DH_generate_key.3
-dist_man3_MANS += DH_generate_parameters.3
-dist_man3_MANS += DH_get0_pqg.3
-dist_man3_MANS += DH_get_ex_new_index.3
-dist_man3_MANS += DH_new.3
-dist_man3_MANS += DH_set_method.3
-dist_man3_MANS += DH_size.3
-dist_man3_MANS += DIST_POINT_new.3
-dist_man3_MANS += DSA_do_sign.3
-dist_man3_MANS += DSA_dup_DH.3
-dist_man3_MANS += DSA_generate_key.3
-dist_man3_MANS += DSA_generate_parameters.3
-dist_man3_MANS += DSA_get0_pqg.3
-dist_man3_MANS += DSA_get_ex_new_index.3
-dist_man3_MANS += DSA_meth_new.3
-dist_man3_MANS += DSA_new.3
-dist_man3_MANS += DSA_set_method.3
-dist_man3_MANS += DSA_sign.3
-dist_man3_MANS += DSA_SIG_new.3
-dist_man3_MANS += DSA_size.3
-dist_man3_MANS += ECDSA_SIG_new.3
-dist_man3_MANS += EC_GFp_simple_method.3
-dist_man3_MANS += EC_GROUP_copy.3
-dist_man3_MANS += EC_GROUP_new.3
-dist_man3_MANS += EC_KEY_new.3
-dist_man3_MANS += EC_POINT_add.3
-dist_man3_MANS += EC_POINT_new.3
-dist_man3_MANS += engine.3
-dist_man3_MANS += ERR.3
-dist_man3_MANS += ERR_asprintf_error_data.3
-dist_man3_MANS += ERR_clear_error.3
-dist_man3_MANS += ERR_error_string.3
-dist_man3_MANS += ERR_get_error.3
-dist_man3_MANS += ERR_GET_LIB.3
-dist_man3_MANS += ERR_load_crypto_strings.3
-dist_man3_MANS += ERR_load_strings.3
-dist_man3_MANS += ERR_print_errors.3
-dist_man3_MANS += ERR_put_error.3
-dist_man3_MANS += ERR_remove_state.3
-dist_man3_MANS += ERR_set_mark.3
-dist_man3_MANS += ESS_SIGNING_CERT_new.3
 dist_man3_MANS += evp.3
-dist_man3_MANS += EVP_AEAD_CTX_init.3
-dist_man3_MANS += EVP_BytesToKey.3
-dist_man3_MANS += EVP_DigestInit.3
-dist_man3_MANS += EVP_DigestSignInit.3
-dist_man3_MANS += EVP_DigestVerifyInit.3
-dist_man3_MANS += EVP_EncodeInit.3
-dist_man3_MANS += EVP_EncryptInit.3
-dist_man3_MANS += EVP_OpenInit.3
-dist_man3_MANS += EVP_PKEY_asn1_get_count.3
-dist_man3_MANS += EVP_PKEY_asn1_new.3
-dist_man3_MANS += EVP_PKEY_cmp.3
-dist_man3_MANS += EVP_PKEY_CTX_ctrl.3
-dist_man3_MANS += EVP_PKEY_CTX_new.3
-dist_man3_MANS += EVP_PKEY_decrypt.3
-dist_man3_MANS += EVP_PKEY_derive.3
-dist_man3_MANS += EVP_PKEY_encrypt.3
-dist_man3_MANS += EVP_PKEY_get_default_digest_nid.3
-dist_man3_MANS += EVP_PKEY_keygen.3
-dist_man3_MANS += EVP_PKEY_meth_get0_info.3
-dist_man3_MANS += EVP_PKEY_meth_new.3
-dist_man3_MANS += EVP_PKEY_new.3
-dist_man3_MANS += EVP_PKEY_print_private.3
-dist_man3_MANS += EVP_PKEY_set1_RSA.3
-dist_man3_MANS += EVP_PKEY_sign.3
-dist_man3_MANS += EVP_PKEY_verify.3
-dist_man3_MANS += EVP_PKEY_verify_recover.3
-dist_man3_MANS += EVP_SealInit.3
-dist_man3_MANS += EVP_SignInit.3
-dist_man3_MANS += EVP_VerifyInit.3
-dist_man3_MANS += EXTENDED_KEY_USAGE_new.3
-dist_man3_MANS += GENERAL_NAME_new.3
 dist_man3_MANS += get_rfc3526_prime_8192.3
-dist_man3_MANS += HMAC.3
 dist_man3_MANS += i2d_PKCS7_bio_stream.3
 dist_man3_MANS += lh_new.3
 dist_man3_MANS += lh_stats.3
-dist_man3_MANS += MD5.3
-dist_man3_MANS += NAME_CONSTRAINTS_new.3
-dist_man3_MANS += OBJ_nid2obj.3
-dist_man3_MANS += OCSP_cert_to_id.3
-dist_man3_MANS += OCSP_CRLID_new.3
-dist_man3_MANS += OCSP_request_add1_nonce.3
-dist_man3_MANS += OCSP_REQUEST_new.3
-dist_man3_MANS += OCSP_resp_find_status.3
-dist_man3_MANS += OCSP_response_status.3
-dist_man3_MANS += OCSP_sendreq_new.3
-dist_man3_MANS += OCSP_SERVICELOC_new.3
-dist_man3_MANS += OpenSSL_add_all_algorithms.3
-dist_man3_MANS += OPENSSL_cleanse.3
-dist_man3_MANS += OPENSSL_config.3
-dist_man3_MANS += OPENSSL_init_crypto.3
-dist_man3_MANS += OPENSSL_load_builtin_modules.3
-dist_man3_MANS += OPENSSL_malloc.3
-dist_man3_MANS += OPENSSL_sk_new.3
-dist_man3_MANS += OPENSSL_VERSION_NUMBER.3
-dist_man3_MANS += PEM_bytes_read_bio.3
-dist_man3_MANS += PEM_read.3
-dist_man3_MANS += PEM_read_bio_PrivateKey.3
-dist_man3_MANS += PEM_write_bio_PKCS7_stream.3
-dist_man3_MANS += PKCS12_create.3
-dist_man3_MANS += PKCS12_new.3
-dist_man3_MANS += PKCS12_newpass.3
-dist_man3_MANS += PKCS12_parse.3
-dist_man3_MANS += PKCS12_SAFEBAG_new.3
-dist_man3_MANS += PKCS5_PBKDF2_HMAC.3
-dist_man3_MANS += PKCS7_decrypt.3
-dist_man3_MANS += PKCS7_encrypt.3
-dist_man3_MANS += PKCS7_new.3
-dist_man3_MANS += PKCS7_sign.3
-dist_man3_MANS += PKCS7_sign_add_signer.3
-dist_man3_MANS += PKCS7_verify.3
-dist_man3_MANS += PKCS8_PRIV_KEY_INFO_new.3
-dist_man3_MANS += PKEY_USAGE_PERIOD_new.3
-dist_man3_MANS += POLICYINFO_new.3
-dist_man3_MANS += PROXY_POLICY_new.3
-dist_man3_MANS += RAND_add.3
-dist_man3_MANS += RAND_bytes.3
-dist_man3_MANS += RAND_load_file.3
-dist_man3_MANS += RAND_set_rand_method.3
-dist_man3_MANS += RC4.3
-dist_man3_MANS += RIPEMD160.3
-dist_man3_MANS += RSA_blinding_on.3
-dist_man3_MANS += RSA_check_key.3
-dist_man3_MANS += RSA_generate_key.3
-dist_man3_MANS += RSA_get0_key.3
-dist_man3_MANS += RSA_get_ex_new_index.3
-dist_man3_MANS += RSA_meth_new.3
-dist_man3_MANS += RSA_new.3
-dist_man3_MANS += RSA_padding_add_PKCS1_type_1.3
-dist_man3_MANS += RSA_print.3
-dist_man3_MANS += RSA_private_encrypt.3
-dist_man3_MANS += RSA_PSS_PARAMS_new.3
-dist_man3_MANS += RSA_public_encrypt.3
-dist_man3_MANS += RSA_set_method.3
-dist_man3_MANS += RSA_sign.3
-dist_man3_MANS += RSA_sign_ASN1_OCTET_STRING.3
-dist_man3_MANS += RSA_size.3
-dist_man3_MANS += SHA1.3
-dist_man3_MANS += SMIME_read_PKCS7.3
-dist_man3_MANS += SMIME_write_PKCS7.3
-dist_man3_MANS += STACK_OF.3
-dist_man3_MANS += SXNET_new.3
-dist_man3_MANS += TS_REQ_new.3
-dist_man3_MANS += UI_create_method.3
-dist_man3_MANS += UI_get_string_type.3
-dist_man3_MANS += UI_new.3
-dist_man3_MANS += UI_UTIL_read_pw.3
-dist_man3_MANS += X25519.3
-dist_man3_MANS += X509_ALGOR_dup.3
-dist_man3_MANS += X509_ATTRIBUTE_new.3
-dist_man3_MANS += X509_check_ca.3
-dist_man3_MANS += X509_check_host.3
-dist_man3_MANS += X509_check_issued.3
-dist_man3_MANS += X509_check_private_key.3
-dist_man3_MANS += X509_CINF_new.3
-dist_man3_MANS += X509_cmp_time.3
-dist_man3_MANS += X509_CRL_get0_by_serial.3
-dist_man3_MANS += X509_CRL_new.3
-dist_man3_MANS += X509_digest.3
-dist_man3_MANS += X509_EXTENSION_set_object.3
-dist_man3_MANS += X509_get0_notBefore.3
-dist_man3_MANS += X509_get0_signature.3
-dist_man3_MANS += X509_get_pubkey.3
-dist_man3_MANS += X509_get_serialNumber.3
-dist_man3_MANS += X509_get_subject_name.3
-dist_man3_MANS += X509_get_version.3
-dist_man3_MANS += X509_LOOKUP_hash_dir.3
-dist_man3_MANS += X509_NAME_add_entry_by_txt.3
-dist_man3_MANS += X509_NAME_ENTRY_get_object.3
-dist_man3_MANS += X509_NAME_get_index_by_NID.3
-dist_man3_MANS += X509_NAME_new.3
-dist_man3_MANS += X509_NAME_print_ex.3
-dist_man3_MANS += X509_new.3
-dist_man3_MANS += X509_OBJECT_get0_X509.3
-dist_man3_MANS += X509_PUBKEY_new.3
-dist_man3_MANS += X509_REQ_new.3
-dist_man3_MANS += X509_REVOKED_new.3
-dist_man3_MANS += X509_sign.3
-dist_man3_MANS += X509_SIG_new.3
-dist_man3_MANS += X509_STORE_CTX_get_error.3
-dist_man3_MANS += X509_STORE_CTX_get_ex_new_index.3
-dist_man3_MANS += X509_STORE_CTX_new.3
-dist_man3_MANS += X509_STORE_CTX_set_verify_cb.3
-dist_man3_MANS += X509_STORE_load_locations.3
-dist_man3_MANS += X509_STORE_new.3
-dist_man3_MANS += X509_STORE_set1_param.3
-dist_man3_MANS += X509_STORE_set_verify_cb_func.3
-dist_man3_MANS += X509V3_get_d2i.3
-dist_man3_MANS += X509v3_get_ext_by_NID.3
-dist_man3_MANS += X509_verify_cert.3
-dist_man3_MANS += X509_VERIFY_PARAM_set_flags.3
 dist_man3_MANS += tls_accept_socket.3
 dist_man3_MANS += tls_client.3
 dist_man3_MANS += tls_config_ocsp_require_stapling.3
 dist_man3_MANS += tls_config_set_protocols.3
 dist_man3_MANS += tls_config_set_session_id.3
 dist_man3_MANS += tls_config_verify.3
-dist_man3_MANS += tls_connect.3
 dist_man3_MANS += tls_conn_version.3
+dist_man3_MANS += tls_connect.3
 dist_man3_MANS += tls_init.3
 dist_man3_MANS += tls_load_file.3
 dist_man3_MANS += tls_ocsp_process_response.3
@@ -428,6 +439,13 @@ install-data-hook:
 	ln -sf "ACCESS_DESCRIPTION_new.3" "$(DESTDIR)$(mandir)/man3/ACCESS_DESCRIPTION_free.3"
 	ln -sf "ACCESS_DESCRIPTION_new.3" "$(DESTDIR)$(mandir)/man3/AUTHORITY_INFO_ACCESS_free.3"
 	ln -sf "ACCESS_DESCRIPTION_new.3" "$(DESTDIR)$(mandir)/man3/AUTHORITY_INFO_ACCESS_new.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_get.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_set.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_to_BN.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/ASN1_INTEGER_set.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/ASN1_INTEGER_to_BN.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/BN_to_ASN1_ENUMERATED.3"
+	ln -sf "ASN1_INTEGER_get.3" "$(DESTDIR)$(mandir)/man3/BN_to_ASN1_INTEGER.3"
 	ln -sf "ASN1_OBJECT_new.3" "$(DESTDIR)$(mandir)/man3/ASN1_OBJECT_free.3"
 	ln -sf "ASN1_STRING_TABLE_add.3" "$(DESTDIR)$(mandir)/man3/ASN1_STRING_TABLE_cleanup.3"
 	ln -sf "ASN1_STRING_TABLE_add.3" "$(DESTDIR)$(mandir)/man3/ASN1_STRING_TABLE_get.3"
@@ -862,6 +880,7 @@ install-data-hook:
 	ln -sf "DH_get_ex_new_index.3" "$(DESTDIR)$(mandir)/man3/DH_get_ex_data.3"
 	ln -sf "DH_get_ex_new_index.3" "$(DESTDIR)$(mandir)/man3/DH_set_ex_data.3"
 	ln -sf "DH_new.3" "$(DESTDIR)$(mandir)/man3/DH_free.3"
+	ln -sf "DH_new.3" "$(DESTDIR)$(mandir)/man3/DH_up_ref.3"
 	ln -sf "DH_set_method.3" "$(DESTDIR)$(mandir)/man3/DH_OpenSSL.3"
 	ln -sf "DH_set_method.3" "$(DESTDIR)$(mandir)/man3/DH_get_default_method.3"
 	ln -sf "DH_set_method.3" "$(DESTDIR)$(mandir)/man3/DH_new_method.3"
@@ -893,6 +912,7 @@ install-data-hook:
 	ln -sf "DSA_meth_new.3" "$(DESTDIR)$(mandir)/man3/DSA_meth_set_finish.3"
 	ln -sf "DSA_meth_new.3" "$(DESTDIR)$(mandir)/man3/DSA_meth_set_sign.3"
 	ln -sf "DSA_new.3" "$(DESTDIR)$(mandir)/man3/DSA_free.3"
+	ln -sf "DSA_new.3" "$(DESTDIR)$(mandir)/man3/DSA_up_ref.3"
 	ln -sf "DSA_set_method.3" "$(DESTDIR)$(mandir)/man3/DSA_OpenSSL.3"
 	ln -sf "DSA_set_method.3" "$(DESTDIR)$(mandir)/man3/DSA_get_default_method.3"
 	ln -sf "DSA_set_method.3" "$(DESTDIR)$(mandir)/man3/DSA_new_method.3"
@@ -1013,6 +1033,104 @@ install-data-hook:
 	ln -sf "EC_POINT_new.3" "$(DESTDIR)$(mandir)/man3/EC_POINT_set_compressed_coordinates_GF2m.3"
 	ln -sf "EC_POINT_new.3" "$(DESTDIR)$(mandir)/man3/EC_POINT_set_compressed_coordinates_GFp.3"
 	ln -sf "EC_POINT_new.3" "$(DESTDIR)$(mandir)/man3/EC_POINT_set_to_infinity.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_by_id.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_cleanup.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_first.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_id.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_last.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_name.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_next.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_prev.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_remove.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_id.3"
+	ln -sf "ENGINE_add.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_name.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_CTRL_FUNC_PTR.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_cmd_is_executable.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_ctrl_cmd.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_ctrl_cmd_string.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_cmd_defns.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_ctrl_function.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_cmd_defns.3"
+	ln -sf "ENGINE_ctrl.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_ctrl_function.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_cipher_engine.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_DH.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_DSA.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_ECDH.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_ECDSA.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_RAND.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_digest_engine.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_table_flags.3"
+	ln -sf "ENGINE_get_default_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_table_flags.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_GEN_INT_FUNC_PTR.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_finish.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_finish_function.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_init_function.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_finish_function.3"
+	ln -sf "ENGINE_init.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_init_function.3"
+	ln -sf "ENGINE_new.3" "$(DESTDIR)$(mandir)/man3/ENGINE_GEN_INT_FUNC_PTR.3"
+	ln -sf "ENGINE_new.3" "$(DESTDIR)$(mandir)/man3/ENGINE_free.3"
+	ln -sf "ENGINE_new.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_destroy_function.3"
+	ln -sf "ENGINE_new.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_destroy_function.3"
+	ln -sf "ENGINE_new.3" "$(DESTDIR)$(mandir)/man3/ENGINE_up_ref.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_DH.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_DSA.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_ECDH.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_ECDSA.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_RAND.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_STORE.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_ciphers.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_complete.3"
+	ln -sf "ENGINE_register_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_digests.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_load_builtin_engines.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_load_dynamic.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_DH.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_DSA.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ECDH.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ECDSA.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_RAND.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_STORE.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ciphers.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_complete.3"
+	ln -sf "ENGINE_register_all_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_digests.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_CIPHERS_PTR.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_DIGESTS_PTR.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_DH.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_DSA.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_ECDH.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_ECDSA.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_RAND.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_RSA.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_STORE.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_cipher.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_ciphers.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_digest.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_digests.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_DH.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_DSA.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_ECDH.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_ECDSA.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_RAND.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_STORE.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_ciphers.3"
+	ln -sf "ENGINE_set_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_digests.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_DH.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_DSA.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ECDH.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ECDSA.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_RAND.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_RSA.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ciphers.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_digests.3"
+	ln -sf "ENGINE_set_default.3" "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_string.3"
+	ln -sf "ENGINE_set_flags.3" "$(DESTDIR)$(mandir)/man3/ENGINE_get_flags.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_DH.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_DSA.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ECDH.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ECDSA.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_RAND.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_STORE.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ciphers.3"
+	ln -sf "ENGINE_unregister_RSA.3" "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_digests.3"
 	ln -sf "ERR_GET_LIB.3" "$(DESTDIR)$(mandir)/man3/ERR_FATAL_ERROR.3"
 	ln -sf "ERR_GET_LIB.3" "$(DESTDIR)$(mandir)/man3/ERR_GET_FUNC.3"
 	ln -sf "ERR_GET_LIB.3" "$(DESTDIR)$(mandir)/man3/ERR_GET_REASON.3"
@@ -1222,6 +1340,7 @@ install-data-hook:
 	ln -sf "EVP_PKEY_asn1_get_count.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_find_str.3"
 	ln -sf "EVP_PKEY_asn1_get_count.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_get0.3"
 	ln -sf "EVP_PKEY_asn1_get_count.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_get0_info.3"
+	ln -sf "EVP_PKEY_asn1_get_count.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_get0_asn1.3"
 	ln -sf "EVP_PKEY_asn1_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_add0.3"
 	ln -sf "EVP_PKEY_asn1_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_add_alias.3"
 	ln -sf "EVP_PKEY_asn1_new.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_copy.3"
@@ -1292,6 +1411,7 @@ install-data-hook:
 	ln -sf "EVP_PKEY_verify_recover.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_verify_recover_init.3"
 	ln -sf "EVP_SealInit.3" "$(DESTDIR)$(mandir)/man3/EVP_SealFinal.3"
 	ln -sf "EVP_SealInit.3" "$(DESTDIR)$(mandir)/man3/EVP_SealUpdate.3"
+	ln -sf "EVP_SignInit.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_bits.3"
 	ln -sf "EVP_SignInit.3" "$(DESTDIR)$(mandir)/man3/EVP_PKEY_size.3"
 	ln -sf "EVP_SignInit.3" "$(DESTDIR)$(mandir)/man3/EVP_SignFinal.3"
 	ln -sf "EVP_SignInit.3" "$(DESTDIR)$(mandir)/man3/EVP_SignInit_ex.3"
@@ -1611,6 +1731,7 @@ install-data-hook:
 	ln -sf "RSA_meth_new.3" "$(DESTDIR)$(mandir)/man3/RSA_meth_set_priv_dec.3"
 	ln -sf "RSA_meth_new.3" "$(DESTDIR)$(mandir)/man3/RSA_meth_set_priv_enc.3"
 	ln -sf "RSA_new.3" "$(DESTDIR)$(mandir)/man3/RSA_free.3"
+	ln -sf "RSA_new.3" "$(DESTDIR)$(mandir)/man3/RSA_up_ref.3"
 	ln -sf "RSA_padding_add_PKCS1_type_1.3" "$(DESTDIR)$(mandir)/man3/RSA_padding_add_PKCS1_OAEP.3"
 	ln -sf "RSA_padding_add_PKCS1_type_1.3" "$(DESTDIR)$(mandir)/man3/RSA_padding_add_PKCS1_type_2.3"
 	ln -sf "RSA_padding_add_PKCS1_type_1.3" "$(DESTDIR)$(mandir)/man3/RSA_padding_add_none.3"
@@ -1630,12 +1751,9 @@ install-data-hook:
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_PKCS1_SSLeay.3"
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_flags.3"
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_get_default_method.3"
-	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_get_default_openssl_method.3"
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_get_method.3"
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_new_method.3"
-	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_null_method.3"
 	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_set_default_method.3"
-	ln -sf "RSA_set_method.3" "$(DESTDIR)$(mandir)/man3/RSA_set_default_openssl_method.3"
 	ln -sf "RSA_sign.3" "$(DESTDIR)$(mandir)/man3/RSA_verify.3"
 	ln -sf "RSA_sign_ASN1_OCTET_STRING.3" "$(DESTDIR)$(mandir)/man3/RSA_verify_ASN1_OCTET_STRING.3"
 	ln -sf "RSA_size.3" "$(DESTDIR)$(mandir)/man3/RSA_bits.3"
@@ -1738,6 +1856,8 @@ install-data-hook:
 	ln -sf "SSL_CTX_set_client_CA_list.3" "$(DESTDIR)$(mandir)/man3/SSL_set_client_CA_list.3"
 	ln -sf "SSL_CTX_set_client_cert_cb.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_client_cert_cb.3"
 	ln -sf "SSL_CTX_set_client_cert_cb.3" "$(DESTDIR)$(mandir)/man3/client_cert_cb.3"
+	ln -sf "SSL_CTX_set_default_passwd_cb.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_default_passwd_cb.3"
+	ln -sf "SSL_CTX_set_default_passwd_cb.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_default_passwd_cb_userdata.3"
 	ln -sf "SSL_CTX_set_default_passwd_cb.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_default_passwd_cb_userdata.3"
 	ln -sf "SSL_CTX_set_default_passwd_cb.3" "$(DESTDIR)$(mandir)/man3/pem_password_cb.3"
 	ln -sf "SSL_CTX_set_generate_session_id.3" "$(DESTDIR)$(mandir)/man3/GEN_SESSION_CB.3"
@@ -1798,7 +1918,7 @@ install-data-hook:
 	ln -sf "SSL_CTX_set_tmp_dh_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_dh_callback.3"
 	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_need_tmp_RSA.3"
 	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_tmp_rsa.3"
-	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_need_tmp_rsa.3"
+	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_need_tmp_RSA.3"
 	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_rsa.3"
 	ln -sf "SSL_CTX_set_tmp_rsa_callback.3" "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_rsa_callback.3"
 	ln -sf "SSL_CTX_set_verify.3" "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_verify_depth.3"
@@ -1960,6 +2080,7 @@ install-data-hook:
 	ln -sf "UI_new.3" "$(DESTDIR)$(mandir)/man3/UI_process.3"
 	ln -sf "UI_new.3" "$(DESTDIR)$(mandir)/man3/UI_set_default_method.3"
 	ln -sf "UI_new.3" "$(DESTDIR)$(mandir)/man3/UI_set_method.3"
+	ln -sf "X25519.3" "$(DESTDIR)$(mandir)/man3/X25519_keypair.3"
 	ln -sf "X509V3_get_d2i.3" "$(DESTDIR)$(mandir)/man3/X509V3_EXT_d2i.3"
 	ln -sf "X509V3_get_d2i.3" "$(DESTDIR)$(mandir)/man3/X509V3_EXT_i2d.3"
 	ln -sf "X509V3_get_d2i.3" "$(DESTDIR)$(mandir)/man3/X509V3_add1_i2d.3"
@@ -2029,6 +2150,7 @@ install-data-hook:
 	ln -sf "X509_NAME_print_ex.3" "$(DESTDIR)$(mandir)/man3/X509_NAME_print_ex_fp.3"
 	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_free_contents.3"
 	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_get0_X509_CRL.3"
+	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_get_type.3"
 	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_idx_by_subject.3"
 	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_retrieve_by_subject.3"
 	ln -sf "X509_OBJECT_get0_X509.3" "$(DESTDIR)$(mandir)/man3/X509_OBJECT_retrieve_match.3"
@@ -2084,6 +2206,7 @@ install-data-hook:
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_add_cert.3"
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_add_crl.3"
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_get0_objects.3"
+	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_get0_param.3"
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_get_ex_data.3"
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_get_ex_new_index.3"
 	ln -sf "X509_STORE_set1_param.3" "$(DESTDIR)$(mandir)/man3/X509_STORE_set_depth.3"
@@ -2752,7 +2875,7 @@ install-data-hook:
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_crl_reason.3"
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_next_update.3"
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_response_status.3"
-	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_result_msg.3"
+	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_result.3"
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_revocation_time.3"
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_this_update.3"
 	ln -sf "tls_ocsp_process_response.3" "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_url.3"
@@ -2766,6 +2889,13 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/ACCESS_DESCRIPTION_free.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/AUTHORITY_INFO_ACCESS_free.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/AUTHORITY_INFO_ACCESS_new.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_get.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_set.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_ENUMERATED_to_BN.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_INTEGER_set.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_INTEGER_to_BN.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/BN_to_ASN1_ENUMERATED.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/BN_to_ASN1_INTEGER.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_OBJECT_free.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_STRING_TABLE_cleanup.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ASN1_STRING_TABLE_get.3"
@@ -3200,6 +3330,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_get_ex_data.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_set_ex_data.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/DH_up_ref.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_OpenSSL.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_get_default_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DH_new_method.3"
@@ -3231,6 +3362,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_meth_set_finish.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_meth_set_sign.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_up_ref.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_OpenSSL.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_get_default_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/DSA_new_method.3"
@@ -3351,6 +3483,104 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/EC_POINT_set_compressed_coordinates_GF2m.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EC_POINT_set_compressed_coordinates_GFp.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EC_POINT_set_to_infinity.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_by_id.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_cleanup.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_first.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_id.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_last.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_name.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_next.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_prev.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_remove.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_id.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_name.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_CTRL_FUNC_PTR.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_cmd_is_executable.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_ctrl_cmd.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_ctrl_cmd_string.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_cmd_defns.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_ctrl_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_cmd_defns.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_ctrl_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_cipher_engine.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_default_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_digest_engine.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_table_flags.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_table_flags.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_GEN_INT_FUNC_PTR.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_finish.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_finish_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_init_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_finish_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_init_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_GEN_INT_FUNC_PTR.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_destroy_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_destroy_function.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_up_ref.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_STORE.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_complete.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_digests.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_load_builtin_engines.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_load_dynamic.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_STORE.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_complete.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_register_all_digests.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_CIPHERS_PTR.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_DIGESTS_PTR.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_RSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_STORE.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_cipher.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_digest.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_digests.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_STORE.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_digests.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_RSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_digests.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_set_default_string.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_get_flags.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_DH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_DSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ECDH.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ECDSA.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_RAND.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_STORE.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_ciphers.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/ENGINE_unregister_digests.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ERR_FATAL_ERROR.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ERR_GET_FUNC.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/ERR_GET_REASON.3"
@@ -3560,6 +3790,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_find_str.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_get0.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_get0_info.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_get0_asn1.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_add0.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_add_alias.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_asn1_copy.3"
@@ -3630,6 +3861,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_verify_recover_init.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_SealFinal.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_SealUpdate.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_bits.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_PKEY_size.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_SignFinal.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/EVP_SignInit_ex.3"
@@ -3949,6 +4181,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_meth_set_priv_dec.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_meth_set_priv_enc.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_free.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_up_ref.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_padding_add_PKCS1_OAEP.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_padding_add_PKCS1_type_2.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_padding_add_none.3"
@@ -3968,12 +4201,9 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_PKCS1_SSLeay.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_flags.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_get_default_method.3"
-	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_get_default_openssl_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_get_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_new_method.3"
-	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_null_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_set_default_method.3"
-	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_set_default_openssl_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_verify.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_verify_ASN1_OCTET_STRING.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/RSA_bits.3"
@@ -4076,6 +4306,8 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_client_CA_list.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_client_cert_cb.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/client_cert_cb.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_default_passwd_cb.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_get_default_passwd_cb_userdata.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_default_passwd_cb_userdata.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/pem_password_cb.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/GEN_SESSION_CB.3"
@@ -4136,7 +4368,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_dh_callback.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_need_tmp_RSA.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_tmp_rsa.3"
-	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_need_tmp_rsa.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_need_tmp_RSA.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_rsa.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_set_tmp_rsa_callback.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/SSL_CTX_set_verify_depth.3"
@@ -4298,6 +4530,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/UI_process.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/UI_set_default_method.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/UI_set_method.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/X25519_keypair.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509V3_EXT_d2i.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509V3_EXT_i2d.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509V3_add1_i2d.3"
@@ -4367,6 +4600,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_NAME_print_ex_fp.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_free_contents.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_get0_X509_CRL.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_get_type.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_idx_by_subject.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_retrieve_by_subject.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_OBJECT_retrieve_match.3"
@@ -4422,6 +4656,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_add_cert.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_add_crl.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_get0_objects.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_get0_param.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_get_ex_data.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_get_ex_new_index.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/X509_STORE_set_depth.3"
@@ -5090,7 +5325,7 @@ uninstall-local:
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_crl_reason.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_next_update.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_response_status.3"
-	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_result_msg.3"
+	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_result.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_revocation_time.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_this_update.3"
 	-rm -f "$(DESTDIR)$(mandir)/man3/tls_peer_ocsp_url.3"

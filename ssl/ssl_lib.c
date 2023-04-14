@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_lib.c,v 1.182 2018/03/17 16:20:01 beck Exp $ */
+/* $OpenBSD: ssl_lib.c,v 1.185 2018/04/25 07:10:39 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -964,7 +964,7 @@ SSL_read(SSL *s, void *buf, int num)
 		s->internal->rwstate = SSL_NOTHING;
 		return (0);
 	}
-	return (s->method->internal->ssl_read(s, buf, num));
+	return ssl3_read(s, buf, num);
 }
 
 int
@@ -978,7 +978,7 @@ SSL_peek(SSL *s, void *buf, int num)
 	if (s->internal->shutdown & SSL_RECEIVED_SHUTDOWN) {
 		return (0);
 	}
-	return (s->method->internal->ssl_peek(s, buf, num));
+	return ssl3_peek(s, buf, num);
 }
 
 int
@@ -994,7 +994,7 @@ SSL_write(SSL *s, const void *buf, int num)
 		SSLerror(s, SSL_R_PROTOCOL_IS_SHUTDOWN);
 		return (-1);
 	}
-	return (s->method->internal->ssl_write(s, buf, num));
+	return ssl3_write(s, buf, num);
 }
 
 int
@@ -1976,8 +1976,7 @@ SSL_CTX_free(SSL_CTX *ctx)
 #endif
 
 #ifndef OPENSSL_NO_ENGINE
-	if (ctx->internal->client_cert_engine)
-		ENGINE_finish(ctx->internal->client_cert_engine);
+	ENGINE_finish(ctx->internal->client_cert_engine);
 #endif
 
 	free(ctx->internal->tlsext_ecpointformatlist);
@@ -2655,7 +2654,7 @@ SSL_get_certificate(const SSL *s)
 
 /* Fix this function so that it takes an optional type parameter */
 EVP_PKEY *
-SSL_get_privatekey(SSL *s)
+SSL_get_privatekey(const SSL *s)
 {
 	if (s->cert != NULL)
 		return (s->cert->key->privatekey);
