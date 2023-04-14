@@ -139,10 +139,12 @@ am__DEPENDENCIES_1 =
 libtls_la_DEPENDENCIES = ../crypto/libcrypto.la ../ssl/libssl.la \
 	$(am__DEPENDENCIES_1)
 am__libtls_la_SOURCES_DIST = tls.c tls_client.c tls_config.c \
-	tls_server.c tls_util.c tls_verify.c strsep.c
+	tls_conninfo.c tls_server.c tls_peer.c tls_util.c tls_verify.c \
+	strsep.c
 @HAVE_STRSEP_FALSE@am__objects_1 = strsep.lo
 am_libtls_la_OBJECTS = tls.lo tls_client.lo tls_config.lo \
-	tls_server.lo tls_util.lo tls_verify.lo $(am__objects_1)
+	tls_conninfo.lo tls_server.lo tls_peer.lo tls_util.lo \
+	tls_verify.lo $(am__objects_1)
 libtls_la_OBJECTS = $(am_libtls_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -338,14 +340,15 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat -DLIBRESSL_INTERNAL
+AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat
+AM_CPPFLAGS = -DLIBRESSL_INTERNAL
 lib_LTLIBRARIES = libtls.la
 EXTRA_DIST = VERSION CMakeLists.txt
 libtls_la_LDFLAGS = -version-info @LIBTLS_VERSION@ -no-undefined
 libtls_la_LIBADD = ../crypto/libcrypto.la ../ssl/libssl.la $(PLATFORM_LDADD)
-libtls_la_SOURCES = tls.c tls_client.c tls_config.c tls_server.c \
-	tls_util.c tls_verify.c $(am__append_1)
+libtls_la_SOURCES = tls.c tls_client.c tls_config.c tls_conninfo.c \
+	tls_server.c tls_peer.c tls_util.c tls_verify.c \
+	$(am__append_1)
 noinst_HEADERS = tls_internal.h
 all: all-am
 
@@ -430,6 +433,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_client.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_config.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_conninfo.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_peer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_server.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_util.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_verify.Plo@am__quote@

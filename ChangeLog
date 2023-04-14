@@ -28,53 +28,63 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
-2.2.9 - Security fix
+2.3.0 - SSLv3 removed, libtls API changes, portability improvements
 
-	* Correct a problem that prevents the DSA signing algorithm from
-	  running in constant time even if the flag BN_FLG_CONSTTIME is set.
-	  This issue was reported by Cesar Pereida (Aalto University), Billy
-	  Brumley (Tampere University of Technology), and Yuval Yarom (The
-	  University of Adelaide and NICTA). The fix was developed by Cesar
-	  Pereida. See OpenBSD 5.8 errata 17, June 6, 2016
+	* SSLv3 is now permanently removed from the tree.
 
-2.2.8 - Reliability fix
+	* The libtls API is changed from the 2.2.x series.
 
-	* Fixed an error in libcrypto when parsing some ASN.1 elements > 16k.
+	  The read/write functions work correctly with external event
+	  libraries.  See the tls_init man page for examples of using libtls
+	  correctly in asynchronous mode.
 
-2.2.7 - Security Update
+	  Client-side verification is now supported, with the client supplying
+	  the certificate to the server.
 
-	* Fix multiple vulnerabilities in libcrypto relating to ASN.1 and encoding.
-	From OpenSSL.
+	  Also, when using tls_connect_fds, tls_connect_socket or
+	  tls_accept_fds, libtls no longer implicitly closes the passed in
+	  sockets. The caller is responsible for closing them in this case.
 
-2.2.6 - Security Update
+	* When loading a DSA key from an raw (without DH parameters) ASN.1
+	  serialization, perform some consistency checks on its `p' and `q'
+	  values, and return an error if the checks failed.
 
-	* Deprecated the SSL_OP_SINGLE_DH_USE flag.
+	  Thanks for Georgi Guninski (guninski at guninski dot com) for
+	  mentioning the possibility of a weak (non prime) q value and
+	  providing a test case.
 
-2.2.5 - Reliability Update
+	  See
+	  https://cpunks.org/pipermail/cypherpunks/2015-September/009007.html
+	  for a longer discussion.
 
-	* Fixes from OpenSSL 1.0.1q
-	 - CVE-2015-3194 - NULL pointer dereference in client side certificate
-	                   validation.
-	 - CVE-2015-3195 - Memory leak in PKCS7 - not reachable from TLS/SSL
+	* Fixed a bug in ECDH_compute_key that can lead to silent truncation
+	  of the result key without error. A coding error could cause software
+	  to use much shorter keys than intended.
 
-	* The following OpenSSL CVEs did not apply to LibreSSL
-	 - CVE-2015-3193 - Carry propagating bug in the x86_64 Montgomery
-	                   squaring procedure.
-	 - CVE-2015-3196 - Double free race condition of the identify hint
-	                   data.
+	* Removed support for DTLS_BAD_VER. Pre-DTLSv1 implementations are no
+	  longer supported.
 
-	 See https://marc.info/?l=openbsd-announce&m=144925068504102
+	* The engine command and parameters are removed from the openssl(1).
+	  Previous releases removed dynamic and builtin engine support
+	  already.
 
-2.2.4 - Build and bug fixes
+	* SHA-0 is removed, which was withdrawn shortly after publication 20
+	  years ago.
 
-	* Backported build fixes for CMake on Windows, OSX and Linux
+	* Added Certplus CA root certificate to the default cert.pem file.
 
-	* Fixes for a memory leak and out-of-bounds access in OBJ_obj2txt
-	  reported by Qualys Security.
-	 - CVE-2015-5333 - memory leak in OBJ_obj2txt
-	 - CVE-2015-5334 - 1-byte buffer overflow in OBJ_obj2txt
+	* New interface OPENSSL_cpu_caps is provided that does not allow
+	  software to inadvertently modify cpu capability flags.
+	  OPENSSL_ia32cap and OPENSSL_ia32cap_loc are removed.
 
-	 See http://www.openwall.com/lists/oss-security/2015/10/16/1
+	* The out_len argument of AEAD changed from ssize_t to size_t.
+
+	* Deduplicated DTLS code, sharing bugfixes and improvements with
+	  TLS.
+
+	* Converted 'nc' to use libtls for client and server operations; it is
+	  included in the libressl-portable distribution as an example of how
+	  to use the library.
 
 2.2.3 - Bug fixes, build enhancements
 

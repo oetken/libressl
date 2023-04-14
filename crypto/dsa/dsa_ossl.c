@@ -1,4 +1,4 @@
-/* $OpenBSD: dsa_ossl.c,v 1.22.6.1 2016/06/06 10:00:50 beck Exp $ */
+/* $OpenBSD: dsa_ossl.c,v 1.22 2014/10/18 17:20:40 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -247,6 +247,9 @@ dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp)
 		if (!BN_rand_range(&k, dsa->q))
 			goto err;
 	} while (BN_is_zero(&k));
+	if ((dsa->flags & DSA_FLAG_NO_EXP_CONSTTIME) == 0) {
+		BN_set_flags(&k, BN_FLG_CONSTTIME);
+	}
 
 	if (dsa->flags & DSA_FLAG_CACHE_MONT_P) {
 		if (!BN_MONT_CTX_set_locked(&dsa->method_mont_p,
@@ -280,11 +283,6 @@ dsa_sign_setup(DSA *dsa, BN_CTX *ctx_in, BIGNUM **kinvp, BIGNUM **rp)
 	} else {
 		K = &k;
 	}
-
-	if ((dsa->flags & DSA_FLAG_NO_EXP_CONSTTIME) == 0) {
-		BN_set_flags(K, BN_FLG_CONSTTIME);
-	}
-
 	DSA_BN_MOD_EXP(goto err, dsa, r, dsa->g, K, dsa->p, ctx,
 	    dsa->method_mont_p);
 	if (!BN_mod(r,r,dsa->q,ctx))
@@ -398,9 +396,7 @@ dsa_do_verify(const unsigned char *dgst, int dgst_len, DSA_SIG *sig, DSA *dsa)
 	ret = BN_ucmp(&u1, sig->r) == 0;
 
 err:
-	/* XXX: surely this is wrong - if ret is 0, it just didn't verify;
-	   there is no error in BN. Test should be ret == -1 (Ben) */
-	if (ret != 1)
+	if (ret < 0)
 		DSAerr(DSA_F_DSA_DO_VERIFY, ERR_R_BN_LIB);
 	BN_CTX_free(ctx);
 	BN_free(&u1);
