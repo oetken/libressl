@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_clnt.c,v 1.107 2015/02/07 05:46:01 jsing Exp $ */
+/* $OpenBSD: s3_clnt.c,v 1.110 2015/03/27 12:29:54 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -218,7 +218,6 @@ ssl3_get_client_method(int ver)
 int
 ssl3_connect(SSL *s)
 {
-	BUF_MEM	*buf = NULL;
 	void   (*cb)(const SSL *ssl, int type, int val) = NULL;
 	int	 ret = -1;
 	int	 new_state, state, skip = 0;
@@ -263,26 +262,14 @@ ssl3_connect(SSL *s)
 			/* s->version=SSL3_VERSION; */
 			s->type = SSL_ST_CONNECT;
 
-			if (s->init_buf == NULL) {
-				if ((buf = BUF_MEM_new()) == NULL) {
-					ret = -1;
-					goto end;
-				}
-				if (!BUF_MEM_grow(buf,
-				    SSL3_RT_MAX_PLAIN_LENGTH)) {
-					ret = -1;
-					goto end;
-				}
-				s->init_buf = buf;
-				buf = NULL;
+			if (!ssl3_setup_init_buffer(s)) {
+				ret = -1;
+				goto end;
 			}
-
 			if (!ssl3_setup_buffers(s)) {
 				ret = -1;
 				goto end;
 			}
-
-			/* setup buffing BIO */
 			if (!ssl_init_wbio_buffer(s, 0)) {
 				ret = -1;
 				goto end;
@@ -631,12 +618,12 @@ ssl3_connect(SSL *s)
 		}
 		skip = 0;
 	}
+
 end:
 	s->in_handshake--;
-	if (buf != NULL)
-		BUF_MEM_free(buf);
 	if (cb != NULL)
 		cb(s, SSL_CB_CONNECT_EXIT, ret);
+
 	return (ret);
 }
 
@@ -723,16 +710,6 @@ ssl3_client_hello(SSL *s)
 			    SSL_R_NO_CIPHERS_AVAILABLE);
 			goto err;
 		}
-#ifdef OPENSSL_MAX_TLS1_2_CIPHER_LENGTH
-			/*
-			 * Some servers hang if client hello > 256 bytes
-			 * as hack workaround chop number of supported ciphers
-			 * to keep it well below this if we use TLS v1.2
-			 */
-		if (TLS1_get_version(s) >= TLS1_2_VERSION &&
-		    i > OPENSSL_MAX_TLS1_2_CIPHER_LENGTH)
-			i = OPENSSL_MAX_TLS1_2_CIPHER_LENGTH & ~1;
-#endif
 		s2n(i, p);
 		p += i;
 
@@ -1168,8 +1145,6 @@ ssl3_get_key_exchange(SSL *s)
 	alg_k = s->s3->tmp.new_cipher->algorithm_mkey;
 	alg_a = s->s3->tmp.new_cipher->algorithm_auth;
 
-	EVP_MD_CTX_init(&md_ctx);
-
 	/*
 	 * Use same message size as in ssl3_get_certificate_request()
 	 * as ServerKeyExchange message may be skipped.
@@ -1178,6 +1153,8 @@ ssl3_get_key_exchange(SSL *s)
 	    SSL3_ST_CR_KEY_EXCH_B, -1, s->max_cert_list, &ok);
 	if (!ok)
 		return ((int)n);
+	
+	EVP_MD_CTX_init(&md_ctx);
 
 	if (s->s3->tmp.message_type != SSL3_MT_SERVER_KEY_EXCHANGE) {
 		/*
@@ -1192,6 +1169,7 @@ ssl3_get_key_exchange(SSL *s)
 		}
 
 		s->s3->tmp.reuse_message = 1;
+		EVP_MD_CTX_cleanup(&md_ctx);
 		return (1);
 	}
 

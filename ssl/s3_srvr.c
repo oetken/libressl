@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_srvr.c,v 1.99 2015/02/07 08:56:39 jsing Exp $ */
+/* $OpenBSD: s3_srvr.c,v 1.102 2015/04/15 16:25:43 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -265,21 +265,10 @@ ssl3_accept(SSL *s)
 			}
 			s->type = SSL_ST_ACCEPT;
 
-			if (s->init_buf == NULL) {
-				BUF_MEM *buf;
-				if ((buf = BUF_MEM_new()) == NULL) {
-					ret = -1;
-					goto end;
-				}
-				if (!BUF_MEM_grow(buf,
-				    SSL3_RT_MAX_PLAIN_LENGTH)) {
-					BUF_MEM_free(buf);
-					ret = -1;
-					goto end;
-				}
-				s->init_buf = buf;
+			if (!ssl3_setup_init_buffer(s)) {
+				ret = -1;
+				goto end;
 			}
-
 			if (!ssl3_setup_buffers(s)) {
 				ret = -1;
 				goto end;
@@ -999,9 +988,9 @@ ssl3_get_client_hello(SSL *s)
 	}
 	if (p + i - d > n)
 		goto truncated;
-	if ((i > 0) &&
-	    (ssl_bytes_to_cipher_list(s, p, i, &(ciphers)) == NULL)) {
-		goto err;
+	if (i > 0) {
+		if ((ciphers = ssl_bytes_to_cipher_list(s, p, i)) == NULL)
+			goto err;
 	}
 	p += i;
 
@@ -2700,6 +2689,7 @@ ssl3_send_newsession_ticket(SSL *s)
 			if (tctx->tlsext_ticket_key_cb(s, key_name, iv, &ctx,
 			    &hctx, 1) < 0) {
 				free(senc);
+				EVP_CIPHER_CTX_cleanup(&ctx);
 				return (-1);
 			}
 		} else {

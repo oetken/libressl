@@ -1,4 +1,4 @@
-/* $OpenBSD: s_socket.c,v 1.2 2014/11/06 13:46:09 jsing Exp $ */
+/* $OpenBSD: s_socket.c,v 1.3 2014/12/03 22:16:02 bcook Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *

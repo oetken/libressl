@@ -87,49 +87,70 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-TESTS = aes_wrap$(EXEEXT) asn1test$(EXEEXT) base64test$(EXEEXT) \
-	bftest$(EXEEXT) bntest$(EXEEXT) bytestringtest$(EXEEXT) \
+TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_1) \
+	asn1test$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
+	$(am__EXEEXT_2) bntest$(EXEEXT) bytestringtest$(EXEEXT) \
 	casttest$(EXEEXT) chachatest$(EXEEXT) cipherstest$(EXEEXT) \
 	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
 	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
-	ectest$(EXEEXT) enginetest$(EXEEXT) $(am__EXEEXT_2) \
+	ectest$(EXEEXT) enginetest$(EXEEXT) evptest.sh $(am__EXEEXT_3) \
 	exptest$(EXEEXT) gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
 	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
 	md4test$(EXEEXT) md5test$(EXEEXT) mdc2test$(EXEEXT) \
-	mont$(EXEEXT) pbkdf2$(EXEEXT) pkcs7test$(EXEEXT) \
-	poly1305test$(EXEEXT) randtest$(EXEEXT) rc2test$(EXEEXT) \
-	rc4test$(EXEEXT) rmdtest$(EXEEXT) sha1test$(EXEEXT) \
-	sha256test$(EXEEXT) sha512test$(EXEEXT) shatest$(EXEEXT) \
-	timingsafe$(EXEEXT) utf8test$(EXEEXT) aeadtest.sh evptest.sh \
-	pq_test.sh ssltest.sh $(am__append_6)
+	mont$(EXEEXT) optionstest$(EXEEXT) pbkdf2$(EXEEXT) \
+	$(am__EXEEXT_4) pkcs7test$(EXEEXT) poly1305test$(EXEEXT) \
+	pq_test.sh randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
+	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
+	sha512test$(EXEEXT) shatest$(EXEEXT) ssltest.sh testdsa.sh \
+	testenc.sh testrsa.sh timingsafe$(EXEEXT) utf8test$(EXEEXT)
 check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	asn1test$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
-	bntest$(EXEEXT) bytestringtest$(EXEEXT) casttest$(EXEEXT) \
-	chachatest$(EXEEXT) cipherstest$(EXEEXT) cts128test$(EXEEXT) \
-	destest$(EXEEXT) dhtest$(EXEEXT) dsatest$(EXEEXT) \
-	ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) ectest$(EXEEXT) \
-	enginetest$(EXEEXT) evptest$(EXEEXT) $(am__EXEEXT_2) \
-	exptest$(EXEEXT) gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
-	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
-	md4test$(EXEEXT) md5test$(EXEEXT) mdc2test$(EXEEXT) \
-	mont$(EXEEXT) pbkdf2$(EXEEXT) $(am__EXEEXT_3) \
-	pkcs7test$(EXEEXT) poly1305test$(EXEEXT) pq_test$(EXEEXT) \
-	randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
-	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
-	sha512test$(EXEEXT) shatest$(EXEEXT) ssltest$(EXEEXT) \
-	timingsafe$(EXEEXT) utf8test$(EXEEXT)
-@HOST_WIN_FALSE@am__append_1 = arc4randomforktest
-@HOST_WIN_FALSE@am__append_2 = explicit_bzero
-@HOST_WIN_FALSE@am__append_3 = explicit_bzero
-@HAVE_MEMMEM_FALSE@@HOST_WIN_FALSE@am__append_4 = memmem.c
-@HOST_WIN_FALSE@am__append_5 = pidwraptest
-@HOST_WIN_FALSE@am__append_6 = arc4randomforktest.sh pidwraptest.sh
+	$(am__EXEEXT_2) bntest$(EXEEXT) bytestringtest$(EXEEXT) \
+	casttest$(EXEEXT) chachatest$(EXEEXT) cipherstest$(EXEEXT) \
+	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
+	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
+	ectest$(EXEEXT) enginetest$(EXEEXT) evptest$(EXEEXT) \
+	$(am__EXEEXT_3) exptest$(EXEEXT) gcm128test$(EXEEXT) \
+	gost2814789t$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
+	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
+	mdc2test$(EXEEXT) mont$(EXEEXT) optionstest$(EXEEXT) \
+	pbkdf2$(EXEEXT) $(am__EXEEXT_4) pkcs7test$(EXEEXT) \
+	poly1305test$(EXEEXT) pq_test$(EXEEXT) randtest$(EXEEXT) \
+	rc2test$(EXEEXT) rc4test$(EXEEXT) rmdtest$(EXEEXT) \
+	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
+	shatest$(EXEEXT) ssltest$(EXEEXT) timingsafe$(EXEEXT) \
+	utf8test$(EXEEXT)
+
+# arc4randomforktest
+# Windows/mingw does not have fork, but Cygwin does.
+@HOST_WIN_FALSE@am__append_1 = arc4randomforktest.sh
+@HOST_WIN_FALSE@am__append_2 = arc4randomforktest
+
+# biotest
+# the BIO tests rely on resolver results that are OS and environment-specific
+@ENABLE_EXTRATESTS_TRUE@am__append_3 = biotest
+@ENABLE_EXTRATESTS_TRUE@am__append_4 = biotest
+
+# explicit_bzero
+# explicit_bzero relies on SA_ONSTACK, which is unavailable on Windows
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_5 = explicit_bzero
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_6 = explicit_bzero
+@HAVE_MEMMEM_FALSE@@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_7 = memmem.c
+
+# pidwraptest
+# pidwraptest relies on an OS-specific way to give out pids and is generally
+# awkward on systems with slow fork
+@ENABLE_EXTRATESTS_TRUE@am__append_8 = pidwraptest
+@ENABLE_EXTRATESTS_TRUE@am__append_9 = pidwraptest
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
-am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
-	$(top_srcdir)/m4/ltoptions.m4 $(top_srcdir)/m4/ltsugar.m4 \
-	$(top_srcdir)/m4/ltversion.m4 $(top_srcdir)/m4/lt~obsolete.m4 \
-	$(top_srcdir)/configure.ac
+am__aclocal_m4_deps = $(top_srcdir)/m4/check-hardening-options.m4 \
+	$(top_srcdir)/m4/check-libc.m4 \
+	$(top_srcdir)/m4/check-os-options.m4 \
+	$(top_srcdir)/m4/disable-compiler-warnings.m4 \
+	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
+	$(top_srcdir)/m4/ltsugar.m4 $(top_srcdir)/m4/ltversion.m4 \
+	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
 DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
@@ -137,8 +158,10 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 @HOST_WIN_FALSE@am__EXEEXT_1 = arc4randomforktest$(EXEEXT)
-@HOST_WIN_FALSE@am__EXEEXT_2 = explicit_bzero$(EXEEXT)
-@HOST_WIN_FALSE@am__EXEEXT_3 = pidwraptest$(EXEEXT)
+@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_2 = biotest$(EXEEXT)
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__EXEEXT_3 =  \
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	explicit_bzero$(EXEEXT)
+@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_4 = pidwraptest$(EXEEXT)
 am_aeadtest_OBJECTS = aeadtest.$(OBJEXT)
 aeadtest_OBJECTS = $(am_aeadtest_OBJECTS)
 aeadtest_LDADD = $(LDADD)
@@ -180,6 +203,13 @@ am_bftest_OBJECTS = bftest.$(OBJEXT)
 bftest_OBJECTS = $(am_bftest_OBJECTS)
 bftest_LDADD = $(LDADD)
 bftest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+am__biotest_SOURCES_DIST = biotest.c
+@ENABLE_EXTRATESTS_TRUE@am_biotest_OBJECTS = biotest.$(OBJEXT)
+biotest_OBJECTS = $(am_biotest_OBJECTS)
+biotest_LDADD = $(LDADD)
+biotest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_bntest_OBJECTS = bntest.$(OBJEXT)
@@ -267,9 +297,10 @@ evptest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am__explicit_bzero_SOURCES_DIST = explicit_bzero.c memmem.c
-@HAVE_MEMMEM_FALSE@@HOST_WIN_FALSE@am__objects_1 = memmem.$(OBJEXT)
-@HOST_WIN_FALSE@am_explicit_bzero_OBJECTS = explicit_bzero.$(OBJEXT) \
-@HOST_WIN_FALSE@	$(am__objects_1)
+@HAVE_MEMMEM_FALSE@@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__objects_1 = memmem.$(OBJEXT)
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am_explicit_bzero_OBJECTS =  \
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	explicit_bzero.$(OBJEXT) \
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	$(am__objects_1)
 explicit_bzero_OBJECTS = $(am_explicit_bzero_OBJECTS)
 explicit_bzero_LDADD = $(LDADD)
 explicit_bzero_DEPENDENCIES = $(am__DEPENDENCIES_1) \
@@ -335,6 +366,12 @@ mont_LDADD = $(LDADD)
 mont_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
+am_optionstest_OBJECTS = optionstest.$(OBJEXT)
+optionstest_OBJECTS = $(am_optionstest_OBJECTS)
+optionstest_LDADD = $(LDADD)
+optionstest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
 am_pbkdf2_OBJECTS = pbkdf2.$(OBJEXT)
 pbkdf2_OBJECTS = $(am_pbkdf2_OBJECTS)
 pbkdf2_LDADD = $(LDADD)
@@ -342,7 +379,8 @@ pbkdf2_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am__pidwraptest_SOURCES_DIST = pidwraptest.c
-@HOST_WIN_FALSE@am_pidwraptest_OBJECTS = pidwraptest.$(OBJEXT)
+@ENABLE_EXTRATESTS_TRUE@am_pidwraptest_OBJECTS =  \
+@ENABLE_EXTRATESTS_TRUE@	pidwraptest.$(OBJEXT)
 pidwraptest_OBJECTS = $(am_pidwraptest_OBJECTS)
 pidwraptest_LDADD = $(LDADD)
 pidwraptest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
@@ -468,25 +506,28 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(arc4randomforktest_SOURCES) $(asn1test_SOURCES) \
-	$(base64test_SOURCES) $(bftest_SOURCES) $(bntest_SOURCES) \
-	$(bytestringtest_SOURCES) $(casttest_SOURCES) \
-	$(chachatest_SOURCES) $(cipherstest_SOURCES) \
-	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
-	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
-	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) $(biotest_SOURCES) \
+	$(bntest_SOURCES) $(bytestringtest_SOURCES) \
+	$(casttest_SOURCES) $(chachatest_SOURCES) \
+	$(cipherstest_SOURCES) $(cts128test_SOURCES) \
+	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
+	$(ecdhtest_SOURCES) $(ecdsatest_SOURCES) $(ectest_SOURCES) \
+	$(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
 	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
 	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
 	$(md4test_SOURCES) $(md5test_SOURCES) $(mdc2test_SOURCES) \
-	$(mont_SOURCES) $(pbkdf2_SOURCES) $(pidwraptest_SOURCES) \
-	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
-	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
-	$(rc4test_SOURCES) $(rmdtest_SOURCES) $(sha1test_SOURCES) \
-	$(sha256test_SOURCES) $(sha512test_SOURCES) $(shatest_SOURCES) \
-	$(ssltest_SOURCES) $(timingsafe_SOURCES) $(utf8test_SOURCES)
+	$(mont_SOURCES) $(optionstest_SOURCES) $(pbkdf2_SOURCES) \
+	$(pidwraptest_SOURCES) $(pkcs7test_SOURCES) \
+	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
+	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
+	$(sha1test_SOURCES) $(sha256test_SOURCES) \
+	$(sha512test_SOURCES) $(shatest_SOURCES) $(ssltest_SOURCES) \
+	$(timingsafe_SOURCES) $(utf8test_SOURCES)
 DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(am__arc4randomforktest_SOURCES_DIST) $(asn1test_SOURCES) \
-	$(base64test_SOURCES) $(bftest_SOURCES) $(bntest_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) \
+	$(am__biotest_SOURCES_DIST) $(bntest_SOURCES) \
 	$(bytestringtest_SOURCES) $(casttest_SOURCES) \
 	$(chachatest_SOURCES) $(cipherstest_SOURCES) \
 	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
@@ -496,7 +537,7 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
 	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
 	$(md4test_SOURCES) $(md5test_SOURCES) $(mdc2test_SOURCES) \
-	$(mont_SOURCES) $(pbkdf2_SOURCES) \
+	$(mont_SOURCES) $(optionstest_SOURCES) $(pbkdf2_SOURCES) \
 	$(am__pidwraptest_SOURCES_DIST) $(pkcs7test_SOURCES) \
 	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
 	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
@@ -804,7 +845,6 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
-USER_CFLAGS = @USER_CFLAGS@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -858,14 +898,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -I$(top_srcdir)/include -DLIBRESSL_INTERNAL -I \
-	$(top_srcdir)/crypto/modes -I $(top_srcdir)/crypto/asn1 -I \
-	$(top_srcdir)/ssl
+AM_CFLAGS = -I$(top_srcdir)/include
+AM_CPPFLAGS = -DLIBRESSL_INTERNAL -I $(top_srcdir)/crypto/modes -I \
+	$(top_srcdir)/crypto/asn1 -I $(top_srcdir)/ssl -I \
+	$(top_srcdir)/apps
 LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
-EXTRA_DIST = aeadtest.sh evptest.sh pq_test.sh ssltest.sh \
-	arc4randomforktest.sh pidwraptest.sh aeadtests.txt \
-	evptests.txt pq_expected.txt testssl ca.pem server.pem
+EXTRA_DIST = aeadtest.sh aeadtests.txt arc4randomforktest.sh \
+	evptest.sh evptests.txt pq_test.sh pq_expected.txt ssltest.sh \
+	testssl ca.pem server.pem testdsa.sh openssl.cnf testenc.sh \
+	testrsa.sh
 DISTCLEANFILES = pidwraptest.txt
 aeadtest_SOURCES = aeadtest.c
 aes_wrap_SOURCES = aes_wrap.c
@@ -873,6 +915,7 @@ aes_wrap_SOURCES = aes_wrap.c
 asn1test_SOURCES = asn1test.c
 base64test_SOURCES = base64test.c
 bftest_SOURCES = bftest.c
+@ENABLE_EXTRATESTS_TRUE@biotest_SOURCES = biotest.c
 bntest_SOURCES = bntest.c
 bytestringtest_SOURCES = bytestringtest.c
 casttest_SOURCES = casttest.c
@@ -887,8 +930,9 @@ ecdsatest_SOURCES = ecdsatest.c
 ectest_SOURCES = ectest.c
 enginetest_SOURCES = enginetest.c
 evptest_SOURCES = evptest.c
-@HOST_WIN_FALSE@explicit_bzero_SOURCES = explicit_bzero.c \
-@HOST_WIN_FALSE@	$(am__append_4)
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@explicit_bzero_SOURCES =  \
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	explicit_bzero.c \
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	$(am__append_7)
 exptest_SOURCES = exptest.c
 gcm128test_SOURCES = gcm128test.c
 gost2814789t_SOURCES = gost2814789t.c
@@ -899,8 +943,9 @@ md4test_SOURCES = md4test.c
 md5test_SOURCES = md5test.c
 mdc2test_SOURCES = mdc2test.c
 mont_SOURCES = mont.c
+optionstest_SOURCES = optionstest.c
 pbkdf2_SOURCES = pbkdf2.c
-@HOST_WIN_FALSE@pidwraptest_SOURCES = pidwraptest.c
+@ENABLE_EXTRATESTS_TRUE@pidwraptest_SOURCES = pidwraptest.c
 pkcs7test_SOURCES = pkcs7test.c
 poly1305test_SOURCES = poly1305test.c
 pq_test_SOURCES = pq_test.c
@@ -982,6 +1027,10 @@ base64test$(EXEEXT): $(base64test_OBJECTS) $(base64test_DEPENDENCIES) $(EXTRA_ba
 bftest$(EXEEXT): $(bftest_OBJECTS) $(bftest_DEPENDENCIES) $(EXTRA_bftest_DEPENDENCIES) 
 	@rm -f bftest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bftest_OBJECTS) $(bftest_LDADD) $(LIBS)
+
+biotest$(EXEEXT): $(biotest_OBJECTS) $(biotest_DEPENDENCIES) $(EXTRA_biotest_DEPENDENCIES) 
+	@rm -f biotest$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(biotest_OBJECTS) $(biotest_LDADD) $(LIBS)
 
 bntest$(EXEEXT): $(bntest_OBJECTS) $(bntest_DEPENDENCIES) $(EXTRA_bntest_DEPENDENCIES) 
 	@rm -f bntest$(EXEEXT)
@@ -1083,6 +1132,10 @@ mont$(EXEEXT): $(mont_OBJECTS) $(mont_DEPENDENCIES) $(EXTRA_mont_DEPENDENCIES)
 	@rm -f mont$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mont_OBJECTS) $(mont_LDADD) $(LIBS)
 
+optionstest$(EXEEXT): $(optionstest_OBJECTS) $(optionstest_DEPENDENCIES) $(EXTRA_optionstest_DEPENDENCIES) 
+	@rm -f optionstest$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(optionstest_OBJECTS) $(optionstest_LDADD) $(LIBS)
+
 pbkdf2$(EXEEXT): $(pbkdf2_OBJECTS) $(pbkdf2_DEPENDENCIES) $(EXTRA_pbkdf2_DEPENDENCIES) 
 	@rm -f pbkdf2$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(pbkdf2_OBJECTS) $(pbkdf2_LDADD) $(LIBS)
@@ -1159,6 +1212,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bftest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/biotest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bntest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bytestringtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/casttest.Po@am__quote@
@@ -1185,6 +1239,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mdc2test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memmem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/optionstest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pbkdf2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pidwraptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pkcs7test.Po@am__quote@
@@ -1425,9 +1480,23 @@ recheck: all $(check_PROGRAMS)
 	        am__force_recheck=am--force-recheck \
 	        TEST_LOGS="$$log_list"; \
 	exit $$?
+aeadtest.sh.log: aeadtest.sh
+	@p='aeadtest.sh'; \
+	b='aeadtest.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 aes_wrap.log: aes_wrap$(EXEEXT)
 	@p='aes_wrap$(EXEEXT)'; \
 	b='aes_wrap'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+arc4randomforktest.sh.log: arc4randomforktest.sh
+	@p='arc4randomforktest.sh'; \
+	b='arc4randomforktest.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1449,6 +1518,13 @@ base64test.log: base64test$(EXEEXT)
 bftest.log: bftest$(EXEEXT)
 	@p='bftest$(EXEEXT)'; \
 	b='bftest'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+biotest.log: biotest$(EXEEXT)
+	@p='biotest$(EXEEXT)'; \
+	b='biotest'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1544,6 +1620,13 @@ enginetest.log: enginetest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+evptest.sh.log: evptest.sh
+	@p='evptest.sh'; \
+	b='evptest.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 explicit_bzero.log: explicit_bzero$(EXEEXT)
 	@p='explicit_bzero$(EXEEXT)'; \
 	b='explicit_bzero'; \
@@ -1621,9 +1704,23 @@ mont.log: mont$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+optionstest.log: optionstest$(EXEEXT)
+	@p='optionstest$(EXEEXT)'; \
+	b='optionstest'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 pbkdf2.log: pbkdf2$(EXEEXT)
 	@p='pbkdf2$(EXEEXT)'; \
 	b='pbkdf2'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pidwraptest.log: pidwraptest$(EXEEXT)
+	@p='pidwraptest$(EXEEXT)'; \
+	b='pidwraptest'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1638,6 +1735,13 @@ pkcs7test.log: pkcs7test$(EXEEXT)
 poly1305test.log: poly1305test$(EXEEXT)
 	@p='poly1305test$(EXEEXT)'; \
 	b='poly1305test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+pq_test.sh.log: pq_test.sh
+	@p='pq_test.sh'; \
+	b='pq_test.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1698,6 +1802,34 @@ shatest.log: shatest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ssltest.sh.log: ssltest.sh
+	@p='ssltest.sh'; \
+	b='ssltest.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testdsa.sh.log: testdsa.sh
+	@p='testdsa.sh'; \
+	b='testdsa.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testenc.sh.log: testenc.sh
+	@p='testenc.sh'; \
+	b='testenc.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+testrsa.sh.log: testrsa.sh
+	@p='testrsa.sh'; \
+	b='testrsa.sh'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 timingsafe.log: timingsafe$(EXEEXT)
 	@p='timingsafe$(EXEEXT)'; \
 	b='timingsafe'; \
@@ -1708,48 +1840,6 @@ timingsafe.log: timingsafe$(EXEEXT)
 utf8test.log: utf8test$(EXEEXT)
 	@p='utf8test$(EXEEXT)'; \
 	b='utf8test'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-aeadtest.sh.log: aeadtest.sh
-	@p='aeadtest.sh'; \
-	b='aeadtest.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-evptest.sh.log: evptest.sh
-	@p='evptest.sh'; \
-	b='evptest.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pq_test.sh.log: pq_test.sh
-	@p='pq_test.sh'; \
-	b='pq_test.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-ssltest.sh.log: ssltest.sh
-	@p='ssltest.sh'; \
-	b='ssltest.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-arc4randomforktest.sh.log: arc4randomforktest.sh
-	@p='arc4randomforktest.sh'; \
-	b='arc4randomforktest.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-pidwraptest.sh.log: pidwraptest.sh
-	@p='pidwraptest.sh'; \
-	b='pidwraptest.sh'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
