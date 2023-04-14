@@ -1,4 +1,4 @@
-/* $OpenBSD: speed.c,v 1.28 2022/01/14 09:27:30 tb Exp $ */
+/* $OpenBSD: speed.c,v 1.29 2022/11/11 17:07:39 joshua Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -480,11 +480,9 @@ speed_main(int argc, char **argv)
 	const char *errstr = NULL;
 #endif
 
-	if (single_execution) {
-		if (pledge("stdio proc", NULL) == -1) {
-			perror("pledge");
-			exit(1);
-		}
+	if (pledge("stdio proc", NULL) == -1) {
+		perror("pledge");
+		exit(1);
 	}
 
 	usertime = -1;
