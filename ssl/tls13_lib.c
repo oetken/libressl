@@ -1,4 +1,4 @@
-/*	$OpenBSD: tls13_lib.c,v 1.54.4.1 2021/02/03 07:06:14 tb Exp $ */
+/*	$OpenBSD: tls13_lib.c,v 1.55 2020/11/16 18:55:15 jsing Exp $ */
 /*
  * Copyright (c) 2018, 2019 Joel Sing <jsing@openbsd.org>
  * Copyright (c) 2019 Bob Beck <beck@openbsd.org>

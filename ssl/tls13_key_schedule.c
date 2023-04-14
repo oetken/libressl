@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_key_schedule.c,v 1.8.6.1 2021/02/03 07:06:14 tb Exp $ */
+/* $OpenBSD: tls13_key_schedule.c,v 1.9 2020/11/16 18:55:15 jsing Exp $ */
 /* Copyright (c) 2018, Bob Beck <beck@openbsd.org>
  *
  * Permission to use, copy, modify, and/or distribute this software for any

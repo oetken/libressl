@@ -28,53 +28,106 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
-3.2.7 - Security fix
+3.3.0 - Development release
 
-	* A stack overread could occur when checking X.509 name constraints.
-	  From GoldBinocle on GitHub.
+	* Make openssl(1) s_server ignore -4 and -6 for compatibility with
+	  OpenSSL.
 
-	* Enable X509_V_FLAG_TRUSTED_FIRST by default in the legacy verifier.
-	  This compensates for the expiry of the DST Root X3 certificate.
+	* Further cleanup of the DTLS record handling.
 
-3.2.6 - Security fix
+	* Continue the replacement of the TLSv1.2 record layer by
+	  reimplementing the read side of the TLSv1.2 record handling.
 
-	* In LibreSSL, printing a certificate can result in a crash in
-	  X509_CERT_AUX_print(). From Ingo Schwarze.
+	* Replace DTLSv1_enc_data() with TLSv1_1_enc_data().
 
-	* Ensure GNU-stack is set on ELF platforms when building with CMake to
-	  enable non-executable stack annotations for the GNU toolchain.
-	  From Tobias Heider.
+	* Merge d1_{clnt,srvr}.c into ssl_{clnt,srvr}.c.
 
-3.2.5 - Bug fix
+	* When switching from the TLSv1.3 stack to the legacy stack include
+	  a TLS record header. This is necessary if there is more than one
+	  handshake message in the TLS plaintext record.
 
-	* A TLS client using session resumption may cause a use-after-free.
+	* Set SO_REUSEADDR on the server socket in the openssl(1) ocsp
+	  command.
 
-3.2.4 - Bug and interoperability fixes
+	* Fix resource handling on error in OCSP_request_add0_id().
 
-	* Switch back to certificate verification code from LibreSSL 3.1.x. The
-	  new verifier is not bug compatible with the old verifier causing issues
-	  with applications expecting behavior of the old verifier.
+	* Add const to ssl_ciphers and tls1[23]_sigalgs* to push them into
+	  .data.rel.ro and .rodata, respectively.
 
-	* Unbreak DTLS retransmissions for flights that include a CCS
+	* Add a const qualifier to srtp_known_profiles.
 
-	* Only check BIO_should_read() on read and BIO_should_write() on write
+	* Simplify TLS method by removing the client and server specific
+	  methods internally.
 
-	* Implement autochain for the TLSv1.3 server
+	* Avoid casting away const in ssl_ctx_make_profiles().
 
-	* Use the legacy verifier for autochain
+	* Make sure there is enough room for stashing the handshake message
+	  when switching to the legacy TLS stack.
 
-	* Implement exporter for TLSv1.3
+	* Avoid explicitly conditioning an assert on DTLS1_VERSION to make
+	  the assert work for newer DTLS versions.
 
-	* Free alert_data and phh_data in tls13_record_layer_free()
+	* Merge SSL_ENC_METHOD into SSL_METHOD_INTERNAL.
 
-	* Plug leak in x509_verify_chain_dup()
+	* Send a host header with OCSP queries to make openssl(1) ocsp
+	  work with some widely used OCSP responders.
 
-	* Free the policy tree in x509_vfy_check_policy()
+	* Fix a memory leak in the openssl(1) s_client.
 
-3.2.3 - Security fix
+	* Add a flag to mark DTLS methods as DTLS to have an easy way to
+	  recognize DTLS methods that avoids inspecting the version number.
 
-	* Malformed ASN.1 in a certificate revocation list or a timestamp
-	  response token can lead to a NULL pointer dereference.
+	* Implement SSL_is_dtls() and use it internally in place of the
+	  SSL_IS_DTLS macro.
+
+	* Unbreak DTLS retransmissions for flights that include a CCS.
+
+	* Add ability to ocspcheck(8) to parse a port in the specified
+	  OCSP URL.
+
+	* Refactor and clean up ocspcheck(8) and add regression tests.
+
+	* If x509_verify() fails, ensure that the error is set on both
+	  the x509_verify_ctx() and its store context to make some failures
+	  visible from SSL_get_verify_result().
+
+	* Use the X509_STORE_CTX get_issuer() callback from the new X.509
+	  verifier to fix hashed certificate directories.
+
+	* Only check BIO_should_read() on read and BIO_should_write() on
+	  write.  Previously, BIO_should_write() was also checked after read
+	  and BIO_should_read() after write which could cause stalls in
+	  software that uses the same BIO for read and write.
+
+	* In openssl(1) verify, also check for error on the store context
+	  since the return value of X509_verify_cert() is unreliable in
+	  presence of a callback that returns 1 too often.
+
+	* Update getentropy on Windows to use Cryptography Next Generation
+	  (CNG). wincrypt is deprecated and no longer works with newer Windows
+	  environments, such as in Windows Store apps.
+
+	* Implement auto chain for the TLSv1.3 server since some software
+	  relies on this.
+
+	* Handle additional certificate error cases in the new X.509 verifier.
+	  Keep track of the errors encountered if a verify callback tells the
+	  verifier to continue and report them back via the error on the store
+	  context. This mimics the behavior of the old verifier that would
+	  persist the first error encountered while building the chain.
+
+	* Report specific failures for "self signed certificates" in a way
+	  compatible with the old verifier since software relies on the
+	  error code.
+
+	* Implement key exporter for TLSv1.3.
+
+	* Plug a large memory leak in the new verifier caused by calling
+	  X509_policy_check() repeatedly instead.
+
+	* Avoid leaking memory in x509_verify_chain_dup().
+
+	* Various documentation improvements, particularly around TLS methods.
 
 3.2.2 - Stable release
 

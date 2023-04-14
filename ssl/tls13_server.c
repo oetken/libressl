@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_server.c,v 1.61.4.1 2021/02/03 07:06:14 tb Exp $ */
+/* $OpenBSD: tls13_server.c,v 1.63 2020/11/17 07:02:30 tb Exp $ */
 /*
  * Copyright (c) 2019, 2020 Joel Sing <jsing@openbsd.org>
  * Copyright (c) 2020 Bob Beck <beck@openbsd.org>
@@ -639,8 +639,6 @@ tls13_server_certificate_send(struct tls13_ctx *ctx, CBB *cbb)
 			goto err;
 		if (!X509_STORE_CTX_init(xsc, s->ctx->cert_store, cpk->x509, NULL))
 			goto err;
-		X509_VERIFY_PARAM_set_flags(X509_STORE_CTX_get0_param(xsc),
-		    X509_V_FLAG_LEGACY_VERIFY);
 		X509_verify_cert(xsc);
 		ERR_clear_error();
 		chain = xsc->chain;
@@ -667,8 +665,8 @@ tls13_server_certificate_send(struct tls13_ctx *ctx, CBB *cbb)
 
 		/*
 		 * XXX we don't send extensions with chain certs to avoid sending
-		 * a leaf ocsp stape with the chain certs.  This needs to get
-		 * fixed
+		 * a leaf ocsp staple with the chain certs.  This needs to get
+		 * fixed.
 		 */
 		if (!tls13_cert_add(ctx, &cert_list, cert, NULL))
 			goto err;
