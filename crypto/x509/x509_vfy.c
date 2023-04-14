@@ -747,6 +747,7 @@ check_cert(X509_STORE_CTX *ctx)
 				goto err;
 		}
 
+		ctx->current_crl = NULL;
 		X509_CRL_free(crl);
 		X509_CRL_free(dcrl);
 		crl = NULL;
@@ -762,10 +763,9 @@ check_cert(X509_STORE_CTX *ctx)
 	}
 
 err:
+	ctx->current_crl = NULL;
 	X509_CRL_free(crl);
 	X509_CRL_free(dcrl);
-
-	ctx->current_crl = NULL;
 	return ok;
 }
 
@@ -1660,57 +1660,34 @@ X509_cmp_time(const ASN1_TIME *ctm, time_t *cmp_time)
 		memcpy(p, str, 10);
 		p += 10;
 		str += 10;
-		i -= 10;
 	} else {
 		if (i < 13)
 			return 0;
 		memcpy(p, str, 12);
 		p += 12;
 		str += 12;
-		i -= 12;
 	}
 
-	if (i < 1)
-		return 0;
 	if ((*str == 'Z') || (*str == '-') || (*str == '+')) {
 		*(p++) = '0';
 		*(p++) = '0';
 	} else {
-		if (i < 2)
-			return 0;
 		*(p++) = *(str++);
 		*(p++) = *(str++);
-		i -= 2;
-		if (i < 1)
-			return 0;
 		/* Skip any fractional seconds... */
 		if (*str == '.') {
 			str++;
-			i--;
-			while (i > 1 && (*str >= '0') && (*str <= '9')) {
+			while ((*str >= '0') && (*str <= '9'))
 				str++;
-				i--;
-			}
 		}
 	}
 	*(p++) = 'Z';
 	*(p++) = '\0';
 
-	if (i < 1)
-		return 0;
-	if (*str == 'Z') {
-		if (i != 1)
-			return 0;
+	if (*str == 'Z')
 		offset = 0;
-	} else {
-		if (i != 5)
-			return 0;
+	else {
 		if ((*str != '+') && (*str != '-'))
-			return 0;
-		if (str[1] < '0' || str[1] > '9' ||
-		    str[2] < '0' || str[2] > '9' ||
-		    str[3] < '0' || str[3] > '9' ||
-		    str[4] < '0' || str[4] > '9')
 			return 0;
 		offset = ((str[1] - '0') * 10 + (str[2] - '0')) * 60;
 		offset += (str[3] - '0') * 10 + (str[4] - '0');
@@ -2123,13 +2100,8 @@ X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *x509,
 	ctx->check_policy = check_policy;
 
 
-	/* This memset() can't make any sense anyway, so it's removed. As
-	 * X509_STORE_CTX_cleanup does a proper "free" on the ex_data, we put a
-	 * corresponding "new" here and remove this bogus initialisation. */
-	/* memset(&(ctx->ex_data),0,sizeof(CRYPTO_EX_DATA)); */
-	if (!CRYPTO_new_ex_data(CRYPTO_EX_INDEX_X509_STORE_CTX, ctx,
-	    &(ctx->ex_data))) {
-		free(ctx);
+	if (CRYPTO_new_ex_data(CRYPTO_EX_INDEX_X509_STORE_CTX, ctx,
+	    &(ctx->ex_data)) == 0) {
 		X509err(X509_F_X509_STORE_CTX_INIT, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
