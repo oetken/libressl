@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "EVP_DigestVerifyInit 3"
-.TH EVP_DigestVerifyInit 3 "2015-07-02" "LibreSSL " "LibreSSL"
+.TH EVP_DigestVerifyInit 3 "2015-08-04" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -175,7 +175,7 @@ or a negative value for failure. In particular a return value of \-2 indicates
 the operation is not supported by the public key algorithm.
 .PP
 Unlike other functions the return value 0 from \fIEVP_DigestVerifyFinal()\fR only
-indicates that the signature did not not verify successfully (that is tbs did
+indicates that the signature did not verify successfully (that is tbs did
 not match the original data or the signature was of invalid form) it is not an
 indication of a more serious error.
 .PP

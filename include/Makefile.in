@@ -268,6 +268,7 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPENSSLDIR = @OPENSSLDIR@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -338,14 +339,18 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat
 AM_CPPFLAGS = -DLIBRESSL_INTERNAL
 SUBDIRS = openssl
-noinst_HEADERS = err.h netdb.h poll.h pqueue.h stdio.h stdlib.h \
-	string.h syslog.h unistd.h win32netcompat.h arpa/inet.h \
-	arpa/nameser.h machine/endian.h netinet/in.h netinet/tcp.h \
-	sys/ioctl.h sys/mman.h sys/select.h sys/socket.h sys/times.h \
-	sys/types.h sys/uio.h
+noinst_HEADERS = pqueue.h compat/dirent.h compat/dirent_msvc.h \
+	compat/err.h compat/netdb.h compat/poll.h compat/stdio.h \
+	compat/stdlib.h compat/string.h compat/time.h compat/unistd.h \
+	compat/win32netcompat.h compat/arpa/inet.h \
+	compat/arpa/nameser.h compat/machine/endian.h \
+	compat/netinet/in.h compat/netinet/tcp.h compat/sys/cdefs.h \
+	compat/sys/ioctl.h compat/sys/mman.h compat/sys/param.h \
+	compat/sys/select.h compat/sys/stat.h compat/sys/socket.h \
+	compat/sys/time.h compat/sys/types.h compat/sys/uio.h
 include_HEADERS = tls.h
 all: all-recursive
 

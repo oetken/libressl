@@ -3,13 +3,16 @@
  * Public domain
  */
 
+#ifdef _MSC_VER
+#include <../include/stdlib.h>
+#else
 #include_next <stdlib.h>
+#endif
 
 #ifndef LIBCRYPTOCOMPAT_STDLIB_H
 #define LIBCRYPTOCOMPAT_STDLIB_H
 
-#include <sys/stat.h>
-#include <sys/time.h>
+#include <sys/types.h>
 #include <stdint.h>
 
 #ifndef HAVE_ARC4RANDOM_BUF

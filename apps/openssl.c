@@ -131,6 +131,7 @@
 #endif
 
 #ifdef _WIN32
+#include <io.h>
 #include <fcntl.h>
 static void set_stdio_binary(void)
 {
@@ -216,7 +217,9 @@ err:
 static void
 openssl_startup(void)
 {
+#ifndef _WIN32
 	signal(SIGPIPE, SIG_IGN);
+#endif
 
 	CRYPTO_malloc_init();
 	OpenSSL_add_all_algorithms();

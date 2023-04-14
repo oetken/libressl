@@ -183,12 +183,12 @@ _mul_1x1:
 	movq	(%rsp,%rdi,8),%rcx
 	movq	%rcx,%rbx
 	shlq	$60,%rcx
-.byte	102,72,15,126,198
+	movq	%xmm0,%rsi
 	shrq	$4,%rbx
 	xorq	%rcx,%rax
 	psrldq	$8,%xmm0
 	xorq	%rbx,%rdx
-.byte	102,72,15,126,199
+	movq	%xmm0,%rdi
 	xorq	%rsi,%rax
 	xorq	%rdi,%rdx
 
@@ -205,17 +205,17 @@ bn_GF2m_mul_2x2:
 	btq	$33,%rax
 	jnc	.Lvanilla_mul_2x2
 
-.byte	102,72,15,110,198
-.byte	102,72,15,110,201
-.byte	102,72,15,110,210
-.byte	102,73,15,110,216
+	movq	%rsi,%xmm0
+	movq	%rcx,%xmm1
+	movq	%rdx,%xmm2
+	movq	%r8,%xmm3
 	movdqa	%xmm0,%xmm4
 	movdqa	%xmm1,%xmm5
-.byte	102,15,58,68,193,0
+	pclmulqdq	$0,%xmm1,%xmm0
 	pxor	%xmm2,%xmm4
 	pxor	%xmm3,%xmm5
-.byte	102,15,58,68,211,0
-.byte	102,15,58,68,229,0
+	pclmulqdq	$0,%xmm3,%xmm2
+	pclmulqdq	$0,%xmm5,%xmm4
 	xorps	%xmm0,%xmm4
 	xorps	%xmm2,%xmm4
 	movdqa	%xmm4,%xmm5
