@@ -326,12 +326,13 @@ dist_man_MANS = tls_init.3 BIO_f_ssl.3 SSL_CIPHER_get_name.3 \
 	BN_copy.3 BN_generate_prime.3 BN_mod_inverse.3 \
 	BN_mod_mul_montgomery.3 BN_mod_mul_reciprocal.3 BN_new.3 \
 	BN_num_bytes.3 BN_rand.3 BN_set_bit.3 BN_swap.3 BN_zero.3 \
-	BUF_MEM_new.3 CMS_add0_cert.3 CMS_add1_recipient_cert.3 \
-	CMS_compress.3 CMS_decrypt.3 CMS_encrypt.3 CMS_final.3 \
-	CMS_get0_RecipientInfos.3 CMS_get0_SignerInfos.3 \
-	CMS_get0_type.3 CMS_get1_ReceiptRequest.3 CMS_sign.3 \
-	CMS_sign_add1_signer.3 CMS_sign_receipt.3 CMS_uncompress.3 \
-	CMS_verify.3 CMS_verify_receipt.3 CONF_modules_free.3 \
+	BUF_MEM_new.3 EVP_AEAD_CTX_init.3 CMS_add0_cert.3 \
+	CMS_add1_recipient_cert.3 CMS_compress.3 CMS_decrypt.3 \
+	CMS_encrypt.3 CMS_final.3 CMS_get0_RecipientInfos.3 \
+	CMS_get0_SignerInfos.3 CMS_get0_type.3 \
+	CMS_get1_ReceiptRequest.3 CMS_sign.3 CMS_sign_add1_signer.3 \
+	CMS_sign_receipt.3 CMS_uncompress.3 CMS_verify.3 \
+	CMS_verify_receipt.3 CONF_modules_free.3 \
 	CONF_modules_load_file.3 CRYPTO_set_ex_data.3 \
 	CRYPTO_set_locking_callback.3 DES_set_key.3 DH_generate_key.3 \
 	DH_generate_parameters.3 DH_get_ex_new_index.3 DH_new.3 \
@@ -1758,6 +1759,8 @@ install-data-hook:
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_contains_name.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_hash.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_issuer.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_notafter.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_notbefore.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_provided.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_subject.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_read.3
@@ -2933,6 +2936,8 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_contains_name.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_hash.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_issuer.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_notafter.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_notbefore.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_provided.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_subject.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_read.3

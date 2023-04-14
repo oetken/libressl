@@ -102,20 +102,21 @@ host_triplet = @host@
 @HAVE_STRNDUP_FALSE@@HAVE_STRNLEN_FALSE@am__append_10 = compat/strnlen.c
 @HAVE_ASPRINTF_FALSE@am__append_11 = compat/bsd-asprintf.c
 @HAVE_INET_PTON_FALSE@am__append_12 = compat/inet_pton.c
-@HAVE_REALLOCARRAY_FALSE@am__append_13 = compat/reallocarray.c
-@HAVE_TIMINGSAFE_MEMCMP_FALSE@am__append_14 = compat/timingsafe_memcmp.c
-@HAVE_TIMINGSAFE_BCMP_FALSE@am__append_15 = compat/timingsafe_bcmp.c
-@HOST_WIN_TRUE@am__append_16 = compat/posix_win.c
-@HAVE_ARC4RANDOM_BUF_FALSE@am__append_17 = compat/arc4random.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_AIX_TRUE@am__append_18 = compat/getentropy_aix.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__append_19 = compat/getentropy_freebsd.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_HPUX_TRUE@am__append_20 = compat/getentropy_hpux.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__append_21 = compat/getentropy_linux.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__append_22 = compat/getentropy_netbsd.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__append_23 = compat/getentropy_osx.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__append_24 = compat/getentropy_solaris.c
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_WIN_TRUE@am__append_25 = compat/getentropy_win.c
-@HOST_ASM_ELF_X86_64_TRUE@am__append_26 = -DAES_ASM -DBSAES_ASM \
+@HAVE_TIMEGM_FALSE@am__append_13 = compat/timegm.c
+@HAVE_REALLOCARRAY_FALSE@am__append_14 = compat/reallocarray.c
+@HAVE_TIMINGSAFE_MEMCMP_FALSE@am__append_15 = compat/timingsafe_memcmp.c
+@HAVE_TIMINGSAFE_BCMP_FALSE@am__append_16 = compat/timingsafe_bcmp.c
+@HOST_WIN_TRUE@am__append_17 = compat/posix_win.c
+@HAVE_ARC4RANDOM_BUF_FALSE@am__append_18 = compat/arc4random.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_AIX_TRUE@am__append_19 = compat/getentropy_aix.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__append_20 = compat/getentropy_freebsd.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_HPUX_TRUE@am__append_21 = compat/getentropy_hpux.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__append_22 = compat/getentropy_linux.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__append_23 = compat/getentropy_netbsd.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__append_24 = compat/getentropy_osx.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__append_25 = compat/getentropy_solaris.c
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_WIN_TRUE@am__append_26 = compat/getentropy_win.c
+@HOST_ASM_ELF_X86_64_TRUE@am__append_27 = -DAES_ASM -DBSAES_ASM \
 @HOST_ASM_ELF_X86_64_TRUE@	-DVPAES_ASM -DOPENSSL_IA32_SSE2 \
 @HOST_ASM_ELF_X86_64_TRUE@	-DOPENSSL_BN_ASM_MONT \
 @HOST_ASM_ELF_X86_64_TRUE@	-DOPENSSL_BN_ASM_MONT5 \
@@ -123,8 +124,8 @@ host_triplet = @host@
 @HOST_ASM_ELF_X86_64_TRUE@	-DGHASH_ASM -DRSA_ASM -DSHA1_ASM \
 @HOST_ASM_ELF_X86_64_TRUE@	-DSHA256_ASM -DSHA512_ASM \
 @HOST_ASM_ELF_X86_64_TRUE@	-DWHIRLPOOL_ASM -DOPENSSL_CPUID_OBJ
-@HOST_ASM_ELF_X86_64_TRUE@am__append_27 = $(ASM_X86_64_ELF)
-@HOST_ASM_MACOSX_X86_64_TRUE@am__append_28 = -DAES_ASM -DBSAES_ASM \
+@HOST_ASM_ELF_X86_64_TRUE@am__append_28 = $(ASM_X86_64_ELF)
+@HOST_ASM_MACOSX_X86_64_TRUE@am__append_29 = -DAES_ASM -DBSAES_ASM \
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DVPAES_ASM -DOPENSSL_IA32_SSE2 \
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DOPENSSL_BN_ASM_MONT \
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DOPENSSL_BN_ASM_MONT5 \
@@ -133,19 +134,19 @@ host_triplet = @host@
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DSHA256_ASM -DSHA512_ASM \
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DWHIRLPOOL_ASM \
 @HOST_ASM_MACOSX_X86_64_TRUE@	-DOPENSSL_CPUID_OBJ
-@HOST_ASM_MACOSX_X86_64_TRUE@am__append_29 = $(ASM_X86_64_MACOSX)
-@HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@am__append_30 = aes/aes_cbc.c \
+@HOST_ASM_MACOSX_X86_64_TRUE@am__append_30 = $(ASM_X86_64_MACOSX)
+@HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@am__append_31 = aes/aes_cbc.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	aes/aes_core.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	camellia/camellia.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	camellia/cmll_cbc.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	rc4/rc4_enc.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	rc4/rc4_skey.c \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	whrlpool/wp_block.c
-@HOST_WIN_FALSE@am__append_31 = bio/b_posix.c
-@HOST_WIN_TRUE@am__append_32 = bio/b_win.c
-@HOST_WIN_FALSE@am__append_33 = bio/bss_log.c
-@HOST_WIN_FALSE@am__append_34 = ui/ui_openssl.c
-@HOST_WIN_TRUE@am__append_35 = ui/ui_openssl_win.c
+@HOST_WIN_FALSE@am__append_32 = bio/b_posix.c
+@HOST_WIN_TRUE@am__append_33 = bio/b_win.c
+@HOST_WIN_FALSE@am__append_34 = bio/bss_log.c
+@HOST_WIN_FALSE@am__append_35 = ui/ui_openssl.c
+@HOST_WIN_TRUE@am__append_36 = ui/ui_openssl_win.c
 subdir = crypto
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/check-hardening-options.m4 \
@@ -195,7 +196,7 @@ am__DEPENDENCIES_1 =
 libcompat_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libcompat_la_SOURCES_DIST = compat/strlcat.c compat/strlcpy.c \
 	compat/strndup.c compat/strnlen.c compat/bsd-asprintf.c \
-	compat/inet_pton.c compat/reallocarray.c \
+	compat/inet_pton.c compat/timegm.c compat/reallocarray.c \
 	compat/timingsafe_memcmp.c compat/timingsafe_bcmp.c \
 	compat/posix_win.c compat/arc4random.c compat/getentropy_aix.c \
 	compat/getentropy_freebsd.c compat/getentropy_hpux.c \
@@ -210,27 +211,29 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @HAVE_STRNDUP_FALSE@@HAVE_STRNLEN_FALSE@	compat/strnlen.lo
 @HAVE_ASPRINTF_FALSE@am__objects_5 = compat/bsd-asprintf.lo
 @HAVE_INET_PTON_FALSE@am__objects_6 = compat/inet_pton.lo
-@HAVE_REALLOCARRAY_FALSE@am__objects_7 = compat/reallocarray.lo
-@HAVE_TIMINGSAFE_MEMCMP_FALSE@am__objects_8 =  \
+@HAVE_TIMEGM_FALSE@am__objects_7 = compat/timegm.lo
+@HAVE_REALLOCARRAY_FALSE@am__objects_8 = compat/reallocarray.lo
+@HAVE_TIMINGSAFE_MEMCMP_FALSE@am__objects_9 =  \
 @HAVE_TIMINGSAFE_MEMCMP_FALSE@	compat/timingsafe_memcmp.lo
-@HAVE_TIMINGSAFE_BCMP_FALSE@am__objects_9 = compat/timingsafe_bcmp.lo
-@HOST_WIN_TRUE@am__objects_10 = compat/posix_win.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@am__objects_11 = compat/arc4random.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_AIX_TRUE@am__objects_12 = compat/getentropy_aix.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__objects_13 = compat/getentropy_freebsd.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_HPUX_TRUE@am__objects_14 = compat/getentropy_hpux.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__objects_15 = compat/getentropy_linux.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__objects_16 = compat/getentropy_netbsd.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__objects_17 = compat/getentropy_osx.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__objects_18 = compat/getentropy_solaris.lo
-@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_WIN_TRUE@am__objects_19 = compat/getentropy_win.lo
+@HAVE_TIMINGSAFE_BCMP_FALSE@am__objects_10 =  \
+@HAVE_TIMINGSAFE_BCMP_FALSE@	compat/timingsafe_bcmp.lo
+@HOST_WIN_TRUE@am__objects_11 = compat/posix_win.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@am__objects_12 = compat/arc4random.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_AIX_TRUE@am__objects_13 = compat/getentropy_aix.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_FREEBSD_TRUE@am__objects_14 = compat/getentropy_freebsd.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_HPUX_TRUE@am__objects_15 = compat/getentropy_hpux.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_LINUX_TRUE@am__objects_16 = compat/getentropy_linux.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_NETBSD_TRUE@am__objects_17 = compat/getentropy_netbsd.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_DARWIN_TRUE@am__objects_18 = compat/getentropy_osx.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_SOLARIS_TRUE@am__objects_19 = compat/getentropy_solaris.lo
+@HAVE_ARC4RANDOM_BUF_FALSE@@HAVE_GETENTROPY_FALSE@@HOST_WIN_TRUE@am__objects_20 = compat/getentropy_win.lo
 am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
 	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
 	$(am__objects_12) $(am__objects_13) $(am__objects_14) \
 	$(am__objects_15) $(am__objects_16) $(am__objects_17) \
-	$(am__objects_18) $(am__objects_19)
+	$(am__objects_18) $(am__objects_19) $(am__objects_20)
 libcompat_la_OBJECTS = $(am_libcompat_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -239,9 +242,9 @@ am__v_lt_1 =
 libcompatnoopt_la_LIBADD =
 am__libcompatnoopt_la_SOURCES_DIST = compat/explicit_bzero_win.c \
 	compat/explicit_bzero.c
-@HAVE_EXPLICIT_BZERO_FALSE@@HOST_WIN_TRUE@am__objects_20 = compat/libcompatnoopt_la-explicit_bzero_win.lo
-@HAVE_EXPLICIT_BZERO_FALSE@@HOST_WIN_FALSE@am__objects_21 = compat/libcompatnoopt_la-explicit_bzero.lo
-am_libcompatnoopt_la_OBJECTS = $(am__objects_20) $(am__objects_21)
+@HAVE_EXPLICIT_BZERO_FALSE@@HOST_WIN_TRUE@am__objects_21 = compat/libcompatnoopt_la-explicit_bzero_win.lo
+@HAVE_EXPLICIT_BZERO_FALSE@@HOST_WIN_FALSE@am__objects_22 = compat/libcompatnoopt_la-explicit_bzero.lo
+am_libcompatnoopt_la_OBJECTS = $(am__objects_21) $(am__objects_22)
 libcompatnoopt_la_OBJECTS = $(am_libcompatnoopt_la_OBJECTS)
 libcompatnoopt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -275,76 +278,76 @@ am__libcrypto_la_SOURCES_DIST = aes/aes-elf-x86_64.s \
 	aes/aes_ecb.c aes/aes_ige.c aes/aes_misc.c aes/aes_ofb.c \
 	aes/aes_wrap.c asn1/a_bitstr.c asn1/a_bool.c asn1/a_bytes.c \
 	asn1/a_d2i_fp.c asn1/a_digest.c asn1/a_dup.c asn1/a_enum.c \
-	asn1/a_gentm.c asn1/a_i2d_fp.c asn1/a_int.c asn1/a_mbstr.c \
-	asn1/a_object.c asn1/a_octet.c asn1/a_print.c asn1/a_set.c \
-	asn1/a_sign.c asn1/a_strex.c asn1/a_strnid.c asn1/a_time.c \
-	asn1/a_type.c asn1/a_utctm.c asn1/a_utf8.c asn1/a_verify.c \
-	asn1/ameth_lib.c asn1/asn1_err.c asn1/asn1_gen.c \
-	asn1/asn1_lib.c asn1/asn1_par.c asn1/asn_mime.c \
-	asn1/asn_moid.c asn1/asn_pack.c asn1/bio_asn1.c \
-	asn1/bio_ndef.c asn1/d2i_pr.c asn1/d2i_pu.c asn1/evp_asn1.c \
-	asn1/f_enum.c asn1/f_int.c asn1/f_string.c asn1/i2d_pr.c \
-	asn1/i2d_pu.c asn1/n_pkey.c asn1/nsseq.c asn1/p5_pbe.c \
-	asn1/p5_pbev2.c asn1/p8_pkey.c asn1/t_bitst.c asn1/t_crl.c \
-	asn1/t_pkey.c asn1/t_req.c asn1/t_spki.c asn1/t_x509.c \
-	asn1/t_x509a.c asn1/tasn_dec.c asn1/tasn_enc.c asn1/tasn_fre.c \
-	asn1/tasn_new.c asn1/tasn_prn.c asn1/tasn_typ.c \
-	asn1/tasn_utl.c asn1/x_algor.c asn1/x_attrib.c asn1/x_bignum.c \
-	asn1/x_crl.c asn1/x_exten.c asn1/x_info.c asn1/x_long.c \
-	asn1/x_name.c asn1/x_nx509.c asn1/x_pkey.c asn1/x_pubkey.c \
-	asn1/x_req.c asn1/x_sig.c asn1/x_spki.c asn1/x_val.c \
-	asn1/x_x509.c asn1/x_x509a.c bf/bf_cfb64.c bf/bf_ecb.c \
-	bf/bf_enc.c bf/bf_ofb64.c bf/bf_skey.c bio/b_dump.c \
-	bio/b_posix.c bio/b_print.c bio/b_sock.c bio/b_win.c \
-	bio/bf_buff.c bio/bf_nbio.c bio/bf_null.c bio/bio_cb.c \
-	bio/bio_err.c bio/bio_lib.c bio/bss_acpt.c bio/bss_bio.c \
-	bio/bss_conn.c bio/bss_dgram.c bio/bss_fd.c bio/bss_file.c \
-	bio/bss_log.c bio/bss_mem.c bio/bss_null.c bio/bss_sock.c \
-	bn/bn_add.c bn/bn_asm.c bn/bn_blind.c bn/bn_const.c \
-	bn/bn_ctx.c bn/bn_depr.c bn/bn_div.c bn/bn_err.c bn/bn_exp.c \
-	bn/bn_exp2.c bn/bn_gcd.c bn/bn_gf2m.c bn/bn_kron.c bn/bn_lib.c \
-	bn/bn_mod.c bn/bn_mont.c bn/bn_mpi.c bn/bn_mul.c bn/bn_nist.c \
-	bn/bn_prime.c bn/bn_print.c bn/bn_rand.c bn/bn_recp.c \
-	bn/bn_shift.c bn/bn_sqr.c bn/bn_sqrt.c bn/bn_word.c \
-	bn/bn_x931p.c buffer/buf_err.c buffer/buf_str.c \
-	buffer/buffer.c camellia/cmll_cfb.c camellia/cmll_ctr.c \
-	camellia/cmll_ecb.c camellia/cmll_misc.c camellia/cmll_ofb.c \
-	cast/c_cfb64.c cast/c_ecb.c cast/c_enc.c cast/c_ofb64.c \
-	cast/c_skey.c chacha/chacha.c cmac/cm_ameth.c cmac/cm_pmeth.c \
-	cmac/cmac.c comp/c_rle.c comp/c_zlib.c comp/comp_err.c \
-	comp/comp_lib.c conf/conf_api.c conf/conf_def.c \
-	conf/conf_err.c conf/conf_lib.c conf/conf_mall.c \
-	conf/conf_mod.c conf/conf_sap.c des/cbc_cksm.c des/cbc_enc.c \
-	des/cfb64ede.c des/cfb64enc.c des/cfb_enc.c des/des_enc.c \
-	des/ecb3_enc.c des/ecb_enc.c des/ede_cbcm_enc.c des/enc_read.c \
-	des/enc_writ.c des/fcrypt.c des/fcrypt_b.c des/ofb64ede.c \
-	des/ofb64enc.c des/ofb_enc.c des/pcbc_enc.c des/qud_cksm.c \
-	des/rand_key.c des/set_key.c des/str2key.c des/xcbc_enc.c \
-	dh/dh_ameth.c dh/dh_asn1.c dh/dh_check.c dh/dh_depr.c \
-	dh/dh_err.c dh/dh_gen.c dh/dh_key.c dh/dh_lib.c dh/dh_pmeth.c \
-	dh/dh_prn.c dsa/dsa_ameth.c dsa/dsa_asn1.c dsa/dsa_depr.c \
-	dsa/dsa_err.c dsa/dsa_gen.c dsa/dsa_key.c dsa/dsa_lib.c \
-	dsa/dsa_ossl.c dsa/dsa_pmeth.c dsa/dsa_prn.c dsa/dsa_sign.c \
-	dsa/dsa_vrf.c dso/dso_dlfcn.c dso/dso_err.c dso/dso_lib.c \
-	dso/dso_null.c dso/dso_openssl.c ec/ec2_mult.c ec/ec2_oct.c \
-	ec/ec2_smpl.c ec/ec_ameth.c ec/ec_asn1.c ec/ec_check.c \
-	ec/ec_curve.c ec/ec_cvt.c ec/ec_err.c ec/ec_key.c ec/ec_lib.c \
-	ec/ec_mult.c ec/ec_oct.c ec/ec_pmeth.c ec/ec_print.c \
-	ec/eck_prn.c ec/ecp_mont.c ec/ecp_nist.c ec/ecp_oct.c \
-	ec/ecp_smpl.c ecdh/ech_err.c ecdh/ech_key.c ecdh/ech_lib.c \
-	ecdsa/ecs_asn1.c ecdsa/ecs_err.c ecdsa/ecs_lib.c \
-	ecdsa/ecs_ossl.c ecdsa/ecs_sign.c ecdsa/ecs_vrf.c \
-	engine/eng_all.c engine/eng_cnf.c engine/eng_ctrl.c \
-	engine/eng_dyn.c engine/eng_err.c engine/eng_fat.c \
-	engine/eng_init.c engine/eng_lib.c engine/eng_list.c \
-	engine/eng_openssl.c engine/eng_pkey.c engine/eng_table.c \
-	engine/tb_asnmth.c engine/tb_cipher.c engine/tb_dh.c \
-	engine/tb_digest.c engine/tb_dsa.c engine/tb_ecdh.c \
-	engine/tb_ecdsa.c engine/tb_pkmeth.c engine/tb_rand.c \
-	engine/tb_rsa.c engine/tb_store.c err/err.c err/err_all.c \
-	err/err_prn.c evp/bio_b64.c evp/bio_enc.c evp/bio_md.c \
-	evp/c_all.c evp/digest.c evp/e_aes.c evp/e_aes_cbc_hmac_sha1.c \
-	evp/e_bf.c evp/e_camellia.c evp/e_cast.c evp/e_chacha.c \
+	asn1/a_i2d_fp.c asn1/a_int.c asn1/a_mbstr.c asn1/a_object.c \
+	asn1/a_octet.c asn1/a_print.c asn1/a_set.c asn1/a_sign.c \
+	asn1/a_strex.c asn1/a_strnid.c asn1/a_time.c asn1/a_time_tm.c \
+	asn1/a_type.c asn1/a_utf8.c asn1/a_verify.c asn1/ameth_lib.c \
+	asn1/asn1_err.c asn1/asn1_gen.c asn1/asn1_lib.c \
+	asn1/asn1_par.c asn1/asn_mime.c asn1/asn_moid.c \
+	asn1/asn_pack.c asn1/bio_asn1.c asn1/bio_ndef.c asn1/d2i_pr.c \
+	asn1/d2i_pu.c asn1/evp_asn1.c asn1/f_enum.c asn1/f_int.c \
+	asn1/f_string.c asn1/i2d_pr.c asn1/i2d_pu.c asn1/n_pkey.c \
+	asn1/nsseq.c asn1/p5_pbe.c asn1/p5_pbev2.c asn1/p8_pkey.c \
+	asn1/t_bitst.c asn1/t_crl.c asn1/t_pkey.c asn1/t_req.c \
+	asn1/t_spki.c asn1/t_x509.c asn1/t_x509a.c asn1/tasn_dec.c \
+	asn1/tasn_enc.c asn1/tasn_fre.c asn1/tasn_new.c \
+	asn1/tasn_prn.c asn1/tasn_typ.c asn1/tasn_utl.c asn1/x_algor.c \
+	asn1/x_attrib.c asn1/x_bignum.c asn1/x_crl.c asn1/x_exten.c \
+	asn1/x_info.c asn1/x_long.c asn1/x_name.c asn1/x_nx509.c \
+	asn1/x_pkey.c asn1/x_pubkey.c asn1/x_req.c asn1/x_sig.c \
+	asn1/x_spki.c asn1/x_val.c asn1/x_x509.c asn1/x_x509a.c \
+	bf/bf_cfb64.c bf/bf_ecb.c bf/bf_enc.c bf/bf_ofb64.c \
+	bf/bf_skey.c bio/b_dump.c bio/b_posix.c bio/b_print.c \
+	bio/b_sock.c bio/b_win.c bio/bf_buff.c bio/bf_nbio.c \
+	bio/bf_null.c bio/bio_cb.c bio/bio_err.c bio/bio_lib.c \
+	bio/bss_acpt.c bio/bss_bio.c bio/bss_conn.c bio/bss_dgram.c \
+	bio/bss_fd.c bio/bss_file.c bio/bss_log.c bio/bss_mem.c \
+	bio/bss_null.c bio/bss_sock.c bn/bn_add.c bn/bn_asm.c \
+	bn/bn_blind.c bn/bn_const.c bn/bn_ctx.c bn/bn_depr.c \
+	bn/bn_div.c bn/bn_err.c bn/bn_exp.c bn/bn_exp2.c bn/bn_gcd.c \
+	bn/bn_gf2m.c bn/bn_kron.c bn/bn_lib.c bn/bn_mod.c bn/bn_mont.c \
+	bn/bn_mpi.c bn/bn_mul.c bn/bn_nist.c bn/bn_prime.c \
+	bn/bn_print.c bn/bn_rand.c bn/bn_recp.c bn/bn_shift.c \
+	bn/bn_sqr.c bn/bn_sqrt.c bn/bn_word.c bn/bn_x931p.c \
+	buffer/buf_err.c buffer/buf_str.c buffer/buffer.c \
+	camellia/cmll_cfb.c camellia/cmll_ctr.c camellia/cmll_ecb.c \
+	camellia/cmll_misc.c camellia/cmll_ofb.c cast/c_cfb64.c \
+	cast/c_ecb.c cast/c_enc.c cast/c_ofb64.c cast/c_skey.c \
+	chacha/chacha.c cmac/cm_ameth.c cmac/cm_pmeth.c cmac/cmac.c \
+	comp/c_rle.c comp/c_zlib.c comp/comp_err.c comp/comp_lib.c \
+	conf/conf_api.c conf/conf_def.c conf/conf_err.c \
+	conf/conf_lib.c conf/conf_mall.c conf/conf_mod.c \
+	conf/conf_sap.c des/cbc_cksm.c des/cbc_enc.c des/cfb64ede.c \
+	des/cfb64enc.c des/cfb_enc.c des/des_enc.c des/ecb3_enc.c \
+	des/ecb_enc.c des/ede_cbcm_enc.c des/enc_read.c des/enc_writ.c \
+	des/fcrypt.c des/fcrypt_b.c des/ofb64ede.c des/ofb64enc.c \
+	des/ofb_enc.c des/pcbc_enc.c des/qud_cksm.c des/rand_key.c \
+	des/set_key.c des/str2key.c des/xcbc_enc.c dh/dh_ameth.c \
+	dh/dh_asn1.c dh/dh_check.c dh/dh_depr.c dh/dh_err.c \
+	dh/dh_gen.c dh/dh_key.c dh/dh_lib.c dh/dh_pmeth.c dh/dh_prn.c \
+	dsa/dsa_ameth.c dsa/dsa_asn1.c dsa/dsa_depr.c dsa/dsa_err.c \
+	dsa/dsa_gen.c dsa/dsa_key.c dsa/dsa_lib.c dsa/dsa_ossl.c \
+	dsa/dsa_pmeth.c dsa/dsa_prn.c dsa/dsa_sign.c dsa/dsa_vrf.c \
+	dso/dso_dlfcn.c dso/dso_err.c dso/dso_lib.c dso/dso_null.c \
+	dso/dso_openssl.c ec/ec2_mult.c ec/ec2_oct.c ec/ec2_smpl.c \
+	ec/ec_ameth.c ec/ec_asn1.c ec/ec_check.c ec/ec_curve.c \
+	ec/ec_cvt.c ec/ec_err.c ec/ec_key.c ec/ec_lib.c ec/ec_mult.c \
+	ec/ec_oct.c ec/ec_pmeth.c ec/ec_print.c ec/eck_prn.c \
+	ec/ecp_mont.c ec/ecp_nist.c ec/ecp_oct.c ec/ecp_smpl.c \
+	ecdh/ech_err.c ecdh/ech_key.c ecdh/ech_lib.c ecdsa/ecs_asn1.c \
+	ecdsa/ecs_err.c ecdsa/ecs_lib.c ecdsa/ecs_ossl.c \
+	ecdsa/ecs_sign.c ecdsa/ecs_vrf.c engine/eng_all.c \
+	engine/eng_cnf.c engine/eng_ctrl.c engine/eng_dyn.c \
+	engine/eng_err.c engine/eng_fat.c engine/eng_init.c \
+	engine/eng_lib.c engine/eng_list.c engine/eng_openssl.c \
+	engine/eng_pkey.c engine/eng_table.c engine/tb_asnmth.c \
+	engine/tb_cipher.c engine/tb_dh.c engine/tb_digest.c \
+	engine/tb_dsa.c engine/tb_ecdh.c engine/tb_ecdsa.c \
+	engine/tb_pkmeth.c engine/tb_rand.c engine/tb_rsa.c \
+	engine/tb_store.c err/err.c err/err_all.c err/err_prn.c \
+	evp/bio_b64.c evp/bio_enc.c evp/bio_md.c evp/c_all.c \
+	evp/digest.c evp/e_aes.c evp/e_aes_cbc_hmac_sha1.c evp/e_bf.c \
+	evp/e_camellia.c evp/e_cast.c evp/e_chacha.c \
 	evp/e_chacha20poly1305.c evp/e_des.c evp/e_des3.c \
 	evp/e_gost2814789.c evp/e_idea.c evp/e_null.c evp/e_old.c \
 	evp/e_rc2.c evp/e_rc4.c evp/e_rc4_hmac_md5.c evp/e_xcbc_d.c \
@@ -415,7 +418,7 @@ am__libcrypto_la_SOURCES_DIST = aes/aes-elf-x86_64.s \
 	x509v3/v3_pcons.c x509v3/v3_pku.c x509v3/v3_pmaps.c \
 	x509v3/v3_prn.c x509v3/v3_purp.c x509v3/v3_skey.c \
 	x509v3/v3_sxnet.c x509v3/v3_utl.c x509v3/v3err.c
-am__objects_22 = aes/aes-elf-x86_64.lo aes/bsaes-elf-x86_64.lo \
+am__objects_23 = aes/aes-elf-x86_64.lo aes/bsaes-elf-x86_64.lo \
 	aes/vpaes-elf-x86_64.lo aes/aesni-elf-x86_64.lo \
 	aes/aesni-sha1-elf-x86_64.lo bn/modexp512-elf-x86_64.lo \
 	bn/mont-elf-x86_64.lo bn/mont5-elf-x86_64.lo \
@@ -425,8 +428,8 @@ am__objects_22 = aes/aes-elf-x86_64.lo aes/bsaes-elf-x86_64.lo \
 	sha/sha1-elf-x86_64.lo sha/libcrypto_la-sha256-elf-x86_64.lo \
 	sha/libcrypto_la-sha512-elf-x86_64.lo \
 	whrlpool/wp-elf-x86_64.lo libcrypto_la-cpuid-elf-x86_64.lo
-@HOST_ASM_ELF_X86_64_TRUE@am__objects_23 = $(am__objects_22)
-am__objects_24 = aes/aes-macosx-x86_64.lo aes/bsaes-macosx-x86_64.lo \
+@HOST_ASM_ELF_X86_64_TRUE@am__objects_24 = $(am__objects_23)
+am__objects_25 = aes/aes-macosx-x86_64.lo aes/bsaes-macosx-x86_64.lo \
 	aes/vpaes-macosx-x86_64.lo aes/aesni-macosx-x86_64.lo \
 	aes/aesni-sha1-macosx-x86_64.lo bn/modexp512-macosx-x86_64.lo \
 	bn/mont-macosx-x86_64.lo bn/mont5-macosx-x86_64.lo \
@@ -438,21 +441,21 @@ am__objects_24 = aes/aes-macosx-x86_64.lo aes/bsaes-macosx-x86_64.lo \
 	sha/libcrypto_la-sha512-macosx-x86_64.lo \
 	whrlpool/wp-macosx-x86_64.lo \
 	libcrypto_la-cpuid-macosx-x86_64.lo
-@HOST_ASM_MACOSX_X86_64_TRUE@am__objects_25 = $(am__objects_24)
-@HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@am__objects_26 = aes/libcrypto_la-aes_cbc.lo \
+@HOST_ASM_MACOSX_X86_64_TRUE@am__objects_26 = $(am__objects_25)
+@HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@am__objects_27 = aes/libcrypto_la-aes_cbc.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	aes/libcrypto_la-aes_core.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	camellia/libcrypto_la-camellia.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	camellia/libcrypto_la-cmll_cbc.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	rc4/libcrypto_la-rc4_enc.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	rc4/libcrypto_la-rc4_skey.lo \
 @HOST_ASM_ELF_X86_64_FALSE@@HOST_ASM_MACOSX_X86_64_FALSE@	whrlpool/libcrypto_la-wp_block.lo
-@HOST_WIN_FALSE@am__objects_27 = bio/libcrypto_la-b_posix.lo
-@HOST_WIN_TRUE@am__objects_28 = bio/libcrypto_la-b_win.lo
-@HOST_WIN_FALSE@am__objects_29 = bio/libcrypto_la-bss_log.lo
-@HOST_WIN_FALSE@am__objects_30 = ui/libcrypto_la-ui_openssl.lo
-@HOST_WIN_TRUE@am__objects_31 = ui/libcrypto_la-ui_openssl_win.lo
-am_libcrypto_la_OBJECTS = $(am__objects_23) $(am__objects_25) \
-	$(am__objects_26) libcrypto_la-cpt_err.lo \
+@HOST_WIN_FALSE@am__objects_28 = bio/libcrypto_la-b_posix.lo
+@HOST_WIN_TRUE@am__objects_29 = bio/libcrypto_la-b_win.lo
+@HOST_WIN_FALSE@am__objects_30 = bio/libcrypto_la-bss_log.lo
+@HOST_WIN_FALSE@am__objects_31 = ui/libcrypto_la-ui_openssl.lo
+@HOST_WIN_TRUE@am__objects_32 = ui/libcrypto_la-ui_openssl_win.lo
+am_libcrypto_la_OBJECTS = $(am__objects_24) $(am__objects_26) \
+	$(am__objects_27) libcrypto_la-cpt_err.lo \
 	libcrypto_la-cryptlib.lo libcrypto_la-cversion.lo \
 	libcrypto_la-ex_data.lo libcrypto_la-malloc-wrapper.lo \
 	libcrypto_la-mem_clr.lo libcrypto_la-mem_dbg.lo \
@@ -464,70 +467,70 @@ am_libcrypto_la_OBJECTS = $(am__objects_23) $(am__objects_25) \
 	asn1/libcrypto_la-a_bitstr.lo asn1/libcrypto_la-a_bool.lo \
 	asn1/libcrypto_la-a_bytes.lo asn1/libcrypto_la-a_d2i_fp.lo \
 	asn1/libcrypto_la-a_digest.lo asn1/libcrypto_la-a_dup.lo \
-	asn1/libcrypto_la-a_enum.lo asn1/libcrypto_la-a_gentm.lo \
-	asn1/libcrypto_la-a_i2d_fp.lo asn1/libcrypto_la-a_int.lo \
-	asn1/libcrypto_la-a_mbstr.lo asn1/libcrypto_la-a_object.lo \
-	asn1/libcrypto_la-a_octet.lo asn1/libcrypto_la-a_print.lo \
-	asn1/libcrypto_la-a_set.lo asn1/libcrypto_la-a_sign.lo \
-	asn1/libcrypto_la-a_strex.lo asn1/libcrypto_la-a_strnid.lo \
-	asn1/libcrypto_la-a_time.lo asn1/libcrypto_la-a_type.lo \
-	asn1/libcrypto_la-a_utctm.lo asn1/libcrypto_la-a_utf8.lo \
-	asn1/libcrypto_la-a_verify.lo asn1/libcrypto_la-ameth_lib.lo \
-	asn1/libcrypto_la-asn1_err.lo asn1/libcrypto_la-asn1_gen.lo \
-	asn1/libcrypto_la-asn1_lib.lo asn1/libcrypto_la-asn1_par.lo \
-	asn1/libcrypto_la-asn_mime.lo asn1/libcrypto_la-asn_moid.lo \
-	asn1/libcrypto_la-asn_pack.lo asn1/libcrypto_la-bio_asn1.lo \
-	asn1/libcrypto_la-bio_ndef.lo asn1/libcrypto_la-d2i_pr.lo \
-	asn1/libcrypto_la-d2i_pu.lo asn1/libcrypto_la-evp_asn1.lo \
-	asn1/libcrypto_la-f_enum.lo asn1/libcrypto_la-f_int.lo \
-	asn1/libcrypto_la-f_string.lo asn1/libcrypto_la-i2d_pr.lo \
-	asn1/libcrypto_la-i2d_pu.lo asn1/libcrypto_la-n_pkey.lo \
-	asn1/libcrypto_la-nsseq.lo asn1/libcrypto_la-p5_pbe.lo \
-	asn1/libcrypto_la-p5_pbev2.lo asn1/libcrypto_la-p8_pkey.lo \
-	asn1/libcrypto_la-t_bitst.lo asn1/libcrypto_la-t_crl.lo \
-	asn1/libcrypto_la-t_pkey.lo asn1/libcrypto_la-t_req.lo \
-	asn1/libcrypto_la-t_spki.lo asn1/libcrypto_la-t_x509.lo \
-	asn1/libcrypto_la-t_x509a.lo asn1/libcrypto_la-tasn_dec.lo \
-	asn1/libcrypto_la-tasn_enc.lo asn1/libcrypto_la-tasn_fre.lo \
-	asn1/libcrypto_la-tasn_new.lo asn1/libcrypto_la-tasn_prn.lo \
-	asn1/libcrypto_la-tasn_typ.lo asn1/libcrypto_la-tasn_utl.lo \
-	asn1/libcrypto_la-x_algor.lo asn1/libcrypto_la-x_attrib.lo \
-	asn1/libcrypto_la-x_bignum.lo asn1/libcrypto_la-x_crl.lo \
-	asn1/libcrypto_la-x_exten.lo asn1/libcrypto_la-x_info.lo \
-	asn1/libcrypto_la-x_long.lo asn1/libcrypto_la-x_name.lo \
-	asn1/libcrypto_la-x_nx509.lo asn1/libcrypto_la-x_pkey.lo \
-	asn1/libcrypto_la-x_pubkey.lo asn1/libcrypto_la-x_req.lo \
-	asn1/libcrypto_la-x_sig.lo asn1/libcrypto_la-x_spki.lo \
-	asn1/libcrypto_la-x_val.lo asn1/libcrypto_la-x_x509.lo \
-	asn1/libcrypto_la-x_x509a.lo bf/libcrypto_la-bf_cfb64.lo \
-	bf/libcrypto_la-bf_ecb.lo bf/libcrypto_la-bf_enc.lo \
-	bf/libcrypto_la-bf_ofb64.lo bf/libcrypto_la-bf_skey.lo \
-	bio/libcrypto_la-b_dump.lo $(am__objects_27) \
-	bio/libcrypto_la-b_print.lo bio/libcrypto_la-b_sock.lo \
-	$(am__objects_28) bio/libcrypto_la-bf_buff.lo \
-	bio/libcrypto_la-bf_nbio.lo bio/libcrypto_la-bf_null.lo \
-	bio/libcrypto_la-bio_cb.lo bio/libcrypto_la-bio_err.lo \
-	bio/libcrypto_la-bio_lib.lo bio/libcrypto_la-bss_acpt.lo \
-	bio/libcrypto_la-bss_bio.lo bio/libcrypto_la-bss_conn.lo \
-	bio/libcrypto_la-bss_dgram.lo bio/libcrypto_la-bss_fd.lo \
-	bio/libcrypto_la-bss_file.lo $(am__objects_29) \
-	bio/libcrypto_la-bss_mem.lo bio/libcrypto_la-bss_null.lo \
-	bio/libcrypto_la-bss_sock.lo bn/libcrypto_la-bn_add.lo \
-	bn/libcrypto_la-bn_asm.lo bn/libcrypto_la-bn_blind.lo \
-	bn/libcrypto_la-bn_const.lo bn/libcrypto_la-bn_ctx.lo \
-	bn/libcrypto_la-bn_depr.lo bn/libcrypto_la-bn_div.lo \
-	bn/libcrypto_la-bn_err.lo bn/libcrypto_la-bn_exp.lo \
-	bn/libcrypto_la-bn_exp2.lo bn/libcrypto_la-bn_gcd.lo \
-	bn/libcrypto_la-bn_gf2m.lo bn/libcrypto_la-bn_kron.lo \
-	bn/libcrypto_la-bn_lib.lo bn/libcrypto_la-bn_mod.lo \
-	bn/libcrypto_la-bn_mont.lo bn/libcrypto_la-bn_mpi.lo \
-	bn/libcrypto_la-bn_mul.lo bn/libcrypto_la-bn_nist.lo \
-	bn/libcrypto_la-bn_prime.lo bn/libcrypto_la-bn_print.lo \
-	bn/libcrypto_la-bn_rand.lo bn/libcrypto_la-bn_recp.lo \
-	bn/libcrypto_la-bn_shift.lo bn/libcrypto_la-bn_sqr.lo \
-	bn/libcrypto_la-bn_sqrt.lo bn/libcrypto_la-bn_word.lo \
-	bn/libcrypto_la-bn_x931p.lo buffer/libcrypto_la-buf_err.lo \
-	buffer/libcrypto_la-buf_str.lo buffer/libcrypto_la-buffer.lo \
+	asn1/libcrypto_la-a_enum.lo asn1/libcrypto_la-a_i2d_fp.lo \
+	asn1/libcrypto_la-a_int.lo asn1/libcrypto_la-a_mbstr.lo \
+	asn1/libcrypto_la-a_object.lo asn1/libcrypto_la-a_octet.lo \
+	asn1/libcrypto_la-a_print.lo asn1/libcrypto_la-a_set.lo \
+	asn1/libcrypto_la-a_sign.lo asn1/libcrypto_la-a_strex.lo \
+	asn1/libcrypto_la-a_strnid.lo asn1/libcrypto_la-a_time.lo \
+	asn1/libcrypto_la-a_time_tm.lo asn1/libcrypto_la-a_type.lo \
+	asn1/libcrypto_la-a_utf8.lo asn1/libcrypto_la-a_verify.lo \
+	asn1/libcrypto_la-ameth_lib.lo asn1/libcrypto_la-asn1_err.lo \
+	asn1/libcrypto_la-asn1_gen.lo asn1/libcrypto_la-asn1_lib.lo \
+	asn1/libcrypto_la-asn1_par.lo asn1/libcrypto_la-asn_mime.lo \
+	asn1/libcrypto_la-asn_moid.lo asn1/libcrypto_la-asn_pack.lo \
+	asn1/libcrypto_la-bio_asn1.lo asn1/libcrypto_la-bio_ndef.lo \
+	asn1/libcrypto_la-d2i_pr.lo asn1/libcrypto_la-d2i_pu.lo \
+	asn1/libcrypto_la-evp_asn1.lo asn1/libcrypto_la-f_enum.lo \
+	asn1/libcrypto_la-f_int.lo asn1/libcrypto_la-f_string.lo \
+	asn1/libcrypto_la-i2d_pr.lo asn1/libcrypto_la-i2d_pu.lo \
+	asn1/libcrypto_la-n_pkey.lo asn1/libcrypto_la-nsseq.lo \
+	asn1/libcrypto_la-p5_pbe.lo asn1/libcrypto_la-p5_pbev2.lo \
+	asn1/libcrypto_la-p8_pkey.lo asn1/libcrypto_la-t_bitst.lo \
+	asn1/libcrypto_la-t_crl.lo asn1/libcrypto_la-t_pkey.lo \
+	asn1/libcrypto_la-t_req.lo asn1/libcrypto_la-t_spki.lo \
+	asn1/libcrypto_la-t_x509.lo asn1/libcrypto_la-t_x509a.lo \
+	asn1/libcrypto_la-tasn_dec.lo asn1/libcrypto_la-tasn_enc.lo \
+	asn1/libcrypto_la-tasn_fre.lo asn1/libcrypto_la-tasn_new.lo \
+	asn1/libcrypto_la-tasn_prn.lo asn1/libcrypto_la-tasn_typ.lo \
+	asn1/libcrypto_la-tasn_utl.lo asn1/libcrypto_la-x_algor.lo \
+	asn1/libcrypto_la-x_attrib.lo asn1/libcrypto_la-x_bignum.lo \
+	asn1/libcrypto_la-x_crl.lo asn1/libcrypto_la-x_exten.lo \
+	asn1/libcrypto_la-x_info.lo asn1/libcrypto_la-x_long.lo \
+	asn1/libcrypto_la-x_name.lo asn1/libcrypto_la-x_nx509.lo \
+	asn1/libcrypto_la-x_pkey.lo asn1/libcrypto_la-x_pubkey.lo \
+	asn1/libcrypto_la-x_req.lo asn1/libcrypto_la-x_sig.lo \
+	asn1/libcrypto_la-x_spki.lo asn1/libcrypto_la-x_val.lo \
+	asn1/libcrypto_la-x_x509.lo asn1/libcrypto_la-x_x509a.lo \
+	bf/libcrypto_la-bf_cfb64.lo bf/libcrypto_la-bf_ecb.lo \
+	bf/libcrypto_la-bf_enc.lo bf/libcrypto_la-bf_ofb64.lo \
+	bf/libcrypto_la-bf_skey.lo bio/libcrypto_la-b_dump.lo \
+	$(am__objects_28) bio/libcrypto_la-b_print.lo \
+	bio/libcrypto_la-b_sock.lo $(am__objects_29) \
+	bio/libcrypto_la-bf_buff.lo bio/libcrypto_la-bf_nbio.lo \
+	bio/libcrypto_la-bf_null.lo bio/libcrypto_la-bio_cb.lo \
+	bio/libcrypto_la-bio_err.lo bio/libcrypto_la-bio_lib.lo \
+	bio/libcrypto_la-bss_acpt.lo bio/libcrypto_la-bss_bio.lo \
+	bio/libcrypto_la-bss_conn.lo bio/libcrypto_la-bss_dgram.lo \
+	bio/libcrypto_la-bss_fd.lo bio/libcrypto_la-bss_file.lo \
+	$(am__objects_30) bio/libcrypto_la-bss_mem.lo \
+	bio/libcrypto_la-bss_null.lo bio/libcrypto_la-bss_sock.lo \
+	bn/libcrypto_la-bn_add.lo bn/libcrypto_la-bn_asm.lo \
+	bn/libcrypto_la-bn_blind.lo bn/libcrypto_la-bn_const.lo \
+	bn/libcrypto_la-bn_ctx.lo bn/libcrypto_la-bn_depr.lo \
+	bn/libcrypto_la-bn_div.lo bn/libcrypto_la-bn_err.lo \
+	bn/libcrypto_la-bn_exp.lo bn/libcrypto_la-bn_exp2.lo \
+	bn/libcrypto_la-bn_gcd.lo bn/libcrypto_la-bn_gf2m.lo \
+	bn/libcrypto_la-bn_kron.lo bn/libcrypto_la-bn_lib.lo \
+	bn/libcrypto_la-bn_mod.lo bn/libcrypto_la-bn_mont.lo \
+	bn/libcrypto_la-bn_mpi.lo bn/libcrypto_la-bn_mul.lo \
+	bn/libcrypto_la-bn_nist.lo bn/libcrypto_la-bn_prime.lo \
+	bn/libcrypto_la-bn_print.lo bn/libcrypto_la-bn_rand.lo \
+	bn/libcrypto_la-bn_recp.lo bn/libcrypto_la-bn_shift.lo \
+	bn/libcrypto_la-bn_sqr.lo bn/libcrypto_la-bn_sqrt.lo \
+	bn/libcrypto_la-bn_word.lo bn/libcrypto_la-bn_x931p.lo \
+	buffer/libcrypto_la-buf_err.lo buffer/libcrypto_la-buf_str.lo \
+	buffer/libcrypto_la-buffer.lo \
 	camellia/libcrypto_la-cmll_cfb.lo \
 	camellia/libcrypto_la-cmll_ctr.lo \
 	camellia/libcrypto_la-cmll_ecb.lo \
@@ -706,7 +709,7 @@ am_libcrypto_la_OBJECTS = $(am__objects_23) $(am__objects_25) \
 	ts/libcrypto_la-ts_rsp_verify.lo \
 	ts/libcrypto_la-ts_verify_ctx.lo txt_db/libcrypto_la-txt_db.lo \
 	ui/libcrypto_la-ui_err.lo ui/libcrypto_la-ui_lib.lo \
-	$(am__objects_30) $(am__objects_31) ui/libcrypto_la-ui_util.lo \
+	$(am__objects_31) $(am__objects_32) ui/libcrypto_la-ui_util.lo \
 	whrlpool/libcrypto_la-wp_dgst.lo x509/libcrypto_la-by_dir.lo \
 	x509/libcrypto_la-by_file.lo x509/libcrypto_la-by_mem.lo \
 	x509/libcrypto_la-x509_att.lo x509/libcrypto_la-x509_cmp.lo \
@@ -952,10 +955,10 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
-	-I$(top_srcdir)/crypto/asn1 -I$(top_srcdir)/crypto/evp \
-	-I$(top_srcdir)/crypto/modes
-AM_CPPFLAGS = -DLIBRESSL_INTERNAL
+AM_CFLAGS = 
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
+	-DLIBRESSL_INTERNAL -I$(top_srcdir)/crypto/asn1 \
+	-I$(top_srcdir)/crypto/evp -I$(top_srcdir)/crypto/modes
 lib_LTLIBRARIES = libcrypto.la
 
 # needed for a CMake target
@@ -963,9 +966,10 @@ EXTRA_DIST = VERSION CMakeLists.txt compat/strcasecmp.c \
 	$(ASM_X86_64_ELF) $(ASM_X86_64_MACOSX)
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_CPPFLAGS = -DLIBRESSL_INTERNAL -DOPENSSL_NO_HW_PADLOCK \
-	$(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_26) $(am__append_28)
+libcrypto_la_CPPFLAGS = $(AM_CPPFLAGS) -DLIBRESSL_INTERNAL \
+	-DOPENSSL_NO_HW_PADLOCK $(am__append_1) $(am__append_2) \
+	$(am__append_3) $(am__append_4) $(am__append_27) \
+	$(am__append_29)
 noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
 
 # compatibility functions that need to be built without optimizations
@@ -979,7 +983,7 @@ libcompat_la_SOURCES = $(am__append_7) $(am__append_8) $(am__append_9) \
 	$(am__append_16) $(am__append_17) $(am__append_18) \
 	$(am__append_19) $(am__append_20) $(am__append_21) \
 	$(am__append_22) $(am__append_23) $(am__append_24) \
-	$(am__append_25)
+	$(am__append_25) $(am__append_26)
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
 
 # rc4
@@ -1092,17 +1096,17 @@ noinst_HEADERS = compat/arc4random.h compat/arc4random_aix.h \
 # x509
 
 # x509v3
-libcrypto_la_SOURCES = $(am__append_27) $(am__append_29) \
-	$(am__append_30) cpt_err.c cryptlib.c cversion.c ex_data.c \
+libcrypto_la_SOURCES = $(am__append_28) $(am__append_30) \
+	$(am__append_31) cpt_err.c cryptlib.c cversion.c ex_data.c \
 	malloc-wrapper.c mem_clr.c mem_dbg.c o_init.c o_str.c o_time.c \
 	aes/aes_cfb.c aes/aes_ctr.c aes/aes_ecb.c aes/aes_ige.c \
 	aes/aes_misc.c aes/aes_ofb.c aes/aes_wrap.c asn1/a_bitstr.c \
 	asn1/a_bool.c asn1/a_bytes.c asn1/a_d2i_fp.c asn1/a_digest.c \
-	asn1/a_dup.c asn1/a_enum.c asn1/a_gentm.c asn1/a_i2d_fp.c \
-	asn1/a_int.c asn1/a_mbstr.c asn1/a_object.c asn1/a_octet.c \
-	asn1/a_print.c asn1/a_set.c asn1/a_sign.c asn1/a_strex.c \
-	asn1/a_strnid.c asn1/a_time.c asn1/a_type.c asn1/a_utctm.c \
-	asn1/a_utf8.c asn1/a_verify.c asn1/ameth_lib.c asn1/asn1_err.c \
+	asn1/a_dup.c asn1/a_enum.c asn1/a_i2d_fp.c asn1/a_int.c \
+	asn1/a_mbstr.c asn1/a_object.c asn1/a_octet.c asn1/a_print.c \
+	asn1/a_set.c asn1/a_sign.c asn1/a_strex.c asn1/a_strnid.c \
+	asn1/a_time.c asn1/a_time_tm.c asn1/a_type.c asn1/a_utf8.c \
+	asn1/a_verify.c asn1/ameth_lib.c asn1/asn1_err.c \
 	asn1/asn1_gen.c asn1/asn1_lib.c asn1/asn1_par.c \
 	asn1/asn_mime.c asn1/asn_moid.c asn1/asn_pack.c \
 	asn1/bio_asn1.c asn1/bio_ndef.c asn1/d2i_pr.c asn1/d2i_pu.c \
@@ -1118,11 +1122,11 @@ libcrypto_la_SOURCES = $(am__append_27) $(am__append_29) \
 	asn1/x_pubkey.c asn1/x_req.c asn1/x_sig.c asn1/x_spki.c \
 	asn1/x_val.c asn1/x_x509.c asn1/x_x509a.c bf/bf_cfb64.c \
 	bf/bf_ecb.c bf/bf_enc.c bf/bf_ofb64.c bf/bf_skey.c \
-	bio/b_dump.c $(am__append_31) bio/b_print.c bio/b_sock.c \
-	$(am__append_32) bio/bf_buff.c bio/bf_nbio.c bio/bf_null.c \
+	bio/b_dump.c $(am__append_32) bio/b_print.c bio/b_sock.c \
+	$(am__append_33) bio/bf_buff.c bio/bf_nbio.c bio/bf_null.c \
 	bio/bio_cb.c bio/bio_err.c bio/bio_lib.c bio/bss_acpt.c \
 	bio/bss_bio.c bio/bss_conn.c bio/bss_dgram.c bio/bss_fd.c \
-	bio/bss_file.c $(am__append_33) bio/bss_mem.c bio/bss_null.c \
+	bio/bss_file.c $(am__append_34) bio/bss_mem.c bio/bss_null.c \
 	bio/bss_sock.c bn/bn_add.c bn/bn_asm.c bn/bn_blind.c \
 	bn/bn_const.c bn/bn_ctx.c bn/bn_depr.c bn/bn_div.c bn/bn_err.c \
 	bn/bn_exp.c bn/bn_exp2.c bn/bn_gcd.c bn/bn_gf2m.c bn/bn_kron.c \
@@ -1218,7 +1222,7 @@ libcrypto_la_SOURCES = $(am__append_27) $(am__append_29) \
 	ts/ts_lib.c ts/ts_req_print.c ts/ts_req_utils.c \
 	ts/ts_rsp_print.c ts/ts_rsp_sign.c ts/ts_rsp_utils.c \
 	ts/ts_rsp_verify.c ts/ts_verify_ctx.c txt_db/txt_db.c \
-	ui/ui_err.c ui/ui_lib.c $(am__append_34) $(am__append_35) \
+	ui/ui_err.c ui/ui_lib.c $(am__append_35) $(am__append_36) \
 	ui/ui_util.c whrlpool/wp_dgst.c x509/by_dir.c x509/by_file.c \
 	x509/by_mem.c x509/x509_att.c x509/x509_cmp.c x509/x509_d2.c \
 	x509/x509_def.c x509/x509_err.c x509/x509_ext.c x509/x509_lu.c \
@@ -1361,6 +1365,8 @@ compat/strnlen.lo: compat/$(am__dirstamp) \
 compat/bsd-asprintf.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/inet_pton.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
+compat/timegm.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/reallocarray.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
@@ -1564,8 +1570,6 @@ asn1/libcrypto_la-a_dup.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
 asn1/libcrypto_la-a_enum.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
-asn1/libcrypto_la-a_gentm.lo: asn1/$(am__dirstamp) \
-	asn1/$(DEPDIR)/$(am__dirstamp)
 asn1/libcrypto_la-a_i2d_fp.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
 asn1/libcrypto_la-a_int.lo: asn1/$(am__dirstamp) \
@@ -1588,9 +1592,9 @@ asn1/libcrypto_la-a_strnid.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
 asn1/libcrypto_la-a_time.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
-asn1/libcrypto_la-a_type.lo: asn1/$(am__dirstamp) \
+asn1/libcrypto_la-a_time_tm.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
-asn1/libcrypto_la-a_utctm.lo: asn1/$(am__dirstamp) \
+asn1/libcrypto_la-a_type.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
 asn1/libcrypto_la-a_utf8.lo: asn1/$(am__dirstamp) \
 	asn1/$(DEPDIR)/$(am__dirstamp)
@@ -2968,7 +2972,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_digest.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_dup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_enum.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_gentm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_i2d_fp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_int.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_mbstr.Plo@am__quote@
@@ -2980,8 +2983,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_strex.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_strnid.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_time.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_time_tm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_type.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_utctm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_utf8.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-a_verify.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@asn1/$(DEPDIR)/libcrypto_la-ameth_lib.Plo@am__quote@
@@ -3135,6 +3138,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/strlcpy.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/strndup.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/strnlen.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/timegm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/timingsafe_bcmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/timingsafe_memcmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@conf/$(DEPDIR)/libcrypto_la-conf_api.Plo@am__quote@
@@ -3833,13 +3837,6 @@ asn1/libcrypto_la-a_enum.lo: asn1/a_enum.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_enum.lo `test -f 'asn1/a_enum.c' || echo '$(srcdir)/'`asn1/a_enum.c
 
-asn1/libcrypto_la-a_gentm.lo: asn1/a_gentm.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_gentm.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_gentm.Tpo -c -o asn1/libcrypto_la-a_gentm.lo `test -f 'asn1/a_gentm.c' || echo '$(srcdir)/'`asn1/a_gentm.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) asn1/$(DEPDIR)/libcrypto_la-a_gentm.Tpo asn1/$(DEPDIR)/libcrypto_la-a_gentm.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='asn1/a_gentm.c' object='asn1/libcrypto_la-a_gentm.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_gentm.lo `test -f 'asn1/a_gentm.c' || echo '$(srcdir)/'`asn1/a_gentm.c
-
 asn1/libcrypto_la-a_i2d_fp.lo: asn1/a_i2d_fp.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_i2d_fp.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_i2d_fp.Tpo -c -o asn1/libcrypto_la-a_i2d_fp.lo `test -f 'asn1/a_i2d_fp.c' || echo '$(srcdir)/'`asn1/a_i2d_fp.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) asn1/$(DEPDIR)/libcrypto_la-a_i2d_fp.Tpo asn1/$(DEPDIR)/libcrypto_la-a_i2d_fp.Plo
@@ -3917,19 +3914,19 @@ asn1/libcrypto_la-a_time.lo: asn1/a_time.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_time.lo `test -f 'asn1/a_time.c' || echo '$(srcdir)/'`asn1/a_time.c
 
+asn1/libcrypto_la-a_time_tm.lo: asn1/a_time_tm.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_time_tm.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_time_tm.Tpo -c -o asn1/libcrypto_la-a_time_tm.lo `test -f 'asn1/a_time_tm.c' || echo '$(srcdir)/'`asn1/a_time_tm.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) asn1/$(DEPDIR)/libcrypto_la-a_time_tm.Tpo asn1/$(DEPDIR)/libcrypto_la-a_time_tm.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='asn1/a_time_tm.c' object='asn1/libcrypto_la-a_time_tm.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_time_tm.lo `test -f 'asn1/a_time_tm.c' || echo '$(srcdir)/'`asn1/a_time_tm.c
+
 asn1/libcrypto_la-a_type.lo: asn1/a_type.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_type.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_type.Tpo -c -o asn1/libcrypto_la-a_type.lo `test -f 'asn1/a_type.c' || echo '$(srcdir)/'`asn1/a_type.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) asn1/$(DEPDIR)/libcrypto_la-a_type.Tpo asn1/$(DEPDIR)/libcrypto_la-a_type.Plo
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='asn1/a_type.c' object='asn1/libcrypto_la-a_type.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_type.lo `test -f 'asn1/a_type.c' || echo '$(srcdir)/'`asn1/a_type.c
-
-asn1/libcrypto_la-a_utctm.lo: asn1/a_utctm.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_utctm.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_utctm.Tpo -c -o asn1/libcrypto_la-a_utctm.lo `test -f 'asn1/a_utctm.c' || echo '$(srcdir)/'`asn1/a_utctm.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) asn1/$(DEPDIR)/libcrypto_la-a_utctm.Tpo asn1/$(DEPDIR)/libcrypto_la-a_utctm.Plo
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='asn1/a_utctm.c' object='asn1/libcrypto_la-a_utctm.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o asn1/libcrypto_la-a_utctm.lo `test -f 'asn1/a_utctm.c' || echo '$(srcdir)/'`asn1/a_utctm.c
 
 asn1/libcrypto_la-a_utf8.lo: asn1/a_utf8.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libcrypto_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT asn1/libcrypto_la-a_utf8.lo -MD -MP -MF asn1/$(DEPDIR)/libcrypto_la-a_utf8.Tpo -c -o asn1/libcrypto_la-a_utf8.lo `test -f 'asn1/a_utf8.c' || echo '$(srcdir)/'`asn1/a_utf8.c
