@@ -28,6 +28,131 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
+2.3.10 - Security and compatibility fixes
+
+	* Avoid a side-channel cache-timing attack that can leak the ECDSA
+	  private keys when signing. This is due to BN_mod_inverse() being
+	  used without the constant time flag being set.
+
+	  This issue was reported by Cesar Pereida Garcia and Billy Brumley
+	  (Tampere University of Technology). The fix was developed by Cesar
+	  Pereida Garcia.
+
+	* iOS and MacOS compatibility updates from Simone Basso and Jacob
+	  Berkman.
+
+2.3.9 - Reliability improvements
+
+	* Avoid continual processing of an unlimited number of TLS records,
+	  which can cause a denial-of-service condition.
+
+2.3.8 - Security and reliability fixes
+
+	* Avoid unbounded memory growth in libssl, which can be triggered by a
+	  TLS client repeatedly renegotiating and sending OCSP Status Request
+	  TLS extensions.
+
+	* Avoid falling back to a weak digest for (EC)DH when using SNI with
+	  libssl.
+
+2.3.7 - OCSP fixes
+
+	* Fix several issues in the OCSP code that could result in the
+	  incorrect generation and parsing of OCSP requests. This remediates a
+	  lack of error checking on time parsing in these functions, and
+	  ensures that only GENERALIZEDTIME formats are accepted for OCSP, as
+	  per RFC 6960.
+
+	  Issues reported, and fixes provided by  Kazuki Yamaguchi <k@rhe.jp>
+	  and Kinichiro Inoguchi <kinichiro.inoguchi@gmail.com>
+
+2.3.6 - Security fix
+
+	* Correct a problem that prevents the DSA signing algorithm from
+	  running in constant time even if the flag BN_FLG_CONSTTIME is set.
+	  This issue was reported by Cesar Pereida (Aalto University), Billy
+	  Brumley (Tampere University of Technology), and Yuval Yarom (The
+	  University of Adelaide and NICTA). The fix was developed by Cesar
+	  Pereida. See OpenBSD 5.9 errata 11, June 6, 2016
+
+2.3.5 - Reliability fix
+
+	* Fixed an error in libcrypto when parsing some ASN.1 elements > 16k.
+
+2.3.4 - Security Update
+
+	* Fix multiple vulnerabilities in libcrypto relating to ASN.1 and encoding.
+	From OpenSSL.
+
+	* Minor build fixes
+
+2.3.3 - OpenBSD 5.9 release branch tagged
+
+	* Reworked build scripts to better sync with OpenNTPD-portable
+
+	* Fixed broken manpage links
+
+	* Fixed an nginx compatibility issue by adding an 'install_sw' make alias
+
+	* Fixed HP-UX builds
+
+	* Changed the default configuration directory to c:\LibreSSL\ssl on Windows
+	  binary builds
+
+	* cert.pem has been reorganized and synced with Mozilla's certificate store
+
+2.3.2 - Compatibility and Reliability fixes
+
+	* Changed format of LIBRESSL_VERSION_NUMBER to match that of
+	  OPENSSL_VERSION_NUMBER, see:
+	  https://wiki.openssl.org/index.php/Manual:OPENSSL_VERSION_NUMBER(3)
+
+	* Added EVP_aead_chacha20_poly1305_ietf() which matches the AEAD
+	  construction introduced in RFC 7539, which is different than that
+	  already used in TLS with EVP_aead_chacha20_poly1305()
+
+	* Avoid a potential undefined C99+ behavior due to shift overflow in
+	  AES_decrypt, reported by Pascal Cuoq <cuoq at trust-in-soft.com>
+
+	* More man pages converted from pod to mdoc format
+
+	* Added COMODO RSA Certification Authority and QuoVadis
+	  root certificates to cert.pem
+
+	* Removed Remove "C=US, O=VeriSign, Inc., OU=Class 3 Public Primary Certification
+	  Authority" (serial 3c:91:31:cb:1f:f6:d0:1b:0e:9a:b8:d0:44:bf:12:be) root
+	  certificate from cert.pem
+
+	* Added support for building nc(1) on Solaris
+
+	* Fixed GCC 5.x+ preprocessor checks, reported by Ruslan Babayev
+
+	* Improved console handling with openssl(1) on Windows
+
+	* Ensure the network stack is enabled on Windows when running
+	  tls_init()
+
+	* Fixed incorrect TLS certificate loading by nc(1)
+
+	* Added support for Solaris 11.3's getentropy(2) system call
+
+	* Enabled support for using NetBSD 7.0's arc4random(3) implementation
+
+	* Deprecated the SSL_OP_SINGLE_DH_USE flag by disabling its effect
+
+	* Fixes from OpenSSL 1.0.1q
+	 - CVE-2015-3194 - NULL pointer dereference in client side certificate
+	                   validation.
+	 - CVE-2015-3195 - Memory leak in PKCS7 - not reachable from TLS/SSL
+
+	* The following OpenSSL CVEs did not apply to LibreSSL
+	 - CVE-2015-3193 - Carry propagating bug in the x86_64 Montgomery
+	                   squaring procedure.
+	 - CVE-2015-3196 - Double free race condition of the identify hint
+	                   data.
+
+	 See https://marc.info/?l=openbsd-announce&m=144925068504102
+
 2.3.1 - ASN.1 and time handling cleanups
 
 	* ASN.1 cleanups and RFC5280 compliance fixes.
