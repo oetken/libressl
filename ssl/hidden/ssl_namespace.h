@@ -1,4 +1,4 @@
-/*	$OpenBSD: ssl_namespace.h,v 1.1 2022/11/11 11:25:18 beck Exp $	*/
+/*	$OpenBSD: ssl_namespace.h,v 1.2 2023/02/16 08:38:17 tb Exp $	*/
 /*
  * Copyright (c) 2016 Philip Guenther <guenther@openbsd.org>
  *
@@ -23,15 +23,21 @@
  * and we alias that to the normal name.
  */
 
+#ifdef _MSC_VER
+#define LSSL_UNUSED(x)
+#define LSSL_USED(x)
+#define LSSL_ALIAS(x)
+#else
 #ifdef LIBRESSL_NAMESPACE
 #define LSSL_UNUSED(x)		typeof(x) x __attribute__((deprecated))
 #define LSSL_USED(x)		__attribute__((visibility("hidden")))	\
 				typeof(x) x asm("_lssl_"#x)
-#define LSSL_ALIAS(x)		asm(".global "#x"; "#x" = _lssl_"#x);
+#define LSSL_ALIAS(x)		asm(".global "#x"; "#x" = _lssl_"#x)
 #else
 #define LSSL_UNUSED(x)
 #define LSSL_USED(x)
-#define LSSL_ALIAS(x)
+#define LSSL_ALIAS(x)		asm("")
 #endif
+#endif /* _MSC_VER */
 
 #endif	/* _LIBSSL_SSL_NAMESPACE_H_ */

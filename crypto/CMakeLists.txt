@@ -47,6 +47,19 @@ if(HOST_ASM_ELF_X86_64)
 		sha/sha512-elf-x86_64.S
 		whrlpool/wp-elf-x86_64.S
 		cpuid-elf-x86_64.S
+
+		bn/arch/amd64/bignum_add.S
+		bn/arch/amd64/bignum_cmadd.S
+		bn/arch/amd64/bignum_cmul.S
+		bn/arch/amd64/bignum_mul.S
+		bn/arch/amd64/bignum_mul_4_8_alt.S
+		bn/arch/amd64/bignum_mul_8_16_alt.S
+		bn/arch/amd64/bignum_sqr.S
+		bn/arch/amd64/bignum_sqr_4_8_alt.S
+		bn/arch/amd64/bignum_sqr_8_16_alt.S
+		bn/arch/amd64/bignum_sub.S
+		bn/arch/amd64/word_clz.S
+		bn/arch/amd64/bn_arch.c
 	)
 	add_definitions(-DAES_ASM)
 	add_definitions(-DBSAES_ASM)
@@ -89,6 +102,19 @@ if(HOST_ASM_MACOSX_X86_64)
 		sha/sha512-macosx-x86_64.S
 		whrlpool/wp-macosx-x86_64.S
 		cpuid-macosx-x86_64.S
+
+		bn/arch/amd64/bignum_add.S
+		bn/arch/amd64/bignum_cmadd.S
+		bn/arch/amd64/bignum_cmul.S
+		bn/arch/amd64/bignum_mul.S
+		bn/arch/amd64/bignum_mul_4_8_alt.S
+		bn/arch/amd64/bignum_mul_8_16_alt.S
+		bn/arch/amd64/bignum_sqr.S
+		bn/arch/amd64/bignum_sqr_4_8_alt.S
+		bn/arch/amd64/bignum_sqr_8_16_alt.S
+		bn/arch/amd64/bignum_sub.S
+		bn/arch/amd64/word_clz.S
+		bn/arch/amd64/bn_arch.c
 	)
 	add_definitions(-DAES_ASM)
 	add_definitions(-DBSAES_ASM)
@@ -331,16 +357,13 @@ set(
 	bio/bss_null.c
 	bio/bss_sock.c
 	bn/bn_add.c
-	bn/bn_asm.c
 	bn/bn_blind.c
 	bn/bn_bpsw.c
 	bn/bn_const.c
 	bn/bn_ctx.c
-	bn/bn_depr.c
 	bn/bn_div.c
 	bn/bn_err.c
 	bn/bn_exp.c
-	bn/bn_exp2.c
 	bn/bn_gcd.c
 	bn/bn_gf2m.c
 	bn/bn_isqrt.c
@@ -461,8 +484,6 @@ set(
 	dsa/dsa_ossl.c
 	dsa/dsa_pmeth.c
 	dsa/dsa_prn.c
-	dsa/dsa_sign.c
-	dsa/dsa_vrf.c
 	dso/dso_dlfcn.c
 	dso/dso_err.c
 	dso/dso_lib.c
@@ -531,6 +552,7 @@ set(
 	evp/bio_enc.c
 	evp/bio_md.c
 	evp/c_all.c
+	evp/cipher_method_lib.c
 	evp/digest.c
 	evp/e_aes.c
 	evp/e_aes_cbc_hmac_sha1.c
@@ -722,6 +744,7 @@ set(
 	txt_db/txt_db.c
 	ui/ui_err.c
 	ui/ui_lib.c
+	ui/ui_null.c
 	ui/ui_util.c
 	whrlpool/wp_dgst.c
 	x509/by_dir.c
@@ -999,6 +1022,7 @@ target_include_directories(crypto_obj
 		ecdh
 		ecdsa
 		evp
+		hidden
 		hmac
 		modes
 		ocsp
@@ -1009,7 +1033,27 @@ target_include_directories(crypto_obj
 	PUBLIC
 		../include)
 
-add_library(crypto $<TARGET_OBJECTS:crypto_obj>)
+if(HOST_AARCH64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/aarch64/)
+elseif(HOST_ARM)
+	target_include_directories(crypto_obj PRIVATE bn/arch/arm/)
+elseif(HOST_I386)
+	target_include_directories(crypto_obj PRIVATE bn/arch/i386/)
+elseif(HOST_MIPS64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/mips64)
+elseif(HOST_POWERPC)
+	target_include_directories(crypto_obj PRIVATE bn/arch/powerpc)
+elseif(HOST_POWERPC64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/powerpc64)
+elseif(HOST_RISCV64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/riscv64)
+elseif(HOST_SPARC64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/sparc64)
+elseif(HOST_X86_64)
+	target_include_directories(crypto_obj PRIVATE bn/arch/amd64)
+endif()
+
+add_library(crypto $<TARGET_OBJECTS:crypto_obj> empty.c)
 
 export_symbol(crypto ${CMAKE_CURRENT_BINARY_DIR}/crypto_p.sym)
 target_link_libraries(crypto ${PLATFORM_LIBS})

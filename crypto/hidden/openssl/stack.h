@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_STACK_H
 #define _LIBCRYPTO_STACK_H
 
+#ifdef _MSC_VER
+#include <../include/openssl/stack.h>
+#else
 #include_next <openssl/stack.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(sk_num);

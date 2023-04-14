@@ -18,7 +18,11 @@
 #ifndef _LIBCRYPTO_X509V3_H
 #define _LIBCRYPTO_X509V3_H
 
+#ifdef _MSC_VER
+#include <../include/openssl/x509v3.h>
+#else
 #include_next <openssl/x509v3.h>
+#endif
 #include "crypto_namespace.h"
 
 LCRYPTO_USED(PROXY_POLICY_new);
