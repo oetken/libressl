@@ -1,4 +1,4 @@
-/* $OpenBSD: netcat.c,v 1.137 2015/09/12 21:01:14 beck Exp $ */
+/* $OpenBSD: netcat.c,v 1.139 2015/10/11 00:26:23 guenther Exp $ */
 /*
  * Copyright (c) 2001 Eric Jackson <ericj@monkey.org>
  * Copyright (c) 2015 Bob Beck.  All rights reserved.
@@ -57,9 +57,8 @@
 #include <tls.h>
 #include "atomicio.h"
 
-#ifndef SUN_LEN
-#define SUN_LEN(su) \
-	(sizeof(*(su)) - sizeof((su)->sun_path) + strlen((su)->sun_path))
+#ifndef IPV6_TCLASS
+#define IPV6_TCLASS -1
 #endif
 
 #define PORT_MAX	65535
@@ -323,6 +322,30 @@ main(int argc, char *argv[])
 	argc -= optind;
 	argv += optind;
 
+#ifdef SO_RTABLE
+	if (rtableid >= 0) {
+		/*
+		 * XXX No pledge if doing rtable manipulation!
+		 * XXX the routing table stuff is dangerous and can't be pledged.
+		 * XXX rtable should really have a better interface than sockopt
+		 */
+	} else
+#endif
+	if (family == AF_UNIX) {
+		if (pledge("stdio rpath wpath cpath tmppath unix", NULL) == -1)
+			err(1, "pledge");
+	}
+	else if (Fflag) {
+		if (pledge("stdio inet dns sendfd", NULL) == -1)
+			err(1, "pledge");
+	}
+	else if (usetls) {
+		if (pledge("stdio rpath inet dns", NULL) == -1)
+			err(1, "pledge");
+	}
+	else if (pledge("stdio inet dns", NULL) == -1)
+		err(1, "pledge");
+
 	/* Cruft to make sure options are clean, and used properly. */
 	if (argv[0] && !argv[1] && family == AF_UNIX) {
 		host = argv[0];
@@ -350,6 +373,10 @@ main(int argc, char *argv[])
 		errx(1, "cannot use -c and -u");
 	if ((family == AF_UNIX) && usetls)
 		errx(1, "cannot use -c and -U");
+	if ((family == AF_UNIX) && Fflag)
+		errx(1, "cannot use -F and -U");
+	if (Fflag && usetls)
+		errx(1, "cannot use -c and -F");
 	if (TLSopt && !usetls)
 		errx(1, "you must specify -c to use TLS options");
 	if (Cflag && !usetls)
@@ -654,7 +681,7 @@ unix_bind(char *path, int flags)
 		return (-1);
 	}
 
-	if (bind(s, (struct sockaddr *)&sun, SUN_LEN(&sun)) < 0) {
+	if (bind(s, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
 		close(s);
 		return (-1);
 	}
@@ -749,7 +776,7 @@ unix_connect(char *path)
 		errno = ENAMETOOLONG;
 		return (-1);
 	}
-	if (connect(s, (struct sockaddr *)&sun, SUN_LEN(&sun)) < 0) {
+	if (connect(s, (struct sockaddr *)&sun, sizeof(sun)) < 0) {
 		close(s);
 		return (-1);
 	}
