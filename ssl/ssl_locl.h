@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_locl.h,v 1.202 2018/01/27 15:30:05 jsing Exp $ */
+/* $OpenBSD: ssl_locl.h,v 1.205 2018/04/25 07:10:39 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -385,9 +385,6 @@ typedef struct ssl_method_internal_st {
 
 	int (*ssl_accept)(SSL *s);
 	int (*ssl_connect)(SSL *s);
-	int (*ssl_read)(SSL *s, void *buf, int len);
-	int (*ssl_peek)(SSL *s, void *buf, int len);
-	int (*ssl_write)(SSL *s, const void *buf, int len);
 	int (*ssl_shutdown)(SSL *s);
 
 	int (*ssl_renegotiate)(SSL *s);
@@ -463,7 +460,7 @@ typedef struct ssl_ctx_internal_st {
 	int (*new_session_cb)(struct ssl_st *ssl, SSL_SESSION *sess);
 	void (*remove_session_cb)(struct ssl_ctx_st *ctx, SSL_SESSION *sess);
 	SSL_SESSION *(*get_session_cb)(struct ssl_st *ssl,
-	    unsigned char *data, int len, int *copy);
+	    const unsigned char *data, int len, int *copy);
 
 	/* if defined, these override the X509_verify_cert() calls */
 	int (*app_verify_callback)(X509_STORE_CTX *, void *);
@@ -477,7 +474,7 @@ typedef struct ssl_ctx_internal_st {
 	    unsigned int *cookie_len);
 
 	/* verify cookie callback */
-	int (*app_verify_cookie_cb)(SSL *ssl, unsigned char *cookie,
+	int (*app_verify_cookie_cb)(SSL *ssl, const unsigned char *cookie,
 	    unsigned int cookie_len);
 
 	void (*info_callback)(const SSL *ssl,int type,int val); /* used if SSL's info_callback is NULL */
@@ -760,8 +757,6 @@ typedef struct ssl_internal_st {
 } SSL_INTERNAL;
 
 typedef struct ssl3_state_internal_st {
-	int delay_buf_pop_ret;
-
 	unsigned char read_sequence[SSL3_SEQUENCE_SIZE];
 	int read_mac_secret_size;
 	unsigned char read_mac_secret[EVP_MAX_MD_SIZE];
