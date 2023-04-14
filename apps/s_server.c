@@ -1,4 +1,4 @@
-/* $OpenBSD: s_server.c,v 1.57 2014/07/10 08:59:15 bcook Exp $ */
+/* $OpenBSD: s_server.c,v 1.59 2014/07/12 17:54:31 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -640,9 +640,6 @@ s_server_main(int argc, char *argv[])
 
 	s_server_init();
 
-	if (!load_config(bio_err, NULL))
-		goto end;
-
 	verify_depth = 0;
 	s_nbio = 0;
 	s_nbio_test = 0;
@@ -930,9 +927,6 @@ bad:
 			sv_usage();
 		goto end;
 	}
-
-	SSL_load_error_strings();
-	OpenSSL_add_ssl_algorithms();
 
 #ifndef OPENSSL_NO_ENGINE
 	e = setup_engine(bio_err, engine_id, 1);

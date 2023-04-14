@@ -1,4 +1,4 @@
-AC_INIT([libressl], [2.0.0])
+AC_INIT([libressl], [2.0.1])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
@@ -6,7 +6,7 @@ AC_CONFIG_MACRO_DIR([m4])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 AC_SUBST([USER_CFLAGS], "-O2 $CFLAGS")
-CFLAGS="$CFLAGS -Wall -Werror -std=c99 -g -Wno-pointer-sign"
+CFLAGS="$CFLAGS -Wall -std=c99 -g"
 
 case $target_os in
 	*darwin*)
@@ -16,6 +16,7 @@ case $target_os in
 	*linux*)
 		TARGET_OS=linux;
 		CFLAGS="$CFLAGS -D_BSD_SOURCE -D_POSIX_SOURCE -D_GNU_SOURCE"
+		AC_SUBST([PLATFORM_LDADD], ['-lrt'])
 		;;
 	*solaris*)
 		TARGET_OS=solaris;
@@ -92,7 +93,32 @@ AC_CHECK_FUNC(getauxval, AC_DEFINE(HAVE_GETAUXVAL))
 
 AC_CHECK_FUNC(funopen, AC_DEFINE(HAVE_FUNOPEN))
 
+AC_CHECK_HEADER(sys/sysctl.h, AC_DEFINE(HAVE_SYS_SYSCTL_H))
+
+AC_ARG_WITH([openssldir],
+	AS_HELP_STRING([--with-openssldir], [Set the default openssl directory]),
+	AC_DEFINE_UNQUOTED(OPENSSLDIR, "$withval")
+])
+
+AC_ARG_WITH([enginesdir],
+	AS_HELP_STRING([--with-enginesdir], [Set the default engines directory (use with openssldir)]),
+	AC_DEFINE_UNQUOTED(ENGINESDIR, "$withval")
+])
+
 LT_INIT
 
-AC_OUTPUT(Makefile include/Makefile include/openssl/Makefile ssl/Makefile
-          crypto/Makefile tests/Makefile apps/Makefile man/Makefile)
+AC_CONFIG_FILES([
+	Makefile
+	include/Makefile
+	include/openssl/Makefile
+	ssl/Makefile
+	crypto/Makefile
+	tests/Makefile
+	apps/Makefile
+	man/Makefile
+	libcrypto.pc
+	libssl.pc
+	openssl.pc
+])
+
+AC_OUTPUT

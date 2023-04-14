@@ -123,9 +123,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_aeadtest_OBJECTS = aeadtest.$(OBJEXT)
 aeadtest_OBJECTS = $(am_aeadtest_OBJECTS)
-am__DEPENDENCIES_1 =
-aeadtest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+aeadtest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -133,208 +131,167 @@ am__v_lt_0 = --silent
 am__v_lt_1 = 
 am_aes_wrap_OBJECTS = aes_wrap.$(OBJEXT)
 aes_wrap_OBJECTS = $(am_aes_wrap_OBJECTS)
-aes_wrap_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+aes_wrap_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_arc4randomforktest_OBJECTS = arc4randomforktest.$(OBJEXT)
 arc4randomforktest_OBJECTS = $(am_arc4randomforktest_OBJECTS)
-arc4randomforktest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+arc4randomforktest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_base64test_OBJECTS = base64test.$(OBJEXT)
 base64test_OBJECTS = $(am_base64test_OBJECTS)
-base64test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+base64test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_bftest_OBJECTS = bftest.$(OBJEXT)
 bftest_OBJECTS = $(am_bftest_OBJECTS)
-bftest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+bftest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_biotest_OBJECTS = biotest.$(OBJEXT)
 biotest_OBJECTS = $(am_biotest_OBJECTS)
-biotest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+biotest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_bntest_OBJECTS = bntest.$(OBJEXT)
 bntest_OBJECTS = $(am_bntest_OBJECTS)
-bntest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+bntest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_casttest_OBJECTS = casttest.$(OBJEXT)
 casttest_OBJECTS = $(am_casttest_OBJECTS)
-casttest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+casttest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_chachatest_OBJECTS = chachatest.$(OBJEXT)
 chachatest_OBJECTS = $(am_chachatest_OBJECTS)
-chachatest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+chachatest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_cts128test_OBJECTS = cts128test.$(OBJEXT)
 cts128test_OBJECTS = $(am_cts128test_OBJECTS)
-cts128test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+cts128test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_destest_OBJECTS = destest.$(OBJEXT)
 destest_OBJECTS = $(am_destest_OBJECTS)
-destest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+destest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_dhtest_OBJECTS = dhtest.$(OBJEXT)
 dhtest_OBJECTS = $(am_dhtest_OBJECTS)
-dhtest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+dhtest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_dsatest_OBJECTS = dsatest.$(OBJEXT)
 dsatest_OBJECTS = $(am_dsatest_OBJECTS)
-dsatest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+dsatest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_ecdhtest_OBJECTS = ecdhtest.$(OBJEXT)
 ecdhtest_OBJECTS = $(am_ecdhtest_OBJECTS)
-ecdhtest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+ecdhtest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_ecdsatest_OBJECTS = ecdsatest.$(OBJEXT)
 ecdsatest_OBJECTS = $(am_ecdsatest_OBJECTS)
-ecdsatest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+ecdsatest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_ectest_OBJECTS = ectest.$(OBJEXT)
 ectest_OBJECTS = $(am_ectest_OBJECTS)
-ectest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+ectest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_enginetest_OBJECTS = enginetest.$(OBJEXT)
 enginetest_OBJECTS = $(am_enginetest_OBJECTS)
-enginetest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+enginetest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_evptest_OBJECTS = evptest.$(OBJEXT)
 evptest_OBJECTS = $(am_evptest_OBJECTS)
-evptest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+evptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_explicit_bzero_OBJECTS = explicit_bzero.$(OBJEXT)
 explicit_bzero_OBJECTS = $(am_explicit_bzero_OBJECTS)
-explicit_bzero_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+explicit_bzero_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_exptest_OBJECTS = exptest.$(OBJEXT)
 exptest_OBJECTS = $(am_exptest_OBJECTS)
-exptest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+exptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_gcm128test_OBJECTS = gcm128test.$(OBJEXT)
 gcm128test_OBJECTS = $(am_gcm128test_OBJECTS)
-gcm128test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+gcm128test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_hmactest_OBJECTS = hmactest.$(OBJEXT)
 hmactest_OBJECTS = $(am_hmactest_OBJECTS)
-hmactest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+hmactest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_ideatest_OBJECTS = ideatest.$(OBJEXT)
 ideatest_OBJECTS = $(am_ideatest_OBJECTS)
-ideatest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+ideatest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_igetest_OBJECTS = igetest.$(OBJEXT)
 igetest_OBJECTS = $(am_igetest_OBJECTS)
-igetest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+igetest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_md4test_OBJECTS = md4test.$(OBJEXT)
 md4test_OBJECTS = $(am_md4test_OBJECTS)
-md4test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+md4test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_md5test_OBJECTS = md5test.$(OBJEXT)
 md5test_OBJECTS = $(am_md5test_OBJECTS)
-md5test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+md5test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_mdc2test_OBJECTS = mdc2test.$(OBJEXT)
 mdc2test_OBJECTS = $(am_mdc2test_OBJECTS)
-mdc2test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+mdc2test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_mont_OBJECTS = mont.$(OBJEXT)
 mont_OBJECTS = $(am_mont_OBJECTS)
-mont_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+mont_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_pkcs7test_OBJECTS = pkcs7test.$(OBJEXT)
 pkcs7test_OBJECTS = $(am_pkcs7test_OBJECTS)
-pkcs7test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+pkcs7test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_poly1305test_OBJECTS = poly1305test.$(OBJEXT)
 poly1305test_OBJECTS = $(am_poly1305test_OBJECTS)
-poly1305test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+poly1305test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_pq_test_OBJECTS = pq_test.$(OBJEXT)
 pq_test_OBJECTS = $(am_pq_test_OBJECTS)
-pq_test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+pq_test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_randtest_OBJECTS = randtest.$(OBJEXT)
 randtest_OBJECTS = $(am_randtest_OBJECTS)
-randtest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+randtest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_rc2test_OBJECTS = rc2test.$(OBJEXT)
 rc2test_OBJECTS = $(am_rc2test_OBJECTS)
-rc2test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+rc2test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_rc4test_OBJECTS = rc4test.$(OBJEXT)
 rc4test_OBJECTS = $(am_rc4test_OBJECTS)
-rc4test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+rc4test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_rmdtest_OBJECTS = rmdtest.$(OBJEXT)
 rmdtest_OBJECTS = $(am_rmdtest_OBJECTS)
-rmdtest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+rmdtest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_sha1test_OBJECTS = sha1test.$(OBJEXT)
 sha1test_OBJECTS = $(am_sha1test_OBJECTS)
-sha1test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+sha1test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_sha256test_OBJECTS = sha256test.$(OBJEXT)
 sha256test_OBJECTS = $(am_sha256test_OBJECTS)
-sha256test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+sha256test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_sha512test_OBJECTS = sha512test.$(OBJEXT)
 sha512test_OBJECTS = $(am_sha512test_OBJECTS)
-sha512test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+sha512test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_shatest_OBJECTS = shatest.$(OBJEXT)
 shatest_OBJECTS = $(am_shatest_OBJECTS)
-shatest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+shatest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_ssltest_OBJECTS = ssltest.$(OBJEXT)
 ssltest_OBJECTS = $(am_ssltest_OBJECTS)
-ssltest_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+ssltest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_timingsafe_OBJECTS = timingsafe.$(OBJEXT)
 timingsafe_OBJECTS = $(am_timingsafe_OBJECTS)
-timingsafe_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+timingsafe_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_utf8test_OBJECTS = utf8test.$(OBJEXT)
 utf8test_OBJECTS = $(am_utf8test_OBJECTS)
-utf8test_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
+utf8test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -767,131 +724,130 @@ EXTRA_DIST = aeadtest.sh evptest.sh pq_test.sh ssltest.sh \
 	arc4randomforktest.sh aeadtests.txt evptests.txt \
 	pq_expected.txt testssl ca.pem server.pem
 aeadtest_SOURCES = aeadtest.c
-aeadtest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+aeadtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 aes_wrap_SOURCES = aes_wrap.c
-aes_wrap_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+aes_wrap_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 arc4randomforktest_SOURCES = arc4randomforktest.c
-arc4randomforktest_LDADD = $(PLATFORM_LDADD) \
-	$(top_builddir)/ssl/libssl.la \
+arc4randomforktest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 base64test_SOURCES = base64test.c
-base64test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+base64test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 bftest_SOURCES = bftest.c
-bftest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+bftest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 biotest_SOURCES = biotest.c
-biotest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+biotest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 bntest_SOURCES = bntest.c
-bntest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+bntest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 casttest_SOURCES = casttest.c
-casttest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+casttest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 chachatest_SOURCES = chachatest.c
-chachatest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+chachatest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 cts128test_SOURCES = cts128test.c
-cts128test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+cts128test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 destest_SOURCES = destest.c
-destest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+destest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 dhtest_SOURCES = dhtest.c
-dhtest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+dhtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 dsatest_SOURCES = dsatest.c
-dsatest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+dsatest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 ecdhtest_SOURCES = ecdhtest.c
-ecdhtest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+ecdhtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 ecdsatest_SOURCES = ecdsatest.c
-ecdsatest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+ecdsatest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 ectest_SOURCES = ectest.c
-ectest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+ectest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 enginetest_SOURCES = enginetest.c
-enginetest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+enginetest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 evptest_SOURCES = evptest.c
-evptest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+evptest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 explicit_bzero_SOURCES = explicit_bzero.c
-explicit_bzero_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+explicit_bzero_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 exptest_SOURCES = exptest.c
-exptest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+exptest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 gcm128test_SOURCES = gcm128test.c
-gcm128test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+gcm128test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 hmactest_SOURCES = hmactest.c
-hmactest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+hmactest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 ideatest_SOURCES = ideatest.c
-ideatest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+ideatest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 igetest_SOURCES = igetest.c
-igetest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+igetest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 md4test_SOURCES = md4test.c
-md4test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+md4test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 md5test_SOURCES = md5test.c
-md5test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+md5test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 mdc2test_SOURCES = mdc2test.c
-mdc2test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+mdc2test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 mont_SOURCES = mont.c
-mont_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+mont_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 pkcs7test_SOURCES = pkcs7test.c
-pkcs7test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+pkcs7test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 poly1305test_SOURCES = poly1305test.c
-poly1305test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+poly1305test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 pq_test_SOURCES = pq_test.c
-pq_test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+pq_test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 randtest_SOURCES = randtest.c
-randtest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+randtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 rc2test_SOURCES = rc2test.c
-rc2test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+rc2test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 rc4test_SOURCES = rc4test.c
-rc4test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+rc4test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 rmdtest_SOURCES = rmdtest.c
-rmdtest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+rmdtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 sha1test_SOURCES = sha1test.c
-sha1test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+sha1test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 sha256test_SOURCES = sha256test.c
-sha256test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+sha256test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 sha512test_SOURCES = sha512test.c
-sha512test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+sha512test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 shatest_SOURCES = shatest.c
-shatest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+shatest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 ssltest_SOURCES = ssltest.c
-ssltest_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+ssltest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 timingsafe_SOURCES = timingsafe.c
-timingsafe_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+timingsafe_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 utf8test_SOURCES = utf8test.c
-utf8test_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+utf8test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 all: all-am
 

@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "DES_set_key 3"
-.TH DES_set_key 3 "2014-07-11" "LibreSSL" "LibreSSL"
+.TH DES_set_key 3 "2014-07-13" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -251,7 +251,7 @@ consists of 8 bytes with odd parity.  The least significant bit in
 each byte is the parity bit.  The key schedule is an expanded form of
 the key; it is used to speed the encryption process.
 .PP
-\&\fIDES_random_key()\fR generates a random key.
+\&\fIDES_random_key()\fR generates a random key in odd parity.
 .PP
 Before a \s-1DES\s0 key can be used, it must be converted into the
 architecture dependent \fIDES_key_schedule\fR via the
@@ -271,8 +271,7 @@ depend on a global variable.
 \&\fIDES_set_odd_parity()\fR sets the parity of the passed \fIkey\fR to odd.
 .PP
 \&\fIDES_is_weak_key()\fR returns 1 is the passed key is a weak key, 0 if it
-is ok.  The probability that a randomly generated key is weak is
-1/2^52, so it is not really worth checking for them.
+is ok.
 .PP
 The following routines mostly operate on an input and output stream of
 \&\fIDES_cblock\fRs.
