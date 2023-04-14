@@ -1,4 +1,4 @@
-/* $OpenBSD: v3_purp.c,v 1.22 2014/07/13 16:03:10 beck Exp $ */
+/* $OpenBSD: v3_purp.c,v 1.25 2015/02/10 11:22:22 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2001.
  */
@@ -103,8 +103,6 @@ static X509_PURPOSE xstandard[] = {
 
 #define X509_PURPOSE_COUNT (sizeof(xstandard)/sizeof(X509_PURPOSE))
 
-IMPLEMENT_STACK_OF(X509_PURPOSE)
-
 static STACK_OF(X509_PURPOSE) *xptable = NULL;
 
 static int
@@ -203,6 +201,9 @@ X509_PURPOSE_add(int id, int trust, int flags,
 {
 	int idx;
 	X509_PURPOSE *ptmp;
+	char *name_dup, *sname_dup;
+
+	name_dup = sname_dup = NULL;
 
 	if (name == NULL || sname == NULL) {
 		X509V3err(X509V3_F_X509_PURPOSE_ADD,
@@ -227,16 +228,19 @@ X509_PURPOSE_add(int id, int trust, int flags,
 	} else
 		ptmp = X509_PURPOSE_get0(idx);
 
+	if ((name_dup = strdup(name)) == NULL)
+		goto err;
+	if ((sname_dup = strdup(sname)) == NULL)
+		goto err;
+
 	/* free existing name if dynamic */
 	if (ptmp->flags & X509_PURPOSE_DYNAMIC_NAME) {
 		free(ptmp->name);
 		free(ptmp->sname);
 	}
 	/* dup supplied name */
-	ptmp->name = strdup(name);
-	ptmp->sname = strdup(sname);
-	if (ptmp->name == NULL || ptmp->sname == NULL)
-		goto err;
+	ptmp->name = name_dup;
+	ptmp->sname = sname_dup;
 	/* Keep the dynamic flag of existing entry */
 	ptmp->flags &= X509_PURPOSE_DYNAMIC;
 	/* Set all other flags */
@@ -258,14 +262,10 @@ X509_PURPOSE_add(int id, int trust, int flags,
 	return 1;
 
 err:
-	free(ptmp->name);
-	free(ptmp->sname);
+	free(name_dup);
+	free(sname_dup);
 	if (idx == -1)
 		free(ptmp);
-	else {
-		ptmp->name = NULL;
-		ptmp->sname = NULL;
-	}
 	X509V3err(X509V3_F_X509_PURPOSE_ADD, ERR_R_MALLOC_FAILURE);
 	return 0;
 }
@@ -346,10 +346,6 @@ X509_supported_extension(X509_EXTENSION *ex)
 		NID_basic_constraints,	/* 87 */
 		NID_certificate_policies, /* 89 */
 		NID_ext_key_usage,	/* 126 */
-#ifndef OPENSSL_NO_RFC3779
-		NID_sbgp_ipAddrBlock,	/* 290 */
-		NID_sbgp_autonomousSysNum, /* 291 */
-#endif
 		NID_policy_constraints,	/* 401 */
 		NID_proxyCertInfo,	/* 663 */
 		NID_name_constraints,	/* 666 */
@@ -531,11 +527,6 @@ x509v3_cache_extensions(X509 *x)
 		x->ex_flags |= EXFLAG_INVALID;
 	setup_crldp(x);
 
-#ifndef OPENSSL_NO_RFC3779
-	x->rfc3779_addr = X509_get_ext_d2i(x, NID_sbgp_ipAddrBlock, NULL, NULL);
-	x->rfc3779_asid = X509_get_ext_d2i(x, NID_sbgp_autonomousSysNum,
-	    NULL, NULL);
-#endif
 	for (i = 0; i < X509_get_ext_count(x); i++) {
 		ex = X509_get_ext(x, i);
 		if (OBJ_obj2nid(X509_EXTENSION_get_object(ex)) ==

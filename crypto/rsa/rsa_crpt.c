@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_crpt.c,v 1.10 2014/07/10 22:45:57 jsing Exp $ */
+/* $OpenBSD: rsa_crpt.c,v 1.13 2015/02/09 15:49:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,8 +62,8 @@
 
 #include <openssl/bn.h>
 #include <openssl/crypto.h>
+#include <openssl/err.h>
 #include <openssl/lhash.h>
-#include <openssl/rand.h>
 #include <openssl/rsa.h>
 
 #ifndef OPENSSL_NO_ENGINE
@@ -146,10 +146,11 @@ rsa_get_public_exp(const BIGNUM *d, const BIGNUM *p, const BIGNUM *q,
 		return NULL;
 
 	BN_CTX_start(ctx);
-	r0 = BN_CTX_get(ctx);
-	r1 = BN_CTX_get(ctx);
-	r2 = BN_CTX_get(ctx);
-	if (r2 == NULL)
+	if ((r0 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((r1 = BN_CTX_get(ctx)) == NULL)
+		goto err;
+	if ((r2 = BN_CTX_get(ctx)) == NULL)
 		goto err;
 
 	if (!BN_sub(r1, p, BN_value_one()))

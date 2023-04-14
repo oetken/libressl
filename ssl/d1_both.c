@@ -1,4 +1,4 @@
-/* $OpenBSD: d1_both.c,v 1.27 2014/08/07 20:24:12 guenther Exp $ */
+/* $OpenBSD: d1_both.c,v 1.31 2014/12/14 16:07:26 jsing Exp $ */
 /*
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.
@@ -114,13 +114,14 @@
  */
 
 #include <limits.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
+
 #include "ssl_locl.h"
+
 #include <openssl/buffer.h>
-#include <openssl/rand.h>
-#include <openssl/objects.h>
 #include <openssl/evp.h>
+#include <openssl/objects.h>
 #include <openssl/x509.h>
 
 #include "pqueue.h"
@@ -1139,6 +1140,8 @@ dtls1_buffer_message(SSL *s, int is_ccs)
 	hm_fragment *frag;
 	unsigned char seq64be[8];
 
+	/* Buffer the messsage in order to handle DTLS retransmissions. */
+
 	/*
 	 * This function is called immediately after a message has
 	 * been serialized
@@ -1394,21 +1397,6 @@ dtls1_shutdown(SSL *s)
 {
 	int ret;
 
-#ifndef OPENSSL_NO_SCTP
-	if (BIO_dgram_is_sctp(SSL_get_wbio(s)) &&
-	    !(s->shutdown & SSL_SENT_SHUTDOWN)) {
-		ret = BIO_dgram_sctp_wait_for_dry(SSL_get_wbio(s));
-		if (ret < 0)
-			return -1;
-
-		if (ret == 0)
-			BIO_ctrl(SSL_get_wbio(s),
-			    BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN, 1, NULL);
-	}
-#endif
 	ret = ssl3_shutdown(s);
-#ifndef OPENSSL_NO_SCTP
-	BIO_ctrl(SSL_get_wbio(s), BIO_CTRL_DGRAM_SCTP_SAVE_SHUTDOWN, 0, NULL);
-#endif
 	return ret;
 }
