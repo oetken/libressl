@@ -3,6 +3,7 @@ include $(top_srcdir)/Makefile.am.common
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/evp
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
+AM_CPPFLAGS += -I$(top_srcdir)/crypto
 
 lib_LTLIBRARIES = libcrypto.la
 
@@ -13,7 +14,10 @@ EXTRA_DIST += CMakeLists.txt
 EXTRA_DIST += compat/strcasecmp.c
 
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
-libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
+libcrypto_la_LIBADD = libcompat.la
+if !HAVE_EXPLICIT_BZERO
+libcrypto_la_LIBADD += libcompatnoopt.la
+endif
 libcrypto_la_CPPFLAGS = $(AM_CPPFLAGS)
 libcrypto_la_CPPFLAGS += -DLIBRESSL_INTERNAL
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_HW_PADLOCK
@@ -31,13 +35,15 @@ else
 libcrypto_la_CPPFLAGS += -DOPENSSLDIR=\"$(sysconfdir)/ssl\"
 endif
 
-noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
+noinst_LTLIBRARIES = libcompat.la
 
 # compatibility functions that need to be built without optimizations
+if !HAVE_EXPLICIT_BZERO
+noinst_LTLIBRARIES += libcompatnoopt.la
+
 libcompatnoopt_la_CFLAGS = -O0
 libcompatnoopt_la_SOURCES =
 
-if !HAVE_EXPLICIT_BZERO
 if HOST_WIN
 libcompatnoopt_la_SOURCES += compat/explicit_bzero_win.c
 else
@@ -123,6 +129,7 @@ libcrypto_la_SOURCES += mem_dbg.c
 libcrypto_la_SOURCES += o_init.c
 libcrypto_la_SOURCES += o_str.c
 libcrypto_la_SOURCES += o_time.c
+noinst_HEADERS += constant_time_locl.h
 noinst_HEADERS += cryptlib.h
 noinst_HEADERS += md32_common.h
 noinst_HEADERS += o_time.h
