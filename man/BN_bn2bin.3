@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "BN_bn2bin 3"
-.TH BN_bn2bin 3 "2014-07-13" "LibreSSL " "LibreSSL"
+.TH BN_bn2bin 3 "2014-07-15" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -173,7 +173,7 @@ memory.
 \&\fIBN_bn2hex()\fR and \fIBN_bn2dec()\fR return printable strings containing the
 hexadecimal and decimal encoding of \fBa\fR respectively. For negative
 numbers, the string is prefaced with a leading '\-'. The string must be
-freed later using \fIOPENSSL_free()\fR.
+freed later using \fIfree()\fR.
 .PP
 \&\fIBN_hex2bn()\fR converts the string \fBstr\fR containing a hexadecimal number
 to a \fB\s-1BIGNUM\s0\fR and stores it in **\fBbn\fR. If *\fBbn\fR is \s-1NULL,\s0 a new

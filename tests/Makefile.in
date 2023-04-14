@@ -81,35 +81,36 @@ target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/depcomp \
 	$(top_srcdir)/test-driver
-TESTS = aes_wrap$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
+TESTS = aes_wrap$(EXEEXT) asn1test$(EXEEXT) base64test$(EXEEXT) \
+	bftest$(EXEEXT) bntest$(EXEEXT) casttest$(EXEEXT) \
+	chachatest$(EXEEXT) cts128test$(EXEEXT) destest$(EXEEXT) \
+	dhtest$(EXEEXT) dsatest$(EXEEXT) ecdhtest$(EXEEXT) \
+	ecdsatest$(EXEEXT) ectest$(EXEEXT) enginetest$(EXEEXT) \
+	explicit_bzero$(EXEEXT) exptest$(EXEEXT) gcm128test$(EXEEXT) \
+	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
+	md4test$(EXEEXT) md5test$(EXEEXT) mdc2test$(EXEEXT) \
+	mont$(EXEEXT) pkcs7test$(EXEEXT) poly1305test$(EXEEXT) \
+	randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
+	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
+	sha512test$(EXEEXT) shatest$(EXEEXT) timingsafe$(EXEEXT) \
+	utf8test$(EXEEXT) aeadtest.sh evptest.sh pq_test.sh ssltest.sh \
+	arc4randomforktest.sh
+check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) \
+	arc4randomforktest$(EXEEXT) asn1test$(EXEEXT) \
+	base64test$(EXEEXT) bftest$(EXEEXT) biotest$(EXEEXT) \
 	bntest$(EXEEXT) casttest$(EXEEXT) chachatest$(EXEEXT) \
 	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
 	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
-	ectest$(EXEEXT) enginetest$(EXEEXT) explicit_bzero$(EXEEXT) \
-	exptest$(EXEEXT) gcm128test$(EXEEXT) hmactest$(EXEEXT) \
-	ideatest$(EXEEXT) igetest$(EXEEXT) md4test$(EXEEXT) \
-	md5test$(EXEEXT) mdc2test$(EXEEXT) mont$(EXEEXT) \
-	pkcs7test$(EXEEXT) poly1305test$(EXEEXT) randtest$(EXEEXT) \
+	ectest$(EXEEXT) enginetest$(EXEEXT) evptest$(EXEEXT) \
+	explicit_bzero$(EXEEXT) exptest$(EXEEXT) fork_rand$(EXEEXT) \
+	gcm128test$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
+	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
+	mdc2test$(EXEEXT) mont$(EXEEXT) pkcs7test$(EXEEXT) \
+	poly1305test$(EXEEXT) pq_test$(EXEEXT) randtest$(EXEEXT) \
 	rc2test$(EXEEXT) rc4test$(EXEEXT) rmdtest$(EXEEXT) \
 	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
-	shatest$(EXEEXT) timingsafe$(EXEEXT) utf8test$(EXEEXT) \
-	aeadtest.sh evptest.sh pq_test.sh ssltest.sh \
-	arc4randomforktest.sh
-check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) \
-	arc4randomforktest$(EXEEXT) base64test$(EXEEXT) \
-	bftest$(EXEEXT) biotest$(EXEEXT) bntest$(EXEEXT) \
-	casttest$(EXEEXT) chachatest$(EXEEXT) cts128test$(EXEEXT) \
-	destest$(EXEEXT) dhtest$(EXEEXT) dsatest$(EXEEXT) \
-	ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) ectest$(EXEEXT) \
-	enginetest$(EXEEXT) evptest$(EXEEXT) explicit_bzero$(EXEEXT) \
-	exptest$(EXEEXT) gcm128test$(EXEEXT) hmactest$(EXEEXT) \
-	ideatest$(EXEEXT) igetest$(EXEEXT) md4test$(EXEEXT) \
-	md5test$(EXEEXT) mdc2test$(EXEEXT) mont$(EXEEXT) \
-	pkcs7test$(EXEEXT) poly1305test$(EXEEXT) pq_test$(EXEEXT) \
-	randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
-	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
-	sha512test$(EXEEXT) shatest$(EXEEXT) ssltest$(EXEEXT) \
-	timingsafe$(EXEEXT) utf8test$(EXEEXT)
+	shatest$(EXEEXT) ssltest$(EXEEXT) timingsafe$(EXEEXT) \
+	utf8test$(EXEEXT)
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -136,6 +137,10 @@ aes_wrap_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 am_arc4randomforktest_OBJECTS = arc4randomforktest.$(OBJEXT)
 arc4randomforktest_OBJECTS = $(am_arc4randomforktest_OBJECTS)
 arc4randomforktest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+am_asn1test_OBJECTS = asn1test.$(OBJEXT)
+asn1test_OBJECTS = $(am_asn1test_OBJECTS)
+asn1test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_base64test_OBJECTS = base64test.$(OBJEXT)
 base64test_OBJECTS = $(am_base64test_OBJECTS)
@@ -204,6 +209,10 @@ explicit_bzero_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 am_exptest_OBJECTS = exptest.$(OBJEXT)
 exptest_OBJECTS = $(am_exptest_OBJECTS)
 exptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+am_fork_rand_OBJECTS = fork_rand.$(OBJEXT)
+fork_rand_OBJECTS = $(am_fork_rand_OBJECTS)
+fork_rand_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_gcm128test_OBJECTS = gcm128test.$(OBJEXT)
 gcm128test_OBJECTS = $(am_gcm128test_OBJECTS)
@@ -328,37 +337,37 @@ am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
-	$(arc4randomforktest_SOURCES) $(base64test_SOURCES) \
-	$(bftest_SOURCES) $(biotest_SOURCES) $(bntest_SOURCES) \
-	$(casttest_SOURCES) $(chachatest_SOURCES) \
+	$(arc4randomforktest_SOURCES) $(asn1test_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) $(biotest_SOURCES) \
+	$(bntest_SOURCES) $(casttest_SOURCES) $(chachatest_SOURCES) \
 	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
 	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
 	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
-	$(gcm128test_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
-	$(igetest_SOURCES) $(md4test_SOURCES) $(md5test_SOURCES) \
-	$(mdc2test_SOURCES) $(mont_SOURCES) $(pkcs7test_SOURCES) \
-	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
-	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
-	$(sha1test_SOURCES) $(sha256test_SOURCES) \
-	$(sha512test_SOURCES) $(shatest_SOURCES) $(ssltest_SOURCES) \
-	$(timingsafe_SOURCES) $(utf8test_SOURCES)
+	$(fork_rand_SOURCES) $(gcm128test_SOURCES) $(hmactest_SOURCES) \
+	$(ideatest_SOURCES) $(igetest_SOURCES) $(md4test_SOURCES) \
+	$(md5test_SOURCES) $(mdc2test_SOURCES) $(mont_SOURCES) \
+	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
+	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
+	$(rc4test_SOURCES) $(rmdtest_SOURCES) $(sha1test_SOURCES) \
+	$(sha256test_SOURCES) $(sha512test_SOURCES) $(shatest_SOURCES) \
+	$(ssltest_SOURCES) $(timingsafe_SOURCES) $(utf8test_SOURCES)
 DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
-	$(arc4randomforktest_SOURCES) $(base64test_SOURCES) \
-	$(bftest_SOURCES) $(biotest_SOURCES) $(bntest_SOURCES) \
-	$(casttest_SOURCES) $(chachatest_SOURCES) \
+	$(arc4randomforktest_SOURCES) $(asn1test_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) $(biotest_SOURCES) \
+	$(bntest_SOURCES) $(casttest_SOURCES) $(chachatest_SOURCES) \
 	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
 	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
 	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
-	$(gcm128test_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
-	$(igetest_SOURCES) $(md4test_SOURCES) $(md5test_SOURCES) \
-	$(mdc2test_SOURCES) $(mont_SOURCES) $(pkcs7test_SOURCES) \
-	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
-	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
-	$(sha1test_SOURCES) $(sha256test_SOURCES) \
-	$(sha512test_SOURCES) $(shatest_SOURCES) $(ssltest_SOURCES) \
-	$(timingsafe_SOURCES) $(utf8test_SOURCES)
+	$(fork_rand_SOURCES) $(gcm128test_SOURCES) $(hmactest_SOURCES) \
+	$(ideatest_SOURCES) $(igetest_SOURCES) $(md4test_SOURCES) \
+	$(md5test_SOURCES) $(mdc2test_SOURCES) $(mont_SOURCES) \
+	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
+	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
+	$(rc4test_SOURCES) $(rmdtest_SOURCES) $(sha1test_SOURCES) \
+	$(sha256test_SOURCES) $(sha512test_SOURCES) $(shatest_SOURCES) \
+	$(ssltest_SOURCES) $(timingsafe_SOURCES) $(utf8test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -732,6 +741,9 @@ aes_wrap_LDADD = $(top_builddir)/ssl/libssl.la \
 arc4randomforktest_SOURCES = arc4randomforktest.c
 arc4randomforktest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
+asn1test_SOURCES = asn1test.c
+asn1test_LDADD = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
 base64test_SOURCES = base64test.c
 base64test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
@@ -782,6 +794,9 @@ explicit_bzero_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 exptest_SOURCES = exptest.c
 exptest_LDADD = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+fork_rand_SOURCES = fork_rand.c
+fork_rand_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 gcm128test_SOURCES = gcm128test.c
 gcm128test_LDADD = $(top_builddir)/ssl/libssl.la \
@@ -906,6 +921,10 @@ arc4randomforktest$(EXEEXT): $(arc4randomforktest_OBJECTS) $(arc4randomforktest_
 	@rm -f arc4randomforktest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(arc4randomforktest_OBJECTS) $(arc4randomforktest_LDADD) $(LIBS)
 
+asn1test$(EXEEXT): $(asn1test_OBJECTS) $(asn1test_DEPENDENCIES) $(EXTRA_asn1test_DEPENDENCIES) 
+	@rm -f asn1test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(asn1test_OBJECTS) $(asn1test_LDADD) $(LIBS)
+
 base64test$(EXEEXT): $(base64test_OBJECTS) $(base64test_DEPENDENCIES) $(EXTRA_base64test_DEPENDENCIES) 
 	@rm -f base64test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(base64test_OBJECTS) $(base64test_LDADD) $(LIBS)
@@ -973,6 +992,10 @@ explicit_bzero$(EXEEXT): $(explicit_bzero_OBJECTS) $(explicit_bzero_DEPENDENCIES
 exptest$(EXEEXT): $(exptest_OBJECTS) $(exptest_DEPENDENCIES) $(EXTRA_exptest_DEPENDENCIES) 
 	@rm -f exptest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(exptest_OBJECTS) $(exptest_LDADD) $(LIBS)
+
+fork_rand$(EXEEXT): $(fork_rand_OBJECTS) $(fork_rand_DEPENDENCIES) $(EXTRA_fork_rand_DEPENDENCIES) 
+	@rm -f fork_rand$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(fork_rand_OBJECTS) $(fork_rand_LDADD) $(LIBS)
 
 gcm128test$(EXEEXT): $(gcm128test_OBJECTS) $(gcm128test_DEPENDENCIES) $(EXTRA_gcm128test_DEPENDENCIES) 
 	@rm -f gcm128test$(EXEEXT)
@@ -1071,6 +1094,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aeadtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes_wrap.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arc4randomforktest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bftest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/biotest.Po@am__quote@
@@ -1088,6 +1112,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/explicit_bzero.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exptest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fork_rand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcm128test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hmactest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ideatest.Po@am__quote@
@@ -1337,6 +1362,13 @@ recheck: all $(check_PROGRAMS)
 aes_wrap.log: aes_wrap$(EXEEXT)
 	@p='aes_wrap$(EXEEXT)'; \
 	b='aes_wrap'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+asn1test.log: asn1test$(EXEEXT)
+	@p='asn1test$(EXEEXT)'; \
+	b='asn1test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \

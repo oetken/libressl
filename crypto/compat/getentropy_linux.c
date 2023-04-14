@@ -1,4 +1,4 @@
-/*	$OpenBSD: getentropy_linux.c,v 1.21 2014/07/12 20:41:47 wouter Exp $	*/
+/*	$OpenBSD: getentropy_linux.c,v 1.23 2014/07/13 13:03:09 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2014 Theo de Raadt <deraadt@openbsd.org>
@@ -15,6 +15,9 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Emulation of getentropy(2) as documented at:
+ * http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man2/getentropy.2
  */
 
 #define	_POSIX_C_SOURCE 199309L
@@ -36,6 +39,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <link.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -78,6 +82,7 @@ static int getentropy_urandom(void *buf, size_t len);
 static int getentropy_sysctl(void *buf, size_t len);
 #endif
 static int getentropy_fallback(void *buf, size_t len);
+static int getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data);
 
 int
 getentropy(void *buf, size_t len)
@@ -290,6 +295,15 @@ static int cl[] = {
 };
 
 static int
+getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data)
+{
+	SHA512_CTX *ctx = data;
+
+	SHA512_Update(ctx, &info->dlpi_addr, sizeof (info->dlpi_addr));
+	return 0;
+}
+
+static int
 getentropy_fallback(void *buf, size_t len)
 {
 	uint8_t results[SHA512_DIGEST_LENGTH];
@@ -324,6 +338,8 @@ getentropy_fallback(void *buf, size_t len)
 				cnt += (int)tv.tv_sec;
 				cnt += (int)tv.tv_usec;
 			}
+
+			dl_iterate_phdr(getentropy_phdr, &ctx);
 
 			for (ii = 0; ii < sizeof(cl)/sizeof(cl[0]); ii++)
 				HX(clock_gettime(cl[ii], &ts) == -1, ts);

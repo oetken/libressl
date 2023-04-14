@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "d2i_X509 3"
-.TH d2i_X509 3 "2014-07-13" "LibreSSL " "LibreSSL"
+.TH d2i_X509 3 "2014-07-15" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -227,7 +227,7 @@ Allocate and encode the \s-1DER\s0 encoding of an X509 structure:
 \&
 \& len = i2d_X509(x, NULL);
 \&
-\& buf = OPENSSL_malloc(len);
+\& buf = malloc(len);
 \&
 \& if (buf == NULL)
 \&        /* error */
@@ -300,7 +300,7 @@ mistake is to attempt to use a buffer directly as follows:
 \&
 \& len = i2d_X509(x, NULL);
 \&
-\& buf = OPENSSL_malloc(len);
+\& buf = malloc(len);
 \&
 \& if (buf == NULL)
 \&        /* error */
@@ -309,13 +309,13 @@ mistake is to attempt to use a buffer directly as follows:
 \&
 \& /* Other stuff ... */
 \&
-\& OPENSSL_free(buf);
+\& free(buf);
 .Ve
 .PP
 This code will result in \fBbuf\fR apparently containing garbage because
 it was incremented after the call to point after the data just written.
-Also \fBbuf\fR will no longer contain the pointer allocated by \fB\f(BIOPENSSL_malloc()\fB\fR
-and the subsequent call to \fB\f(BIOPENSSL_free()\fB\fR may well crash.
+Also \fBbuf\fR will no longer contain the pointer allocated by \fB\f(BImalloc()\fB\fR
+and the subsequent call to \fB\f(BIfree()\fB\fR may well crash.
 .PP
 The auto allocation feature (setting buf to \s-1NULL\s0) only works on OpenSSL
 0.9.7 and later. Attempts to use it on earlier versions will typically
