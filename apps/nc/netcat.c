@@ -1,4 +1,4 @@
-/* $OpenBSD: netcat.c,v 1.159 2016/07/07 14:09:44 jsing Exp $ */
+/* $OpenBSD: netcat.c,v 1.162 2016/08/13 13:09:10 jsing Exp $ */
 /*
  * Copyright (c) 2001 Eric Jackson <ericj@monkey.org>
  * Copyright (c) 2015 Bob Beck.  All rights reserved.
@@ -65,9 +65,7 @@
 #define POLL_NETIN 2
 #define POLL_STDOUT 3
 #define BUFSIZE 16384
-#ifndef DEFAULT_CA_FILE
 #define DEFAULT_CA_FILE "/etc/ssl/cert.pem"
-#endif
 
 #define TLS_LEGACY	(1 << 1)
 #define TLS_NOVERIFY	(1 << 2)
@@ -110,12 +108,6 @@ int	tls_cachanged;				/* Using non-default CA file */
 int     TLSopt;					/* TLS options */
 char	*tls_expectname;			/* required name in peer cert */
 char	*tls_expecthash;			/* required hash of peer cert */
-uint8_t *cacert;
-size_t  cacertlen;
-uint8_t *privkey;
-size_t  privkeylen;
-uint8_t *pubcert;
-size_t  pubcertlen;
 
 int timeout = -1;
 int family = AF_UNSPEC;
@@ -456,29 +448,22 @@ main(int argc, char *argv[])
 	}
 
 	if (usetls) {
-		if (Rflag && (cacert = tls_load_file(Rflag, &cacertlen, NULL)) == NULL)
-			errx(1, "unable to load root CA file %s", Rflag);
-		if (Cflag && (pubcert = tls_load_file(Cflag, &pubcertlen, NULL)) == NULL)
-			errx(1, "unable to load TLS certificate file %s", Cflag);
-		if (Kflag && (privkey = tls_load_file(Kflag, &privkeylen, NULL)) == NULL)
-			errx(1, "unable to load TLS key file %s", Kflag);
-
 		if (Pflag) {
-			if (pledge("stdio inet dns tty", NULL) == -1)
+			if (pledge("stdio inet dns tty rpath", NULL) == -1)
 				err(1, "pledge");
-		} else if (pledge("stdio inet dns", NULL) == -1)
+		} else if (pledge("stdio inet dns rpath", NULL) == -1)
 			err(1, "pledge");
 
 		if (tls_init() == -1)
 			errx(1, "unable to initialize TLS");
 		if ((tls_cfg = tls_config_new()) == NULL)
 			errx(1, "unable to allocate TLS config");
-		if (Rflag && tls_config_set_ca_mem(tls_cfg, cacert, cacertlen) == -1)
-			errx(1, "unable to set root CA file %s", Rflag);
-		if (Cflag && tls_config_set_cert_mem(tls_cfg, pubcert, pubcertlen) == -1)
-			errx(1, "unable to set TLS certificate file %s", Cflag);
-		if (Kflag && tls_config_set_key_mem(tls_cfg, privkey, privkeylen) == -1)
-			errx(1, "unable to set TLS key file %s", Kflag);
+		if (Rflag && tls_config_set_ca_file(tls_cfg, Rflag) == -1)
+			errx(1, "%s", tls_config_error(tls_cfg));
+		if (Cflag && tls_config_set_cert_file(tls_cfg, Cflag) == -1)
+			errx(1, "%s", tls_config_error(tls_cfg));
+		if (Kflag && tls_config_set_key_file(tls_cfg, Kflag) == -1)
+			errx(1, "%s", tls_config_error(tls_cfg));
 		if (TLSopt & TLS_LEGACY) {
 			tls_config_set_protocols(tls_cfg, TLS_PROTOCOLS_ALL);
 			tls_config_set_ciphers(tls_cfg, "all");
@@ -492,10 +477,13 @@ main(int argc, char *argv[])
 				errx(1, "-H and -T noverify may not be used"
 				    "together");
 			tls_config_insecure_noverifycert(tls_cfg);
-		} else {
-                        if (Rflag && access(Rflag, R_OK) == -1)
-                                errx(1, "unable to find root CA file %s", Rflag);
-                }
+		}
+
+		if (Pflag) {
+			if (pledge("stdio inet dns tty", NULL) == -1)
+				err(1, "pledge");
+		} else if (pledge("stdio inet dns", NULL) == -1)
+			err(1, "pledge");
 	}
 	if (lflag) {
 		struct tls *tls_cctx = NULL;
@@ -847,18 +835,17 @@ int
 remote_connect(const char *host, const char *port, struct addrinfo hints)
 {
 	struct addrinfo *res, *res0;
-	int s, error, save_errno;
+	int s = -1, error, save_errno;
 #ifdef SO_BINDANY
 	int on = 1;
 #endif
 
-	if ((error = getaddrinfo(host, port, &hints, &res)))
+	if ((error = getaddrinfo(host, port, &hints, &res0)))
 		errx(1, "getaddrinfo: %s", gai_strerror(error));
 
-	res0 = res;
-	do {
-		if ((s = socket(res0->ai_family, res0->ai_socktype |
-		    SOCK_NONBLOCK, res0->ai_protocol)) < 0)
+	for (res = res0; res; res = res->ai_next) {
+		if ((s = socket(res->ai_family, res->ai_socktype |
+		    SOCK_NONBLOCK, res->ai_protocol)) < 0)
 			continue;
 
 		/* Bind to a local port or source address if specified. */
@@ -870,7 +857,7 @@ remote_connect(const char *host, const char *port, struct addrinfo hints)
 			setsockopt(s, SOL_SOCKET, SO_BINDANY, &on, sizeof(on));
 #endif
 			memset(&ahints, 0, sizeof(struct addrinfo));
-			ahints.ai_family = res0->ai_family;
+			ahints.ai_family = res->ai_family;
 			ahints.ai_socktype = uflag ? SOCK_DGRAM : SOCK_STREAM;
 			ahints.ai_protocol = uflag ? IPPROTO_UDP : IPPROTO_TCP;
 			ahints.ai_flags = AI_PASSIVE;
@@ -883,9 +870,9 @@ remote_connect(const char *host, const char *port, struct addrinfo hints)
 			freeaddrinfo(ares);
 		}
 
-		set_common_sockopts(s, res0->ai_family);
+		set_common_sockopts(s, res->ai_family);
 
-		if (timeout_connect(s, res0->ai_addr, res0->ai_addrlen) == 0)
+		if (timeout_connect(s, res->ai_addr, res->ai_addrlen) == 0)
 			break;
 		if (vflag)
 			warn("connect to %s port %s (%s) failed", host, port,
@@ -895,9 +882,9 @@ remote_connect(const char *host, const char *port, struct addrinfo hints)
 		close(s);
 		errno = save_errno;
 		s = -1;
-	} while ((res0 = res0->ai_next) != NULL);
+	}
 
-	freeaddrinfo(res);
+	freeaddrinfo(res0);
 
 	return (s);
 }
@@ -939,7 +926,7 @@ int
 local_listen(char *host, char *port, struct addrinfo hints)
 {
 	struct addrinfo *res, *res0;
-	int s, save_errno;
+	int s = -1, save_errno;
 #ifdef SO_REUSEPORT
 	int ret, x = 1;
 #endif
@@ -955,13 +942,12 @@ local_listen(char *host, char *port, struct addrinfo hints)
 	if (host == NULL && hints.ai_family == AF_UNSPEC)
 		hints.ai_family = AF_INET;
 
-	if ((error = getaddrinfo(host, port, &hints, &res)))
+	if ((error = getaddrinfo(host, port, &hints, &res0)))
 		errx(1, "getaddrinfo: %s", gai_strerror(error));
 
-	res0 = res;
-	do {
-		if ((s = socket(res0->ai_family, res0->ai_socktype,
-		    res0->ai_protocol)) < 0)
+	for (res = res0; res; res = res->ai_next) {
+		if ((s = socket(res->ai_family, res->ai_socktype,
+		    res->ai_protocol)) < 0)
 			continue;
 
 #ifdef SO_REUSEPORT
@@ -970,24 +956,24 @@ local_listen(char *host, char *port, struct addrinfo hints)
 			err(1, NULL);
 #endif
 
-		set_common_sockopts(s, res0->ai_family);
+		set_common_sockopts(s, res->ai_family);
 
-		if (bind(s, (struct sockaddr *)res0->ai_addr,
-		    res0->ai_addrlen) == 0)
+		if (bind(s, (struct sockaddr *)res->ai_addr,
+		    res->ai_addrlen) == 0)
 			break;
 
 		save_errno = errno;
 		close(s);
 		errno = save_errno;
 		s = -1;
-	} while ((res0 = res0->ai_next) != NULL);
+	}
 
 	if (!uflag && s != -1) {
 		if (listen(s, 1) < 0)
 			err(1, "listen");
 	}
 
-	freeaddrinfo(res);
+	freeaddrinfo(res0);
 
 	return (s);
 }
