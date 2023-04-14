@@ -1,4 +1,4 @@
-/* $OpenBSD: tasn_dec.c,v 1.27.4.1 2015/12/04 04:21:36 beck Exp $ */
+/* $OpenBSD: tasn_dec.c,v 1.26 2015/03/19 14:00:22 tedu Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -166,10 +166,6 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
 	int otag;
 	int ret = 0;
 	ASN1_VALUE **pchptr;
-	int combine;
-
-	combine = aclass & ASN1_TFLG_COMBINE;
-	aclass &= ~ASN1_TFLG_COMBINE;
 
 	if (!pval)
 		return 0;
@@ -451,8 +447,7 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
 auxerr:
 	ASN1err(ASN1_F_ASN1_ITEM_EX_D2I, ASN1_R_AUX_ERROR);
 err:
-	if (combine == 0)
-		ASN1_item_ex_free(pval, it);
+	ASN1_item_ex_free(pval, it);
 	if (errtt)
 		ERR_asprintf_error_data("Field=%s, Type=%s", errtt->field_name,
 		    it->sname);
@@ -647,7 +642,7 @@ asn1_template_noexp_d2i(ASN1_VALUE **val, const unsigned char **in, long len,
 	} else {
 		/* Nothing special */
 		ret = ASN1_item_ex_d2i(val, &p, len, ASN1_ITEM_ptr(tt->item),
-		    -1, tt->flags & ASN1_TFLG_COMBINE, opt, ctx);
+		    -1, 0, opt, ctx);
 		if (!ret) {
 			ASN1err(ASN1_F_ASN1_TEMPLATE_NOEXP_D2I,
 			    ERR_R_NESTED_ASN1_ERROR);
@@ -860,7 +855,9 @@ asn1_ex_c2i(ASN1_VALUE **pval, const unsigned char *cont, int len, int utype,
 		break;
 
 	case V_ASN1_INTEGER:
+	case V_ASN1_NEG_INTEGER:
 	case V_ASN1_ENUMERATED:
+	case V_ASN1_NEG_ENUMERATED:
 		tint = (ASN1_INTEGER **)pval;
 		if (!c2i_ASN1_INTEGER(tint, &cont, len))
 			goto err;

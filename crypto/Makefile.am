@@ -1,9 +1,8 @@
 include $(top_srcdir)/Makefile.am.common
 
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/evp
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
-AM_CPPFLAGS += -I$(top_srcdir)/crypto
+AM_CFLAGS += -I$(top_srcdir)/crypto/asn1
+AM_CFLAGS += -I$(top_srcdir)/crypto/evp
+AM_CFLAGS += -I$(top_srcdir)/crypto/modes
 
 lib_LTLIBRARIES = libcrypto.la
 
@@ -15,8 +14,7 @@ EXTRA_DIST += compat/strcasecmp.c
 
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_CPPFLAGS = $(AM_CPPFLAGS)
-libcrypto_la_CPPFLAGS += -DLIBRESSL_INTERNAL
+libcrypto_la_CPPFLAGS = -DLIBRESSL_INTERNAL
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_HW_PADLOCK
 if OPENSSL_NO_ASM
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
@@ -120,7 +118,6 @@ libcrypto_la_SOURCES += mem_dbg.c
 libcrypto_la_SOURCES += o_init.c
 libcrypto_la_SOURCES += o_str.c
 libcrypto_la_SOURCES += o_time.c
-noinst_HEADERS += constant_time_locl.h
 noinst_HEADERS += cryptlib.h
 noinst_HEADERS += md32_common.h
 noinst_HEADERS += o_time.h
@@ -422,7 +419,6 @@ noinst_HEADERS += ec/ec_lcl.h
 libcrypto_la_SOURCES += ecdh/ech_err.c
 libcrypto_la_SOURCES += ecdh/ech_key.c
 libcrypto_la_SOURCES += ecdh/ech_lib.c
-libcrypto_la_SOURCES += ecdh/ech_ossl.c
 noinst_HEADERS += ecdh/ech_locl.h
 
 # ecdsa
@@ -505,7 +501,6 @@ libcrypto_la_SOURCES += evp/m_md4.c
 libcrypto_la_SOURCES += evp/m_md5.c
 libcrypto_la_SOURCES += evp/m_null.c
 libcrypto_la_SOURCES += evp/m_ripemd.c
-libcrypto_la_SOURCES += evp/m_sha.c
 libcrypto_la_SOURCES += evp/m_sha1.c
 libcrypto_la_SOURCES += evp/m_sigver.c
 libcrypto_la_SOURCES += evp/m_streebog.c
@@ -699,8 +694,6 @@ libcrypto_la_SOURCES += sha/sha1_one.c
 libcrypto_la_SOURCES += sha/sha1dgst.c
 libcrypto_la_SOURCES += sha/sha256.c
 libcrypto_la_SOURCES += sha/sha512.c
-libcrypto_la_SOURCES += sha/sha_dgst.c
-libcrypto_la_SOURCES += sha/sha_one.c
 noinst_HEADERS += sha/sha_locl.h
 
 # stack

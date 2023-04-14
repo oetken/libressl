@@ -148,9 +148,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-man1dir = $(mandir)/man1
-am__installdirs = "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man3dir)"
 man3dir = $(mandir)/man3
+am__installdirs = "$(DESTDIR)$(man3dir)"
 NROFF = nroff
 MANS = $(dist_man_MANS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
@@ -280,7 +279,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 EXTRA_DIST = CMakeLists.txt
-dist_man_MANS = openssl.1 tls_init.3 BIO_f_ssl.3 SSL_CIPHER_get_name.3 \
+dist_man_MANS = tls_init.3 BIO_f_ssl.3 SSL_CIPHER_get_name.3 \
 	SSL_COMP_add_compression_method.3 \
 	SSL_CTX_add_extra_chain_cert.3 SSL_CTX_add_session.3 \
 	SSL_CTX_ctrl.3 SSL_CTX_flush_sessions.3 SSL_CTX_free.3 \
@@ -417,49 +416,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-man1: $(dist_man_MANS)
-	@$(NORMAL_INSTALL)
-	@list1=''; \
-	list2='$(dist_man_MANS)'; \
-	test -n "$(man1dir)" \
-	  && test -n "`echo $$list1$$list2`" \
-	  || exit 0; \
-	echo " $(MKDIR_P) '$(DESTDIR)$(man1dir)'"; \
-	$(MKDIR_P) "$(DESTDIR)$(man1dir)" || exit 1; \
-	{ for i in $$list1; do echo "$$i"; done;  \
-	if test -n "$$list2"; then \
-	  for i in $$list2; do echo "$$i"; done \
-	    | sed -n '/\.1[a-z]*$$/p'; \
-	fi; \
-	} | while read p; do \
-	  if test -f $$p; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; echo "$$p"; \
-	done | \
-	sed -e 'n;s,.*/,,;p;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
-	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,' | \
-	sed 'N;N;s,\n, ,g' | { \
-	list=; while read file base inst; do \
-	  if test "$$base" = "$$inst"; then list="$$list $$file"; else \
-	    echo " $(INSTALL_DATA) '$$file' '$(DESTDIR)$(man1dir)/$$inst'"; \
-	    $(INSTALL_DATA) "$$file" "$(DESTDIR)$(man1dir)/$$inst" || exit $$?; \
-	  fi; \
-	done; \
-	for i in $$list; do echo "$$i"; done | $(am__base_list) | \
-	while read files; do \
-	  test -z "$$files" || { \
-	    echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(man1dir)'"; \
-	    $(INSTALL_DATA) $$files "$(DESTDIR)$(man1dir)" || exit $$?; }; \
-	done; }
-
-uninstall-man1:
-	@$(NORMAL_UNINSTALL)
-	@list=''; test -n "$(man1dir)" || exit 0; \
-	files=`{ for i in $$list; do echo "$$i"; done; \
-	l2='$(dist_man_MANS)'; for i in $$l2; do echo "$$i"; done | \
-	  sed -n '/\.1[a-z]*$$/p'; \
-	} | sed -e 's,.*/,,;h;s,.*\.,,;s,^[^1][0-9a-z]*$$,1,;x' \
-	      -e 's,\.[0-9a-z]*$$,,;$(transform);G;s,\n,.,'`; \
-	dir='$(DESTDIR)$(man1dir)'; $(am__uninstall_files_from_dir)
 install-man3: $(dist_man_MANS)
 	@$(NORMAL_INSTALL)
 	@list1=''; \
@@ -544,7 +500,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(MANS)
 installdirs:
-	for dir in "$(DESTDIR)$(man1dir)" "$(DESTDIR)$(man3dir)"; do \
+	for dir in "$(DESTDIR)$(man3dir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -614,7 +570,7 @@ install-info: install-info-am
 
 install-info-am:
 
-install-man: install-man1 install-man3
+install-man: install-man3
 
 install-pdf: install-pdf-am
 
@@ -644,7 +600,7 @@ ps-am:
 
 uninstall-am: uninstall-local uninstall-man
 
-uninstall-man: uninstall-man1 uninstall-man3
+uninstall-man: uninstall-man3
 
 .MAKE: install-am install-data-am install-strip
 
@@ -654,13 +610,12 @@ uninstall-man: uninstall-man1 uninstall-man3
 	install install-am install-data install-data-am \
 	install-data-hook install-dvi install-dvi-am install-exec \
 	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-man1 install-man3 \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	tags-am uninstall uninstall-am uninstall-local uninstall-man \
-	uninstall-man1 uninstall-man3
+	install-info-am install-man install-man3 install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am tags-am uninstall \
+	uninstall-am uninstall-local uninstall-man uninstall-man3
 
 .PRECIOUS: Makefile
 
@@ -1112,7 +1067,6 @@ install-data-hook:
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_md5.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_md_null.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_ripemd160.3
-	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha1.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha224.3
 	ln -sf EVP_DigestInit.3 $(DESTDIR)$(mandir)/man3/EVP_sha256.3
@@ -1770,8 +1724,11 @@ install-data-hook:
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_free.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifycert.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyname.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifytime.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_new.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_parse_protocols.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_prefer_ciphers_client.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_prefer_ciphers_server.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_set_ca_file.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_set_ca_mem.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_set_ca_path.3
@@ -1785,14 +1742,24 @@ install-data-hook:
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_set_protocols.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_set_verify_depth.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_verify.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_verify_client.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_config_verify_client_optional.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_configure.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_conn_cipher.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_conn_version.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_connect.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_connect_fds.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_connect_servername.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_connect_socket.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_error.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_free.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_handshake.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_load_file.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_contains_name.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_hash.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_issuer.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_provided.3
+	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_peer_cert_subject.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_read.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_reset.3
 	ln -sf tls_init.3 $(DESTDIR)$(mandir)/man3/tls_server.3
@@ -2275,7 +2242,6 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_md5.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_md_null.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_ripemd160.3
-	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha1.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha224.3
 	-rm -f $(DESTDIR)$(mandir)/man3/EVP_sha256.3
@@ -2933,8 +2899,11 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_free.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifycert.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyname.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifytime.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_new.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_parse_protocols.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_prefer_ciphers_client.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_prefer_ciphers_server.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_file.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_mem.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_path.3
@@ -2948,14 +2917,24 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_protocols.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_verify_depth.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_verify.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_verify_client.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_config_verify_client_optional.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_configure.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_conn_cipher.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_conn_version.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_connect.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_connect_fds.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_connect_servername.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_connect_socket.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_error.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_free.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_handshake.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_load_file.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_contains_name.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_hash.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_issuer.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_provided.3
+	-rm -f $(DESTDIR)$(mandir)/man3/tls_peer_cert_subject.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_read.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_reset.3
 	-rm -f $(DESTDIR)$(mandir)/man3/tls_server.3
