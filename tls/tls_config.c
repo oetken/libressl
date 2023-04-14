@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_config.c,v 1.36 2017/01/31 16:18:57 beck Exp $ */
+/* $OpenBSD: tls_config.c,v 1.41 2017/07/06 17:12:22 jsing Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -67,6 +67,14 @@ tls_keypair_new(void)
 	return calloc(1, sizeof(struct tls_keypair));
 }
 
+static void
+tls_keypair_clear_key(struct tls_keypair *keypair)
+{
+	freezero(keypair->key_mem, keypair->key_len);
+	keypair->key_mem = NULL;
+	keypair->key_len = 0;
+}
+
 static int
 tls_keypair_set_cert_file(struct tls_keypair *keypair, struct tls_error *error,
     const char *cert_file)
@@ -86,8 +94,7 @@ static int
 tls_keypair_set_key_file(struct tls_keypair *keypair, struct tls_error *error,
     const char *key_file)
 {
-	if (keypair->key_mem != NULL)
-		explicit_bzero(keypair->key_mem, keypair->key_len);
+	tls_keypair_clear_key(keypair);
 	return tls_config_load_file(error, "key", key_file,
 	    &keypair->key_mem, &keypair->key_len);
 }
@@ -96,8 +103,7 @@ static int
 tls_keypair_set_key_mem(struct tls_keypair *keypair, const uint8_t *key,
     size_t len)
 {
-	if (keypair->key_mem != NULL)
-		explicit_bzero(keypair->key_mem, keypair->key_len);
+	tls_keypair_clear_key(keypair);
 	return set_mem(&keypair->key_mem, &keypair->key_len, key, len);
 }
 
@@ -135,6 +141,7 @@ tls_keypair_free(struct tls_keypair *keypair)
 	free(keypair->cert_mem);
 	free(keypair->key_mem);
 	free(keypair->ocsp_staple);
+	free(keypair->cert_hash);
 
 	free(keypair);
 }
@@ -181,9 +188,7 @@ tls_config_load_file(struct tls_error *error, const char *filetype,
  fail:
 	if (fd != -1)
 		close(fd);
-	if (*buf != NULL)
-		explicit_bzero(*buf, *len);
-	free(*buf);
+	freezero(*buf, *len);
 	*buf = NULL;
 	*len = 0;
 
@@ -201,6 +206,8 @@ tls_config_new(void)
 
 	if ((config->keypair = tls_keypair_new()) == NULL)
 		goto err;
+
+	config->refcount = 1;
 
 	/*
 	 * Default configuration.
@@ -247,6 +254,9 @@ tls_config_free(struct tls_config *config)
 	if (config == NULL)
 		return;
 
+	if (--config->refcount > 0)
+		return;
+
 	for (kp = config->keypair; kp != NULL; kp = nkp) {
 		nkp = kp->next;
 		tls_keypair_free(kp);
@@ -258,6 +268,7 @@ tls_config_free(struct tls_config *config)
 	free((char *)config->ca_mem);
 	free((char *)config->ca_path);
 	free((char *)config->ciphers);
+	free((char *)config->crl_mem);
 
 	free(config);
 }
@@ -289,6 +300,7 @@ tls_config_clear_keys(struct tls_config *config)
 		tls_keypair_clear(kp);
 
 	tls_config_set_ca_mem(config, NULL, 0);
+	tls_config_set_crl_mem(config, NULL, 0);
 }
 
 int
@@ -569,6 +581,20 @@ tls_config_set_ciphers(struct tls_config *config, const char *ciphers)
 }
 
 int
+tls_config_set_crl_file(struct tls_config *config, const char *crl_file)
+{
+	return tls_config_load_file(&config->error, "CRL", crl_file,
+	    &config->crl_mem, &config->crl_len);
+}
+
+int
+tls_config_set_crl_mem(struct tls_config *config, const uint8_t *crl,
+    size_t len)
+{
+	return set_mem(&config->crl_mem, &config->crl_len, crl, len);
+}
+
+int
 tls_config_set_dheparams(struct tls_config *config, const char *params)
 {
 	int keylen;
@@ -759,6 +785,12 @@ void
 tls_config_verify_client_optional(struct tls_config *config)
 {
 	config->verify_client = 2;
+}
+
+void
+tls_config_skip_private_key_check(struct tls_config *config)
+{
+	config->skip_private_key_check = 1;
 }
 
 int
