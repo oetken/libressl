@@ -79,19 +79,20 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/depcomp $(noinst_HEADERS)
-@NO_STRLCAT_TRUE@am__append_1 = compat/strlcat.c
-@NO_STRLCPY_TRUE@am__append_2 = compat/strlcpy.c
-@NO_REALLOCARRAY_TRUE@am__append_3 = compat/reallocarray.c
-@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_4 = compat/timingsafe_memcmp.c
-@NO_TIMINGSAFE_BCMP_TRUE@am__append_5 = compat/timingsafe_bcmp.c
-@NO_ARC4RANDOM_BUF_TRUE@am__append_6 = compat/arc4random.c
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_LINUX_TRUE@am__append_7 = compat/getentropy_linux.c
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_DARWIN_TRUE@am__append_8 = compat/getentropy_osx.c
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_SOLARIS_TRUE@am__append_9 = compat/getentropy_solaris.c
-@NO_ISSETUGID_TRUE@am__append_10 = compat/issetugid_linux.c
+@NO_EXPLICIT_BZERO_TRUE@am__append_1 = compat/explicit_bzero.c
+@NO_STRLCAT_TRUE@am__append_2 = compat/strlcat.c
+@NO_STRLCPY_TRUE@am__append_3 = compat/strlcpy.c
+@NO_REALLOCARRAY_TRUE@am__append_4 = compat/reallocarray.c
+@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_5 = compat/timingsafe_memcmp.c
+@NO_TIMINGSAFE_BCMP_TRUE@am__append_6 = compat/timingsafe_bcmp.c
+@NO_ARC4RANDOM_BUF_TRUE@am__append_7 = compat/arc4random.c
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_8 = compat/getentropy_linux.c
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_9 = compat/getentropy_osx.c
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_10 = compat/getentropy_solaris.c
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_11 = compat/getentropy_win.c
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__append_12 = compat/issetugid_linux.c
 subdir = crypto
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -138,7 +139,8 @@ am__libcompat_la_SOURCES_DIST = compat/strlcat.c compat/strlcpy.c \
 	compat/reallocarray.c compat/timingsafe_memcmp.c \
 	compat/timingsafe_bcmp.c compat/arc4random.c \
 	compat/getentropy_linux.c compat/getentropy_osx.c \
-	compat/getentropy_solaris.c compat/issetugid_linux.c
+	compat/getentropy_solaris.c compat/getentropy_win.c \
+	compat/issetugid_linux.c
 am__dirstamp = $(am__leading_dot)dirstamp
 @NO_STRLCAT_TRUE@am__objects_1 = compat/libcompat_la-strlcat.lo
 @NO_STRLCPY_TRUE@am__objects_2 = compat/libcompat_la-strlcpy.lo
@@ -148,15 +150,15 @@ am__dirstamp = $(am__leading_dot)dirstamp
 @NO_TIMINGSAFE_BCMP_TRUE@am__objects_5 = compat/libcompat_la-timingsafe_bcmp.lo
 @NO_ARC4RANDOM_BUF_TRUE@am__objects_6 =  \
 @NO_ARC4RANDOM_BUF_TRUE@	compat/libcompat_la-arc4random.lo
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_LINUX_TRUE@am__objects_7 = compat/libcompat_la-getentropy_linux.lo
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_DARWIN_TRUE@am__objects_8 = compat/libcompat_la-getentropy_osx.lo
-@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@@TARGET_SOLARIS_TRUE@am__objects_9 = compat/libcompat_la-getentropy_solaris.lo
-@NO_ISSETUGID_TRUE@am__objects_10 =  \
-@NO_ISSETUGID_TRUE@	compat/libcompat_la-issetugid_linux.lo
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_7 = compat/libcompat_la-getentropy_linux.lo
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_8 = compat/libcompat_la-getentropy_osx.lo
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_9 = compat/libcompat_la-getentropy_solaris.lo
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_10 = compat/libcompat_la-getentropy_win.lo
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__objects_11 = compat/libcompat_la-issetugid_linux.lo
 am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
-	$(am__objects_9) $(am__objects_10)
+	$(am__objects_9) $(am__objects_10) $(am__objects_11)
 libcompat_la_OBJECTS = $(am_libcompat_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -166,8 +168,9 @@ libcompat_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libcompat_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 libcompatnoopt_la_LIBADD =
-am_libcompatnoopt_la_OBJECTS =  \
-	compat/libcompatnoopt_la-explicit_bzero.lo
+am__libcompatnoopt_la_SOURCES_DIST = compat/explicit_bzero.c
+@NO_EXPLICIT_BZERO_TRUE@am__objects_12 = compat/libcompatnoopt_la-explicit_bzero.lo
+am_libcompatnoopt_la_OBJECTS = $(am__objects_12)
 libcompatnoopt_la_OBJECTS = $(am_libcompatnoopt_la_OBJECTS)
 libcompatnoopt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -488,7 +491,7 @@ am__v_CCLD_1 =
 SOURCES = $(libcompat_la_SOURCES) $(libcompatnoopt_la_SOURCES) \
 	$(libcrypto_la_SOURCES) $(EXTRA_libcrypto_la_SOURCES)
 DIST_SOURCES = $(am__libcompat_la_SOURCES_DIST) \
-	$(libcompatnoopt_la_SOURCES) $(libcrypto_la_SOURCES) \
+	$(am__libcompatnoopt_la_SOURCES_DIST) $(libcrypto_la_SOURCES) \
 	$(EXTRA_libcrypto_la_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
@@ -561,6 +564,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
+NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
 NO_GETENTROPY = @NO_GETENTROPY@
 NO_ISSETUGID = @NO_ISSETUGID@
 NO_REALLOCARRAY = @NO_REALLOCARRAY@
@@ -637,11 +641,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
-target = @target@
 target_alias = @target_alias@
-target_cpu = @target_cpu@
-target_os = @target_os@
-target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
@@ -657,27 +657,30 @@ noinst_LTLIBRARIES = libcompat.la libcompatnoopt.la
 
 # compatibility functions that need to be built without optimizations
 libcompatnoopt_la_CFLAGS = -O0
-libcompatnoopt_la_SOURCES = compat/explicit_bzero.c
+libcompatnoopt_la_SOURCES = $(am__append_1)
 
 # other compatibility functions
 libcompat_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS)
-libcompat_la_SOURCES = $(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4) $(am__append_5) $(am__append_6) \
-	$(am__append_7) $(am__append_8) $(am__append_9) \
-	$(am__append_10)
+libcompat_la_SOURCES = $(am__append_2) $(am__append_3) $(am__append_4) \
+	$(am__append_5) $(am__append_6) $(am__append_7) \
+	$(am__append_8) $(am__append_9) $(am__append_10) \
+	$(am__append_11) $(am__append_12)
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
 noinst_HEADERS = des/ncbc_enc.c compat/thread_private.h \
-	compat/chacha_private.h cryptlib.h md32_common.h o_time.h \
-	aes/aes_locl.h asn1/asn1_locl.h asn1/charmap.h bf/bf_locl.h \
-	bf/bf_pi.h bn/bn_lcl.h bn/bn_prime.h cast/cast_lcl.h \
-	cast/cast_s.h conf/conf_def.h des/des_locl.h des/spr.h \
-	dsa/dsa_locl.h ec/ec_lcl.h ecdh/ech_locl.h ecdsa/ecs_locl.h \
-	engine/eng_int.h evp/evp_locl.h idea/idea_lcl.h md4/md4_locl.h \
-	md5/md5_locl.h modes/modes_lcl.h objects/obj_dat.h \
-	objects/obj_xref.h rc2/rc2_locl.h rc4/rc4_locl.h \
-	ripemd/rmd_locl.h ripemd/rmdconst.h rsa/rsa_locl.h \
-	sha/sha_locl.h ui/ui_locl.h whrlpool/wp_locl.h x509/x509_lcl.h \
-	x509v3/ext_dat.h x509v3/pcy_int.h
+	compat/arc4random.h compat/arc4random_linux.h \
+	compat/arc4random_osx.h compat/arc4random_solaris.h \
+	compat/arc4random_win.h compat/chacha_private.h cryptlib.h \
+	md32_common.h o_time.h aes/aes_locl.h asn1/asn1_locl.h \
+	asn1/charmap.h bf/bf_locl.h bf/bf_pi.h bn/bn_lcl.h \
+	bn/bn_prime.h cast/cast_lcl.h cast/cast_s.h conf/conf_def.h \
+	des/des_locl.h des/spr.h dsa/dsa_locl.h ec/ec_lcl.h \
+	ecdh/ech_locl.h ecdsa/ecs_locl.h engine/eng_int.h \
+	evp/evp_locl.h idea/idea_lcl.h md4/md4_locl.h md5/md5_locl.h \
+	modes/modes_lcl.h objects/obj_dat.h objects/obj_xref.h \
+	rc2/rc2_locl.h rc4/rc4_locl.h ripemd/rmd_locl.h \
+	ripemd/rmdconst.h rsa/rsa_locl.h sha/sha_locl.h ui/ui_locl.h \
+	whrlpool/wp_locl.h x509/x509_lcl.h x509v3/ext_dat.h \
+	x509v3/pcy_int.h
 libcrypto_la_SOURCES = cpt_err.c cryptlib.c cversion.c ex_data.c \
 	malloc-wrapper.c mem_clr.c mem_dbg.c o_init.c o_str.c o_time.c \
 	aes/aes_cbc.c aes/aes_cfb.c aes/aes_core.c aes/aes_ctr.c \
@@ -925,6 +928,8 @@ compat/libcompat_la-getentropy_linux.lo: compat/$(am__dirstamp) \
 compat/libcompat_la-getentropy_osx.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-getentropy_solaris.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
+compat/libcompat_la-getentropy_win.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-issetugid_linux.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
@@ -2529,6 +2534,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_linux.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_osx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_solaris.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_win.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-issetugid_linux.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-strlcat.Plo@am__quote@
@@ -2982,6 +2988,13 @@ compat/libcompat_la-getentropy_solaris.lo: compat/getentropy_solaris.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/getentropy_solaris.c' object='compat/libcompat_la-getentropy_solaris.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-getentropy_solaris.lo `test -f 'compat/getentropy_solaris.c' || echo '$(srcdir)/'`compat/getentropy_solaris.c
+
+compat/libcompat_la-getentropy_win.lo: compat/getentropy_win.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-getentropy_win.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-getentropy_win.Tpo -c -o compat/libcompat_la-getentropy_win.lo `test -f 'compat/getentropy_win.c' || echo '$(srcdir)/'`compat/getentropy_win.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-getentropy_win.Tpo compat/$(DEPDIR)/libcompat_la-getentropy_win.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/getentropy_win.c' object='compat/libcompat_la-getentropy_win.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-getentropy_win.lo `test -f 'compat/getentropy_win.c' || echo '$(srcdir)/'`compat/getentropy_win.c
 
 compat/libcompat_la-issetugid_linux.lo: compat/issetugid_linux.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-issetugid_linux.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-issetugid_linux.Tpo -c -o compat/libcompat_la-issetugid_linux.lo `test -f 'compat/issetugid_linux.c' || echo '$(srcdir)/'`compat/issetugid_linux.c

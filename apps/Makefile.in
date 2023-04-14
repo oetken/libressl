@@ -79,7 +79,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/depcomp $(noinst_HEADERS)
 bin_PROGRAMS = openssl$(EXEEXT)
@@ -134,8 +133,8 @@ am_openssl_OBJECTS = $(am__objects_1) openssl-apps.$(OBJEXT) \
 openssl_OBJECTS = $(am_openssl_OBJECTS)
 am__DEPENDENCIES_1 =
 openssl_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(top_builddir)/crypto/libcrypto.la \
-	$(top_builddir)/ssl/libssl.la
+	$(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -250,6 +249,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
+NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
 NO_GETENTROPY = @NO_GETENTROPY@
 NO_ISSETUGID = @NO_ISSETUGID@
 NO_REALLOCARRAY = @NO_REALLOCARRAY@
@@ -326,19 +326,15 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
-target = @target@
 target_alias = @target_alias@
-target_cpu = @target_cpu@
-target_os = @target_os@
-target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CPPFLAGS = -I$(top_srcdir)/include -DOPENSSL_NO_ASM \
 	-DHAVE_CRYPTODEV -DLIBRESSL_INTERNAL
 openssl_CFLAGS = $(USER_CFLAGS)
-openssl_LDADD = $(PLATFORM_LDADD) $(top_builddir)/crypto/libcrypto.la \
-	$(top_builddir)/ssl/libssl.la
+openssl_LDADD = $(PLATFORM_LDADD) $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
 openssl_SOURCES = $(am__append_1) apps.c asn1pars.c ca.c ciphers.c \
 	cms.c crl.c crl2p7.c dgst.c dh.c dhparam.c dsa.c dsaparam.c \
 	ec.c ecparam.c enc.c engine.c errstr.c gendh.c gendsa.c \

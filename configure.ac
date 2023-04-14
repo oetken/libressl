@@ -1,5 +1,5 @@
-AC_INIT([libressl], [2.0.2])
-AC_CANONICAL_TARGET
+AC_INIT([libressl], [2.0.3])
+AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -8,29 +8,33 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_SUBST([USER_CFLAGS], "-O2 $CFLAGS")
 CFLAGS="$CFLAGS -Wall -std=c99 -g"
 
-case $target_os in
+case $host_os in
 	*darwin*)
-		TARGET_OS=darwin;
+		HOST_OS=darwin;
 		LDFLAGS="$LDFLAGS -Qunused-arguments"
 		;;
 	*linux*)
-		TARGET_OS=linux;
+		HOST_OS=linux;
 		CFLAGS="$CFLAGS -D_BSD_SOURCE -D_POSIX_SOURCE -D_GNU_SOURCE"
 		;;
 	*solaris*)
-		TARGET_OS=solaris;
+		HOST_OS=solaris;
 		CFLAGS="$CFLAGS -D__EXTENSIONS__ -D_XOPEN_SOURCE=600 -DBSD_COMP"
 		AC_SUBST([PLATFORM_LDADD], ['-lnsl -lsocket'])
 		;;
 	*openbsd*)
 		AC_DEFINE([HAVE_ATTRIBUTE__BOUNDED__], [1], [OpenBSD gcc has bounded])
 		;;
+	*mingw*)
+		HOST_OS=win32
+		;;
 	*) ;;
 esac
 
-AM_CONDITIONAL(TARGET_DARWIN, test x$TARGET_OS = xdarwin)
-AM_CONDITIONAL(TARGET_LINUX, test x$TARGET_OS = xlinux)
-AM_CONDITIONAL(TARGET_SOLARIS, test x$TARGET_OS = xsolaris)
+AM_CONDITIONAL(HOST_DARWIN, test x$HOST_OS = xdarwin)
+AM_CONDITIONAL(HOST_LINUX, test x$HOST_OS = xlinux)
+AM_CONDITIONAL(HOST_SOLARIS, test x$HOST_OS = xsolaris)
+AM_CONDITIONAL(HOST_WIN, test x$HOST_OS = xwin)
 
 AC_CHECK_FUNC([clock_gettime],,
 	[AC_SEARCH_LIBS([clock_gettime],[rt posix4])])
@@ -39,6 +43,16 @@ AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_PROG_CC_STDC
 AM_PROG_CC_C_O
+
+save_cflags="$CFLAGS"
+CFLAGS=-Wno-pointer-sign
+AC_MSG_CHECKING([whether CC supports -Wno-pointer-sign])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+	[AC_MSG_RESULT([yes])]
+	[AM_CFLAGS=-Wno-pointer-sign],
+	[AC_MSG_RESULT([no])]
+)
+CFLAGS="$save_cflags $AM_CFLAGS"
 
 AC_CHECK_FUNC(strlcpy,[AC_SEARCH_LIBS(strlcpy,, [NO_STRLCPY=],
 			  [NO_STRLCPY=yes])], [NO_STRLCPY=yes])
@@ -72,8 +86,8 @@ AM_CONDITIONAL(NO_ARC4RANDOM_BUF, test "x$NO_ARC4RANDOM_BUF" = "xyes")
 
 # overrides for arc4random_buf implementations with known issues
 AM_CONDITIONAL(NO_ARC4RANDOM_BUF,
-   test x$TARGET_OS = xdarwin \
-     -o x$TARGET_OS = xsolaris \
+   test x$HOST_OS = xdarwin \
+     -o x$HOST_OS = xsolaris \
 	 -o x$NO_ARC4RANDOM_BUF = xyes)
 
 AC_CHECK_FUNC(getentropy,[AC_SEARCH_LIBS(write,, [NO_GETENTROPY=],
@@ -91,11 +105,18 @@ AC_CHECK_FUNC(strtonum,[AC_SEARCH_LIBS(write,, [NO_STRTONUM=],
 AC_SUBST(NO_STRTONUM)
 AM_CONDITIONAL(NO_STRTONUM, test "x$NO_STRTONUM" = "xyes")
 
+AC_CHECK_FUNC(explicit_bzero,[AC_SEARCH_LIBS(write,, [NO_EXPLICIT_BZERO=],
+			  [NO_EXPLICIT_BZERO=yes])], [NO_EXPLICIT_BZERO=yes])
+AC_SUBST(NO_EXPLICIT_BZERO)
+AM_CONDITIONAL(NO_EXPLICIT_BZERO, test "x$NO_EXPLICIT_BZERO" = "xyes")
+
 AC_CHECK_FUNC(getauxval, AC_DEFINE(HAVE_GETAUXVAL))
 
 AC_CHECK_FUNC(funopen, AC_DEFINE(HAVE_FUNOPEN))
 
 AC_CHECK_HEADER(sys/sysctl.h, AC_DEFINE(HAVE_SYS_SYSCTL_H))
+
+AC_CHECK_HEADER(err.h, AC_DEFINE(HAVE_ERR_H))
 
 AC_ARG_WITH([openssldir],
 	AS_HELP_STRING([--with-openssldir], [Set the default openssl directory]),

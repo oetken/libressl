@@ -1,4 +1,4 @@
-/*	$OpenBSD: getentropy_linux.c,v 1.23 2014/07/13 13:03:09 deraadt Exp $	*/
+/*	$OpenBSD: getentropy_linux.c,v 1.31 2014/07/21 23:34:54 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2014 Theo de Raadt <deraadt@openbsd.org>
@@ -20,8 +20,8 @@
  * http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man2/getentropy.2
  */
 
-#define	_POSIX_C_SOURCE 199309L
-#define	_GNU_SOURCE     1
+#define	_POSIX_C_SOURCE	199309L
+#define	_GNU_SOURCE	1
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
@@ -73,12 +73,10 @@
 
 int	getentropy(void *buf, size_t len);
 
-#if 0
-extern int main(int, char *argv[]);
-#endif
 static int gotdata(char *buf, size_t len);
+static int getentropy_getrandom(void *buf, size_t len);
 static int getentropy_urandom(void *buf, size_t len);
-#ifdef CTL_MAXNAME
+#ifdef SYS__sysctl
 static int getentropy_sysctl(void *buf, size_t len);
 #endif
 static int getentropy_fallback(void *buf, size_t len);
@@ -95,6 +93,13 @@ getentropy(void *buf, size_t len)
 	}
 
 	/*
+	 * Try descriptor-less getrandom()
+	 */
+	ret = getentropy_getrandom(buf, len);
+	if (ret != -1)
+		return (ret);
+
+	/*
 	 * Try to get entropy with /dev/urandom
 	 *
 	 * This can fail if the process is inside a chroot or if file
@@ -104,7 +109,7 @@ getentropy(void *buf, size_t len)
 	if (ret != -1)
 		return (ret);
 
-#ifdef CTL_MAXNAME
+#ifdef SYS__sysctl
 	/*
 	 * Try to use sysctl CTL_KERN, KERN_RANDOM, RANDOM_UUID.
 	 * sysctl is a failsafe API, so it guarantees a result.  This
@@ -126,7 +131,7 @@ getentropy(void *buf, size_t len)
 	ret = getentropy_sysctl(buf, len);
 	if (ret != -1)
 		return (ret);
-#endif /* CTL_MAXNAME */
+#endif /* SYS__sysctl */
 
 	/*
 	 * Entropy collection via /dev/urandom and sysctl have failed.
@@ -177,6 +182,28 @@ gotdata(char *buf, size_t len)
 	if (any_set == 0)
 		return -1;
 	return 0;
+}
+
+static int
+getentropy_getrandom(void *buf, size_t len)
+{
+#if 0
+
+/* Hand-definitions until the API becomes commonplace */
+#ifndef SYS__getrandom
+#ifdef __LP64__
+#define SYS__getrandom 317
+#else
+#define SYS__getrandom 354
+#endif
+#endif
+	if (len > 256)
+		return (-1);
+	ret = syscall(SYS__getrandom, buf, len, 0);
+	if (ret == len)
+		return (0);
+#endif
+	return -1;
 }
 
 static int
@@ -237,7 +264,7 @@ nodevrandom:
 	return -1;
 }
 
-#ifdef CTL_MAXNAME
+#ifdef SYS__sysctl
 static int
 getentropy_sysctl(void *buf, size_t len)
 {
@@ -252,7 +279,7 @@ getentropy_sysctl(void *buf, size_t len)
 		struct __sysctl_args args = {
 			.name = mib,
 			.nlen = 3,
-			.oldval = buf + i,
+			.oldval = (char *)buf + i,
 			.oldlenp = &chunk,
 		};
 		if (syscall(SYS__sysctl, &args) != 0)
@@ -267,7 +294,7 @@ sysctlfailed:
 	errno = EIO;
 	return -1;
 }
-#endif /* CTL_MAXNAME */
+#endif /* SYS__sysctl */
 
 static int cl[] = {
 	CLOCK_REALTIME,
@@ -360,9 +387,6 @@ getentropy_fallback(void *buf, size_t len)
 			HX(sigprocmask(SIG_BLOCK, NULL, &sigset) == -1,
 			    sigset);
 
-#if 0
-			HF(main);		/* an addr in program */
-#endif
 			HF(getentropy);	/* an addr in this library */
 			HF(printf);		/* an addr in libc */
 			p = (char *)&p;
@@ -486,6 +510,7 @@ getentropy_fallback(void *buf, size_t len)
 
 			HD(cnt);
 		}
+#ifdef HAVE_GETAUXVAL
 #ifdef AT_RANDOM
 		/* Not as random as you think but we take what we are given */
 		p = (char *) getauxval(AT_RANDOM);
@@ -502,12 +527,14 @@ getentropy_fallback(void *buf, size_t len)
 		if (p)
 			HD(p);
 #endif
+#endif
 
 		SHA512_Final(results, &ctx);
 		memcpy((char *)buf + i, results, min(sizeof(results), len - i));
 		i += min(sizeof(results), len - i);
 	}
-	memset(results, 0, sizeof results);
+	explicit_bzero(&ctx, sizeof ctx);
+	explicit_bzero(results, sizeof results);
 	if (gotdata(buf, len) == 0) {
 		errno = save_errno;
 		return 0;		/* satisfied */

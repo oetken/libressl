@@ -78,7 +78,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-target_triplet = @target@
 subdir = include
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(noinst_HEADERS)
@@ -219,6 +218,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
+NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
 NO_GETENTROPY = @NO_GETENTROPY@
 NO_ISSETUGID = @NO_ISSETUGID@
 NO_REALLOCARRAY = @NO_REALLOCARRAY@
@@ -295,17 +295,13 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
-target = @target@
 target_alias = @target_alias@
-target_cpu = @target_cpu@
-target_os = @target_os@
-target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = openssl
-noinst_HEADERS = pqueue.h stdlib.h string.h unistd.h machine/endian.h \
-	sys/types.h
+noinst_HEADERS = err.h pqueue.h stdlib.h string.h unistd.h \
+	machine/endian.h sys/types.h
 all: all-recursive
 
 .SUFFIXES:

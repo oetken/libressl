@@ -77,7 +77,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-target_triplet = @target@
 DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 	$(srcdir)/Makefile.am $(top_srcdir)/depcomp \
 	$(top_srcdir)/test-driver
@@ -102,10 +101,10 @@ check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) \
 	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
 	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
 	ectest$(EXEEXT) enginetest$(EXEEXT) evptest$(EXEEXT) \
-	explicit_bzero$(EXEEXT) exptest$(EXEEXT) fork_rand$(EXEEXT) \
-	gcm128test$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
-	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
-	mdc2test$(EXEEXT) mont$(EXEEXT) pkcs7test$(EXEEXT) \
+	explicit_bzero$(EXEEXT) exptest$(EXEEXT) gcm128test$(EXEEXT) \
+	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
+	md4test$(EXEEXT) md5test$(EXEEXT) mdc2test$(EXEEXT) \
+	mont$(EXEEXT) pidwraptest$(EXEEXT) pkcs7test$(EXEEXT) \
 	poly1305test$(EXEEXT) pq_test$(EXEEXT) randtest$(EXEEXT) \
 	rc2test$(EXEEXT) rc4test$(EXEEXT) rmdtest$(EXEEXT) \
 	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
@@ -202,17 +201,13 @@ am_evptest_OBJECTS = evptest.$(OBJEXT)
 evptest_OBJECTS = $(am_evptest_OBJECTS)
 evptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
-am_explicit_bzero_OBJECTS = explicit_bzero.$(OBJEXT)
+am_explicit_bzero_OBJECTS = explicit_bzero.$(OBJEXT) memmem.$(OBJEXT)
 explicit_bzero_OBJECTS = $(am_explicit_bzero_OBJECTS)
 explicit_bzero_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_exptest_OBJECTS = exptest.$(OBJEXT)
 exptest_OBJECTS = $(am_exptest_OBJECTS)
 exptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
-	$(top_builddir)/crypto/libcrypto.la
-am_fork_rand_OBJECTS = fork_rand.$(OBJEXT)
-fork_rand_OBJECTS = $(am_fork_rand_OBJECTS)
-fork_rand_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_gcm128test_OBJECTS = gcm128test.$(OBJEXT)
 gcm128test_OBJECTS = $(am_gcm128test_OBJECTS)
@@ -245,6 +240,10 @@ mdc2test_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 am_mont_OBJECTS = mont.$(OBJEXT)
 mont_OBJECTS = $(am_mont_OBJECTS)
 mont_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+am_pidwraptest_OBJECTS = pidwraptest.$(OBJEXT)
+pidwraptest_OBJECTS = $(am_pidwraptest_OBJECTS)
+pidwraptest_DEPENDENCIES = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_pkcs7test_OBJECTS = pkcs7test.$(OBJEXT)
 pkcs7test_OBJECTS = $(am_pkcs7test_OBJECTS)
@@ -344,9 +343,9 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
 	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
-	$(fork_rand_SOURCES) $(gcm128test_SOURCES) $(hmactest_SOURCES) \
-	$(ideatest_SOURCES) $(igetest_SOURCES) $(md4test_SOURCES) \
-	$(md5test_SOURCES) $(mdc2test_SOURCES) $(mont_SOURCES) \
+	$(gcm128test_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
+	$(igetest_SOURCES) $(md4test_SOURCES) $(md5test_SOURCES) \
+	$(mdc2test_SOURCES) $(mont_SOURCES) $(pidwraptest_SOURCES) \
 	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
 	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
 	$(rc4test_SOURCES) $(rmdtest_SOURCES) $(sha1test_SOURCES) \
@@ -360,9 +359,9 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
 	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
-	$(fork_rand_SOURCES) $(gcm128test_SOURCES) $(hmactest_SOURCES) \
-	$(ideatest_SOURCES) $(igetest_SOURCES) $(md4test_SOURCES) \
-	$(md5test_SOURCES) $(mdc2test_SOURCES) $(mont_SOURCES) \
+	$(gcm128test_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
+	$(igetest_SOURCES) $(md4test_SOURCES) $(md5test_SOURCES) \
+	$(mdc2test_SOURCES) $(mont_SOURCES) $(pidwraptest_SOURCES) \
 	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
 	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
 	$(rc4test_SOURCES) $(rmdtest_SOURCES) $(sha1test_SOURCES) \
@@ -642,6 +641,7 @@ MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
 NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
+NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
 NO_GETENTROPY = @NO_GETENTROPY@
 NO_ISSETUGID = @NO_ISSETUGID@
 NO_REALLOCARRAY = @NO_REALLOCARRAY@
@@ -718,11 +718,7 @@ sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
 sysconfdir = @sysconfdir@
-target = @target@
 target_alias = @target_alias@
-target_cpu = @target_cpu@
-target_os = @target_os@
-target_vendor = @target_vendor@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
@@ -730,8 +726,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -DOPENSSL_NO_ASM \
 	-DHAVE_CRYPTODEV -DLIBRESSL_INTERNAL -I \
 	$(top_srcdir)/crypto/modes -I $(top_srcdir)/crypto/asn1
 EXTRA_DIST = aeadtest.sh evptest.sh pq_test.sh ssltest.sh \
-	arc4randomforktest.sh aeadtests.txt evptests.txt \
-	pq_expected.txt testssl ca.pem server.pem
+	arc4randomforktest.sh pidwraptest.sh aeadtests.txt \
+	evptests.txt pq_expected.txt testssl ca.pem server.pem
 aeadtest_SOURCES = aeadtest.c
 aeadtest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
@@ -789,14 +785,11 @@ enginetest_LDADD = $(top_builddir)/ssl/libssl.la \
 evptest_SOURCES = evptest.c
 evptest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
-explicit_bzero_SOURCES = explicit_bzero.c
+explicit_bzero_SOURCES = explicit_bzero.c memmem.c
 explicit_bzero_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 exptest_SOURCES = exptest.c
 exptest_LDADD = $(top_builddir)/ssl/libssl.la \
-	$(top_builddir)/crypto/libcrypto.la
-fork_rand_SOURCES = fork_rand.c
-fork_rand_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 gcm128test_SOURCES = gcm128test.c
 gcm128test_LDADD = $(top_builddir)/ssl/libssl.la \
@@ -821,6 +814,9 @@ mdc2test_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 mont_SOURCES = mont.c
 mont_LDADD = $(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+pidwraptest_SOURCES = pidwraptest.c
+pidwraptest_LDADD = $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 pkcs7test_SOURCES = pkcs7test.c
 pkcs7test_LDADD = $(top_builddir)/ssl/libssl.la \
@@ -993,10 +989,6 @@ exptest$(EXEEXT): $(exptest_OBJECTS) $(exptest_DEPENDENCIES) $(EXTRA_exptest_DEP
 	@rm -f exptest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(exptest_OBJECTS) $(exptest_LDADD) $(LIBS)
 
-fork_rand$(EXEEXT): $(fork_rand_OBJECTS) $(fork_rand_DEPENDENCIES) $(EXTRA_fork_rand_DEPENDENCIES) 
-	@rm -f fork_rand$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(fork_rand_OBJECTS) $(fork_rand_LDADD) $(LIBS)
-
 gcm128test$(EXEEXT): $(gcm128test_OBJECTS) $(gcm128test_DEPENDENCIES) $(EXTRA_gcm128test_DEPENDENCIES) 
 	@rm -f gcm128test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(gcm128test_OBJECTS) $(gcm128test_LDADD) $(LIBS)
@@ -1028,6 +1020,10 @@ mdc2test$(EXEEXT): $(mdc2test_OBJECTS) $(mdc2test_DEPENDENCIES) $(EXTRA_mdc2test
 mont$(EXEEXT): $(mont_OBJECTS) $(mont_DEPENDENCIES) $(EXTRA_mont_DEPENDENCIES) 
 	@rm -f mont$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(mont_OBJECTS) $(mont_LDADD) $(LIBS)
+
+pidwraptest$(EXEEXT): $(pidwraptest_OBJECTS) $(pidwraptest_DEPENDENCIES) $(EXTRA_pidwraptest_DEPENDENCIES) 
+	@rm -f pidwraptest$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(pidwraptest_OBJECTS) $(pidwraptest_LDADD) $(LIBS)
 
 pkcs7test$(EXEEXT): $(pkcs7test_OBJECTS) $(pkcs7test_DEPENDENCIES) $(EXTRA_pkcs7test_DEPENDENCIES) 
 	@rm -f pkcs7test$(EXEEXT)
@@ -1112,7 +1108,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/explicit_bzero.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exptest.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fork_rand.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcm128test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hmactest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ideatest.Po@am__quote@
@@ -1120,7 +1115,9 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md4test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mdc2test.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memmem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mont.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pidwraptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pkcs7test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poly1305test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pq_test.Po@am__quote@
