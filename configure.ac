@@ -1,4 +1,4 @@
-AC_INIT([libressl], [2.0.3])
+AC_INIT([libressl], [2.0.4])
 AC_CANONICAL_HOST
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
@@ -39,6 +39,9 @@ AM_CONDITIONAL(HOST_WIN, test x$HOST_OS = xwin)
 AC_CHECK_FUNC([clock_gettime],,
 	[AC_SEARCH_LIBS([clock_gettime],[rt posix4])])
 
+AC_CHECK_FUNC([dl_iterate_phdr],,
+	[AC_SEARCH_LIBS([dl_iterate_phdr],[dl])])
+
 AC_PROG_CC
 AC_PROG_LIBTOOL
 AC_PROG_CC_STDC
@@ -54,61 +57,90 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
 )
 CFLAGS="$save_cflags $AM_CFLAGS"
 
-AC_CHECK_FUNC(strlcpy,[AC_SEARCH_LIBS(strlcpy,, [NO_STRLCPY=],
-			  [NO_STRLCPY=yes])], [NO_STRLCPY=yes])
-AC_SUBST(NO_STRLCPY)
-AM_CONDITIONAL(NO_STRLCPY, test "x$NO_STRLCPY" = "xyes")
+AC_CHECK_FUNC(strlcpy, 
+	AM_CONDITIONAL(NO_STRLCPY, false),
+	AC_DEFINE(NO_STRLCPY)
+	AM_CONDITIONAL(NO_STRLCPY, true))
 
-AC_CHECK_FUNC(strlcat,[AC_SEARCH_LIBS(strlcat,, [NO_STRLCAT=],
-			  [NO_STRLCAT=yes])], [NO_STRLCAT=yes])
-AC_SUBST(NO_STRLCAT)
-AM_CONDITIONAL(NO_STRLCAT, test "x$NO_STRLCAT" = "xyes")
+AC_CHECK_FUNC(strlcat,
+	AM_CONDITIONAL(NO_STRLCAT, false),
+	AC_DEFINE(NO_STRLCAT)
+	AM_CONDITIONAL(NO_STRLCAT, true))
 
-AC_CHECK_FUNC(reallocarray,[AC_SEARCH_LIBS(reallocarray,, [NO_REALLOCARRAY=],
-			  [NO_REALLOCARRAY=yes])], [NO_REALLOCARRAY=yes])
-AC_SUBST(NO_REALLOCARRAY)
-AM_CONDITIONAL(NO_REALLOCARRAY, test "x$NO_REALLOCARRAY" = "xyes")
+AC_CHECK_FUNC(strndup,
+	AM_CONDITIONAL(NO_STRNDUP, false),
+	AC_DEFINE(NO_STRNDUP)
+	AM_CONDITIONAL(NO_STRNDUP, true))
 
-AC_CHECK_FUNC(timingsafe_bcmp,[AC_SEARCH_LIBS(timingsafe_bcmp,, [NO_TIMINGSAFE_BCMP=],
-			  [NO_TIMINGSAFE_BCMP=yes])], [NO_TIMINGSAFE_BCMP=yes])
-AC_SUBST(NO_TIMINGSAFE_BCMP)
-AM_CONDITIONAL(NO_TIMINGSAFE_BCMP, test "x$NO_TIMINGSAFE_BCMP" = "xyes")
+AC_CHECK_FUNC(asprintf,
+	AM_CONDITIONAL(NO_ASPRINTF, false),
+	AC_DEFINE(NO_ASPRINTF)
+	AM_CONDITIONAL(NO_ASPRINTF, true))
 
-AC_CHECK_FUNC(timingsafe_memcmp,[AC_SEARCH_LIBS(timingsafe_memcmp,, [NO_TIMINGSAFE_MEMCMP=],
-			  [NO_TIMINGSAFE_MEMCMP=yes])], [NO_TIMINGSAFE_MEMCMP=yes])
-AC_SUBST(NO_TIMINGSAFE_MEMCMP)
-AM_CONDITIONAL(NO_TIMINGSAFE_MEMCMP, test "x$NO_TIMINGSAFE_MEMCMP" = "xyes")
+AC_CHECK_FUNC(reallocarray,
+	AM_CONDITIONAL(NO_REALLOCARRAY, false),
+	AC_DEFINE(NO_REALLOCARRAY)
+	AM_CONDITIONAL(NO_REALLOCARRAY, true))
 
-AC_CHECK_FUNC(arc4random_buf,[AC_SEARCH_LIBS(write,, [NO_ARC4RANDOM_BUF=],
-			  [NO_ARC4RANDOM_BUF=yes])], [NO_ARC4RANDOM_BUF=yes])
-AC_SUBST(NO_ARC4RANDOM_BUF)
-AM_CONDITIONAL(NO_ARC4RANDOM_BUF, test "x$NO_ARC4RANDOM_BUF" = "xyes")
+AC_CHECK_FUNC(timingsafe_bcmp,
+	AM_CONDITIONAL(NO_TIMINGSAFE_BCMP, false),
+	AC_DEFINE(NO_TIMINGSAFE_BCMP)
+	AM_CONDITIONAL(NO_TIMINGSAFE_BCMP, true))
 
-# overrides for arc4random_buf implementations with known issues
-AM_CONDITIONAL(NO_ARC4RANDOM_BUF,
-   test x$HOST_OS = xdarwin \
-     -o x$HOST_OS = xsolaris \
-	 -o x$NO_ARC4RANDOM_BUF = xyes)
+AC_CHECK_FUNC(timingsafe_memcmp,
+	AM_CONDITIONAL(NO_TIMINGSAFE_MEMCMP, false),
+	AC_DEFINE(NO_TIMINGSAFE_MEMCMP)
+	AM_CONDITIONAL(NO_TIMINGSAFE_MEMCMP, true))
 
-AC_CHECK_FUNC(getentropy,[AC_SEARCH_LIBS(write,, [NO_GETENTROPY=],
-			  [NO_GETENTROPY=yes])], [NO_GETENTROPY=yes])
-AC_SUBST(NO_GETENTROPY)
-AM_CONDITIONAL(NO_GETENTROPY, test "x$NO_GETENTROPY" = "xyes")
+AC_CHECK_FUNC(arc4random_buf,
+	AM_CONDITIONAL(NO_ARC4RANDOM_BUF, false),
+	AC_DEFINE(NO_ARC4RANDOM_BUF)
+	AM_CONDITIONAL(NO_ARC4RANDOM_BUF, true))
 
-AC_CHECK_FUNC(issetugid,[AC_SEARCH_LIBS(write,, [NO_ISSETUGID=],
-			  [NO_ISSETUGID=yes])], [NO_ISSETUGID=yes])
-AC_SUBST(NO_ISSETUGID)
-AM_CONDITIONAL(NO_ISSETUGID, test "x$NO_ISSETUGID" = "xyes")
+AC_CHECK_FUNC(getentropy,
+	AM_CONDITIONAL(NO_GETENTROPY, false),
+	AC_DEFINE(NO_GETENTROPY)
+	AM_CONDITIONAL(NO_GETENTROPY, true))
 
-AC_CHECK_FUNC(strtonum,[AC_SEARCH_LIBS(write,, [NO_STRTONUM=],
-			  [NO_STRTONUM=yes])], [NO_STRTONUM=yes])
-AC_SUBST(NO_STRTONUM)
-AM_CONDITIONAL(NO_STRTONUM, test "x$NO_STRTONUM" = "xyes")
+AC_CHECK_FUNC(issetugid,
+	AM_CONDITIONAL(NO_ISSETUGID, false),
+	AC_DEFINE(NO_ISSETUGID)
+	AM_CONDITIONAL(NO_ISSETUGID, true))
 
-AC_CHECK_FUNC(explicit_bzero,[AC_SEARCH_LIBS(write,, [NO_EXPLICIT_BZERO=],
-			  [NO_EXPLICIT_BZERO=yes])], [NO_EXPLICIT_BZERO=yes])
-AC_SUBST(NO_EXPLICIT_BZERO)
-AM_CONDITIONAL(NO_EXPLICIT_BZERO, test "x$NO_EXPLICIT_BZERO" = "xyes")
+AC_CHECK_FUNC(strtonum,
+	AM_CONDITIONAL(NO_STRTONUM, false),
+	AC_DEFINE(NO_STRTONUM)
+	AM_CONDITIONAL(NO_STRTONUM, true))
+
+AC_CHECK_FUNC(explicit_bzero,
+	AM_CONDITIONAL(NO_EXPLICIT_BZERO, false),
+	AC_DEFINE(NO_EXPLICIT_BZERO)
+	AM_CONDITIONAL(NO_EXPLICIT_BZERO, true))
+
+AC_CACHE_CHECK([whether va_copy exists], ac_cv_have_va_copy, [
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+va_list x,y;
+		]], [[ va_copy(x,y); ]])],
+	[ ac_cv_have_va_copy="yes" ],
+	[ ac_cv_have_va_copy="no"
+	])
+])
+if test "x$ac_cv_have_va_copy" = "xyes" ; then
+	AC_DEFINE([HAVE_VA_COPY], [1], [Define if va_copy exists])
+fi
+
+AC_CACHE_CHECK([whether __va_copy exists], ac_cv_have___va_copy, [
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <stdarg.h>
+va_list x,y;
+		]], [[ __va_copy(x,y); ]])],
+	[ ac_cv_have___va_copy="yes" ], [ ac_cv_have___va_copy="no"
+	])
+])
+if test "x$ac_cv_have___va_copy" = "xyes" ; then
+	AC_DEFINE([HAVE___VA_COPY], [1], [Define if __va_copy exists])
+fi
 
 AC_CHECK_FUNC(getauxval, AC_DEFINE(HAVE_GETAUXVAL))
 

@@ -217,16 +217,6 @@ MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
-NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
-NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
-NO_GETENTROPY = @NO_GETENTROPY@
-NO_ISSETUGID = @NO_ISSETUGID@
-NO_REALLOCARRAY = @NO_REALLOCARRAY@
-NO_STRLCAT = @NO_STRLCAT@
-NO_STRLCPY = @NO_STRLCPY@
-NO_STRTONUM = @NO_STRTONUM@
-NO_TIMINGSAFE_BCMP = @NO_TIMINGSAFE_BCMP@
-NO_TIMINGSAFE_MEMCMP = @NO_TIMINGSAFE_MEMCMP@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -300,8 +290,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 SUBDIRS = openssl
-noinst_HEADERS = err.h pqueue.h stdlib.h string.h unistd.h \
-	machine/endian.h sys/types.h
+noinst_HEADERS = err.h pqueue.h stdio.h stdlib.h string.h unistd.h \
+	machine/endian.h sys/mman.h sys/types.h
 all: all-recursive
 
 .SUFFIXES:
