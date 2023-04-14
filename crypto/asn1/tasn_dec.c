@@ -1,4 +1,4 @@
-/* $OpenBSD: tasn_dec.c,v 1.28 2015/12/04 04:19:25 beck Exp $ */
+/* $OpenBSD$ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -155,21 +155,19 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
     const ASN1_ITEM *it, int tag, int aclass, char opt, ASN1_TLC *ctx)
 {
 	const ASN1_TEMPLATE *tt, *errtt = NULL;
+	const ASN1_COMPAT_FUNCS *cf;
 	const ASN1_EXTERN_FUNCS *ef;
 	const ASN1_AUX *aux = it->funcs;
 	ASN1_aux_cb *asn1_cb;
 	const unsigned char *p = NULL, *q;
-	unsigned char oclass;
+	unsigned char *wp = NULL;	/* BIG FAT WARNING!  BREAKS CONST WHERE USED */
+	unsigned char imphack = 0, oclass;
 	char seq_eoc, seq_nolen, cst, isopt;
 	long tmplen;
 	int i;
 	int otag;
 	int ret = 0;
-	ASN1_VALUE **pchptr;
-	int combine;
-
-	combine = aclass & ASN1_TFLG_COMBINE;
-	aclass &= ~ASN1_TFLG_COMBINE;
+	ASN1_VALUE **pchptr, *ptmpval;
 
 	if (!pval)
 		return 0;
@@ -238,20 +236,76 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
 		return ef->asn1_ex_d2i(pval, in, len,
 		    it, tag, aclass, opt, ctx);
 
+	case ASN1_ITYPE_COMPAT:
+		/* we must resort to old style evil hackery */
+		cf = it->funcs;
+
+		/* If OPTIONAL see if it is there */
+		if (opt) {
+			int exptag;
+			p = *in;
+			if (tag == -1)
+				exptag = it->utype;
+			else
+				exptag = tag;
+			/* Don't care about anything other than presence
+			 * of expected tag */
+
+			ret = asn1_check_tlen(NULL, NULL, NULL, NULL, NULL,
+			    &p, len, exptag, aclass, 1, ctx);
+			if (!ret) {
+				ASN1err(ASN1_F_ASN1_ITEM_EX_D2I,
+				    ERR_R_NESTED_ASN1_ERROR);
+				goto err;
+			}
+			if (ret == -1)
+				return -1;
+		}
+
+		/* This is the old style evil hack IMPLICIT handling:
+		 * since the underlying code is expecting a tag and
+		 * class other than the one present we change the
+		 * buffer temporarily then change it back afterwards.
+		 * This doesn't and never did work for tags > 30.
+		 *
+		 * Yes this is *horrible* but it is only needed for
+		 * old style d2i which will hopefully not be around
+		 * for much longer.
+		 * FIXME: should copy the buffer then modify it so
+		 * the input buffer can be const: we should *always*
+		 * copy because the old style d2i might modify the
+		 * buffer.
+		 */
+
+		if (tag != -1) {
+			wp = *(unsigned char **)in;
+			imphack = *wp;
+			if (p == NULL) {
+				ASN1err(ASN1_F_ASN1_ITEM_EX_D2I,
+				    ERR_R_NESTED_ASN1_ERROR);
+				goto err;
+			}
+			*wp = (unsigned char)((*p & V_ASN1_CONSTRUCTED) |
+			    it->utype);
+		}
+
+		ptmpval = cf->asn1_d2i(pval, in, len);
+
+		if (tag != -1)
+			*wp = imphack;
+
+		if (ptmpval)
+			return 1;
+
+		ASN1err(ASN1_F_ASN1_ITEM_EX_D2I, ERR_R_NESTED_ASN1_ERROR);
+		goto err;
+
 	case ASN1_ITYPE_CHOICE:
 		if (asn1_cb && !asn1_cb(ASN1_OP_D2I_PRE, pval, it, NULL))
 			goto auxerr;
 
-		if (*pval) {
-			/* Free up and zero CHOICE value if initialised */
-			i = asn1_get_choice_selector(pval, it);
-			if ((i >= 0) && (i < it->tcount)) {
-				tt = it->templates + i;
-				pchptr = asn1_get_field_ptr(pval, tt);
-				ASN1_template_free(pchptr, tt);
-				asn1_set_choice_selector(pval, -1, it);
-			}
-		} else if (!ASN1_item_ex_new(pval, it)) {
+		/* Allocate structure */
+		if (!*pval && !ASN1_item_ex_new(pval, it)) {
 			ASN1err(ASN1_F_ASN1_ITEM_EX_D2I,
 			    ERR_R_NESTED_ASN1_ERROR);
 			goto err;
@@ -336,19 +390,6 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
 
 		if (asn1_cb && !asn1_cb(ASN1_OP_D2I_PRE, pval, it, NULL))
 			goto auxerr;
-
-		/* Free up and zero any ADB found */
-		for (i = 0, tt = it->templates; i < it->tcount; i++, tt++) {
-			if (tt->flags & ASN1_TFLG_ADB_MASK) {
-				const ASN1_TEMPLATE *seqtt;
-				ASN1_VALUE **pseqval;
-				seqtt = asn1_do_adb(pval, tt, 1);
-				if (!seqtt)
-					goto err;
-				pseqval = asn1_get_field_ptr(pval, seqtt);
-				ASN1_template_free(pseqval, seqtt);
-			}
-		}
 
 		/* Get each field entry */
 		for (i = 0, tt = it->templates; i < it->tcount; i++, tt++) {
@@ -449,8 +490,7 @@ ASN1_item_ex_d2i(ASN1_VALUE **pval, const unsigned char **in, long len,
 auxerr:
 	ASN1err(ASN1_F_ASN1_ITEM_EX_D2I, ASN1_R_AUX_ERROR);
 err:
-	if (combine == 0)
-		ASN1_item_ex_free(pval, it);
+	ASN1_item_ex_free(pval, it);
 	if (errtt)
 		ERR_asprintf_error_data("Field=%s, Type=%s", errtt->field_name,
 		    it->sname);
@@ -645,7 +685,7 @@ asn1_template_noexp_d2i(ASN1_VALUE **val, const unsigned char **in, long len,
 	} else {
 		/* Nothing special */
 		ret = ASN1_item_ex_d2i(val, &p, len, ASN1_ITEM_ptr(tt->item),
-		    -1, tt->flags & ASN1_TFLG_COMBINE, opt, ctx);
+		    -1, 0, opt, ctx);
 		if (!ret) {
 			ASN1err(ASN1_F_ASN1_TEMPLATE_NOEXP_D2I,
 			    ERR_R_NESTED_ASN1_ERROR);

@@ -1,4 +1,4 @@
-/* $OpenBSD: ecp_smpl.c,v 1.14 2015/02/08 22:25:03 miod Exp $ */
+/* $OpenBSD: ecp_smpl.c,v 1.12 2014/06/12 15:49:29 deraadt Exp $ */
 /* Includes code written by Lenka Fibikova <fibikova@exp-math.uni-essen.de>
  * for the OpenSSL project.
  * Includes code written by Bodo Moeller for the OpenSSL project.
@@ -188,7 +188,8 @@ ec_GFp_simple_group_set_curve(EC_GROUP * group,
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((tmp_a = BN_CTX_get(ctx)) == NULL)
+	tmp_a = BN_CTX_get(ctx);
+	if (tmp_a == NULL)
 		goto err;
 
 	/* group->field */
@@ -293,15 +294,12 @@ ec_GFp_simple_group_check_discriminant(const EC_GROUP * group, BN_CTX * ctx)
 		}
 	}
 	BN_CTX_start(ctx);
-	if ((a = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((tmp_1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((tmp_2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((order = BN_CTX_get(ctx)) == NULL)
+	a = BN_CTX_get(ctx);
+	b = BN_CTX_get(ctx);
+	tmp_1 = BN_CTX_get(ctx);
+	tmp_2 = BN_CTX_get(ctx);
+	order = BN_CTX_get(ctx);
+	if (order == NULL)
 		goto err;
 
 	if (group->meth->field_decode) {
@@ -531,7 +529,7 @@ ec_GFp_simple_point_get_affine_coordinates(const EC_GROUP * group, const EC_POIN
 	const BIGNUM *Z_;
 	int ret = 0;
 
-	if (EC_POINT_is_at_infinity(group, point) > 0) {
+	if (EC_POINT_is_at_infinity(group, point)) {
 		ECerr(EC_F_EC_GFP_SIMPLE_POINT_GET_AFFINE_COORDINATES, EC_R_POINT_AT_INFINITY);
 		return 0;
 	}
@@ -541,13 +539,11 @@ ec_GFp_simple_point_get_affine_coordinates(const EC_GROUP * group, const EC_POIN
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((Z = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((Z_1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((Z_2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((Z_3 = BN_CTX_get(ctx)) == NULL)
+	Z = BN_CTX_get(ctx);
+	Z_1 = BN_CTX_get(ctx);
+	Z_2 = BN_CTX_get(ctx);
+	Z_3 = BN_CTX_get(ctx);
+	if (Z_3 == NULL)
 		goto err;
 
 	/* transform  (X, Y, Z)  into  (x, y) := (X/Z^2, Y/Z^3) */
@@ -641,9 +637,9 @@ ec_GFp_simple_add(const EC_GROUP * group, EC_POINT * r, const EC_POINT * a, cons
 
 	if (a == b)
 		return EC_POINT_dbl(group, r, a, ctx);
-	if (EC_POINT_is_at_infinity(group, a) > 0)
+	if (EC_POINT_is_at_infinity(group, a))
 		return EC_POINT_copy(r, b);
-	if (EC_POINT_is_at_infinity(group, b) > 0)
+	if (EC_POINT_is_at_infinity(group, b))
 		return EC_POINT_copy(r, a);
 
 	field_mul = group->meth->field_mul;
@@ -656,19 +652,14 @@ ec_GFp_simple_add(const EC_GROUP * group, EC_POINT * r, const EC_POINT * a, cons
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((n0 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n1 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n2 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n3 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n4 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n5 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((n6 = BN_CTX_get(ctx)) == NULL)
+	n0 = BN_CTX_get(ctx);
+	n1 = BN_CTX_get(ctx);
+	n2 = BN_CTX_get(ctx);
+	n3 = BN_CTX_get(ctx);
+	n4 = BN_CTX_get(ctx);
+	n5 = BN_CTX_get(ctx);
+	n6 = BN_CTX_get(ctx);
+	if (n6 == NULL)
 		goto end;
 
 	/*
@@ -828,7 +819,7 @@ ec_GFp_simple_dbl(const EC_GROUP * group, EC_POINT * r, const EC_POINT * a, BN_C
 	BIGNUM *n0, *n1, *n2, *n3;
 	int ret = 0;
 
-	if (EC_POINT_is_at_infinity(group, a) > 0) {
+	if (EC_POINT_is_at_infinity(group, a)) {
 		BN_zero(&r->Z);
 		r->Z_is_one = 0;
 		return 1;
@@ -843,13 +834,11 @@ ec_GFp_simple_dbl(const EC_GROUP * group, EC_POINT * r, const EC_POINT * a, BN_C
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((n0 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((n1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((n2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((n3 = BN_CTX_get(ctx)) == NULL)
+	n0 = BN_CTX_get(ctx);
+	n1 = BN_CTX_get(ctx);
+	n2 = BN_CTX_get(ctx);
+	n3 = BN_CTX_get(ctx);
+	if (n3 == NULL)
 		goto err;
 
 	/*
@@ -963,7 +952,7 @@ err:
 int 
 ec_GFp_simple_invert(const EC_GROUP * group, EC_POINT * point, BN_CTX * ctx)
 {
-	if (EC_POINT_is_at_infinity(group, point) > 0 || BN_is_zero(&point->Y))
+	if (EC_POINT_is_at_infinity(group, point) || BN_is_zero(&point->Y))
 		/* point is its own inverse */
 		return 1;
 
@@ -988,7 +977,7 @@ ec_GFp_simple_is_on_curve(const EC_GROUP * group, const EC_POINT * point, BN_CTX
 	BIGNUM *rh, *tmp, *Z4, *Z6;
 	int ret = -1;
 
-	if (EC_POINT_is_at_infinity(group, point) > 0)
+	if (EC_POINT_is_at_infinity(group, point))
 		return 1;
 
 	field_mul = group->meth->field_mul;
@@ -1001,13 +990,11 @@ ec_GFp_simple_is_on_curve(const EC_GROUP * group, const EC_POINT * point, BN_CTX
 			return -1;
 	}
 	BN_CTX_start(ctx);
-	if ((rh = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((tmp = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((Z4 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((Z6 = BN_CTX_get(ctx)) == NULL)
+	rh = BN_CTX_get(ctx);
+	tmp = BN_CTX_get(ctx);
+	Z4 = BN_CTX_get(ctx);
+	Z6 = BN_CTX_get(ctx);
+	if (Z6 == NULL)
 		goto err;
 
 	/*
@@ -1096,10 +1083,10 @@ ec_GFp_simple_cmp(const EC_GROUP * group, const EC_POINT * a, const EC_POINT * b
 	const BIGNUM *tmp1_, *tmp2_;
 	int ret = -1;
 
-	if (EC_POINT_is_at_infinity(group, a) > 0) {
-		return EC_POINT_is_at_infinity(group, b) > 0 ? 0 : 1;
+	if (EC_POINT_is_at_infinity(group, a)) {
+		return EC_POINT_is_at_infinity(group, b) ? 0 : 1;
 	}
-	if (EC_POINT_is_at_infinity(group, b) > 0)
+	if (EC_POINT_is_at_infinity(group, b))
 		return 1;
 
 	if (a->Z_is_one && b->Z_is_one) {
@@ -1114,13 +1101,11 @@ ec_GFp_simple_cmp(const EC_GROUP * group, const EC_POINT * a, const EC_POINT * b
 			return -1;
 	}
 	BN_CTX_start(ctx);
-	if ((tmp1 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((tmp2 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((Za23 = BN_CTX_get(ctx)) == NULL)
-		goto end;
-	if ((Zb23 = BN_CTX_get(ctx)) == NULL)
+	tmp1 = BN_CTX_get(ctx);
+	tmp2 = BN_CTX_get(ctx);
+	Za23 = BN_CTX_get(ctx);
+	Zb23 = BN_CTX_get(ctx);
+	if (Zb23 == NULL)
 		goto end;
 
 	/*
@@ -1190,7 +1175,7 @@ ec_GFp_simple_make_affine(const EC_GROUP * group, EC_POINT * point, BN_CTX * ctx
 	BIGNUM *x, *y;
 	int ret = 0;
 
-	if (point->Z_is_one || EC_POINT_is_at_infinity(group, point) > 0)
+	if (point->Z_is_one || EC_POINT_is_at_infinity(group, point))
 		return 1;
 
 	if (ctx == NULL) {
@@ -1199,9 +1184,9 @@ ec_GFp_simple_make_affine(const EC_GROUP * group, EC_POINT * point, BN_CTX * ctx
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((x = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((y = BN_CTX_get(ctx)) == NULL)
+	x = BN_CTX_get(ctx);
+	y = BN_CTX_get(ctx);
+	if (y == NULL)
 		goto err;
 
 	if (!EC_POINT_get_affine_coordinates_GFp(group, point, x, y, ctx))
@@ -1240,9 +1225,9 @@ ec_GFp_simple_points_make_affine(const EC_GROUP * group, size_t num, EC_POINT * 
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((tmp0 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((tmp1 = BN_CTX_get(ctx)) == NULL)
+	tmp0 = BN_CTX_get(ctx);
+	tmp1 = BN_CTX_get(ctx);
+	if (tmp0 == NULL || tmp1 == NULL)
 		goto err;
 
 	/*

@@ -173,6 +173,3 @@ OPENSSL_wipe_cpu:
 	leaq	8(%rsp),%rax
 	.byte	0xf3,0xc3
 .size	OPENSSL_wipe_cpu,.-OPENSSL_wipe_cpu
-#if defined(HAVE_GNU_STACK)
-.section .note.GNU-stack,"",%progbits
-#endif

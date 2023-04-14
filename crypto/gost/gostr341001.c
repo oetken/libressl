@@ -1,4 +1,4 @@
-/* $OpenBSD: gostr341001.c,v 1.3 2015/02/11 03:19:37 doug Exp $ */
+/* $OpenBSD$ */
 /*
  * Copyright (c) 2014 Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
  * Copyright (c) 2005-2006 Cryptocom LTD
@@ -54,7 +54,6 @@
 #include <openssl/opensslconf.h>
 
 #ifndef OPENSSL_NO_GOST
-#include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/gost.h>
 #include "gost_locl.h"
@@ -168,22 +167,23 @@ gost2001_do_sign(BIGNUM *md, GOST_KEY *eckey)
 	s = newsig->s;
 	r = newsig->r;
 	group = GOST_KEY_get0_group(eckey);
-	if ((order = BN_CTX_get(ctx)) == NULL)
+	order = BN_CTX_get(ctx);
+	if (order == NULL)
 		goto err;
 	if (EC_GROUP_get_order(group, order, ctx) == 0)
 		goto err;
 	priv_key = GOST_KEY_get0_private_key(eckey);
-	if ((e = BN_CTX_get(ctx)) == NULL)
+	e = BN_CTX_get(ctx);
+	if (e == NULL)
 		goto err;
 	if (BN_mod(e, md, order, ctx) == 0)
 		goto err;
 	if (BN_is_zero(e))
 		BN_one(e);
-	if ((k = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((X = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((C = EC_POINT_new(group)) == NULL)
+	k = BN_CTX_get(ctx);
+	X = BN_CTX_get(ctx);
+	C = EC_POINT_new(group);
+	if (C == NULL)
 		goto err;
 	do {
 		do {
@@ -217,13 +217,15 @@ gost2001_do_sign(BIGNUM *md, GOST_KEY *eckey)
 		} while (BN_is_zero(r));
 		/* s = (r*priv_key+k*e) mod order */
 		if (tmp == NULL) {
-			if ((tmp = BN_CTX_get(ctx)) == NULL)
+			tmp = BN_CTX_get(ctx);
+			if (tmp == NULL)
 				goto err;
 		}
 		if (BN_mod_mul(tmp, priv_key, r, order, ctx) == 0)
 			goto err;
 		if (tmp2 == NULL) {
-			if ((tmp2 = BN_CTX_get(ctx)) == NULL)
+			tmp2 = BN_CTX_get(ctx);
+			if (tmp2 == NULL)
 				goto err;
 		}
 		if (BN_mod_mul(tmp2, k, e, order, ctx) == 0)
@@ -261,21 +263,15 @@ gost2001_do_verify(BIGNUM *md, ECDSA_SIG *sig, GOST_KEY *ec)
 	if (ctx == NULL)
 		goto err;
 	BN_CTX_start(ctx);
-	if ((order = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((e = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((tmp = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((X = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((R = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((v = BN_CTX_get(ctx)) == NULL)
+	order = BN_CTX_get(ctx);
+	e = BN_CTX_get(ctx);
+	z1 = BN_CTX_get(ctx);
+	z2 = BN_CTX_get(ctx);
+	tmp = BN_CTX_get(ctx);
+	X = BN_CTX_get(ctx);
+	R = BN_CTX_get(ctx);
+	v = BN_CTX_get(ctx);
+	if (v == NULL)
 		goto err;
 
 	if (EC_GROUP_get_order(group, order, ctx) == 0)
@@ -292,7 +288,8 @@ gost2001_do_verify(BIGNUM *md, ECDSA_SIG *sig, GOST_KEY *ec)
 		goto err;
 	if (BN_is_zero(e))
 		BN_one(e);
-	if ((v = BN_mod_inverse(v, e, order, ctx)) == NULL)
+	v = BN_mod_inverse(v, e, order, ctx);
+	if (v == NULL)
 		goto err;
 	if (BN_mod_mul(z1, sig->s, v, order, ctx) == 0)
 		goto err;
@@ -300,7 +297,8 @@ gost2001_do_verify(BIGNUM *md, ECDSA_SIG *sig, GOST_KEY *ec)
 		goto err;
 	if (BN_mod_mul(z2, tmp, v, order, ctx) == 0)
 		goto err;
-	if ((C = EC_POINT_new(group)) == NULL)
+	C = EC_POINT_new(group);
+	if (C == NULL)
 		goto err;
 	if (EC_POINT_mul(group, C, z1, pub_key, z2, ctx) == 0) {
 		GOSTerr(GOST_F_GOST2001_DO_VERIFY, ERR_R_EC_LIB);
@@ -346,9 +344,9 @@ VKO_compute_key(BIGNUM *X, BIGNUM *Y, const GOST_KEY *pkey, GOST_KEY *priv_key,
 	if (ctx == NULL)
 		goto err;
 	BN_CTX_start(ctx);
-	if ((p = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((order = BN_CTX_get(ctx)) == NULL)
+	p = BN_CTX_get(ctx);
+	order = BN_CTX_get(ctx);
+	if (order == NULL)
 		goto err;
 	if (EC_GROUP_get_order(group, order, ctx) == 0)
 		goto err;

@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_prime.c,v 1.12 2014/10/18 17:20:40 jsing Exp $ */
+/* $OpenBSD: bn_prime.c,v 1.11 2014/07/12 16:03:36 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -170,7 +170,8 @@ BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
 	if (ctx == NULL)
 		goto err;
 	BN_CTX_start(ctx);
-	if ((t = BN_CTX_get(ctx)) == NULL)
+	t = BN_CTX_get(ctx);
+	if (!t)
 		goto err;
 loop:
 	/* make a random number and set the top and bottom bits */
@@ -286,11 +287,10 @@ BN_is_prime_fasttest_ex(const BIGNUM *a, int checks, BN_CTX *ctx_passed,
 		A = t;
 	} else
 		A = a;
-	if ((A1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((A1_odd = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((check = BN_CTX_get(ctx)) == NULL)
+	A1 = BN_CTX_get(ctx);
+	A1_odd = BN_CTX_get(ctx);
+	check = BN_CTX_get(ctx);
+	if (check == NULL)
 		goto err;
 
 	/* compute A1 := A - 1 */
@@ -461,11 +461,10 @@ probable_prime_dh_safe(BIGNUM *p, int bits, const BIGNUM *padd,
 
 	bits--;
 	BN_CTX_start(ctx);
-	if ((t1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((q = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((qadd = BN_CTX_get(ctx)) == NULL)
+	t1 = BN_CTX_get(ctx);
+	q = BN_CTX_get(ctx);
+	qadd = BN_CTX_get(ctx);
+	if (qadd == NULL)
 		goto err;
 
 	if (!BN_rshift1(qadd, padd))

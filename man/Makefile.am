@@ -83,6 +83,10 @@ dist_man_MANS += SSL_want.3
 dist_man_MANS += SSL_write.3
 dist_man_MANS += d2i_SSL_SESSION.3
 dist_man_MANS += ssl.3
+dist_man_MANS += openssl.1
+if ENABLE_LIBTLS
+dist_man_MANS += tls_init.3
+endif
 dist_man_MANS += ASN1_OBJECT_new.3
 dist_man_MANS += ASN1_STRING_length.3
 dist_man_MANS += ASN1_STRING_new.3
@@ -129,8 +133,6 @@ dist_man_MANS += BN_rand.3
 dist_man_MANS += BN_set_bit.3
 dist_man_MANS += BN_swap.3
 dist_man_MANS += BN_zero.3
-dist_man_MANS += openssl.1
-dist_man_MANS += tls_init.3
 dist_man_MANS += BUF_MEM_new.3
 dist_man_MANS += CMS_add0_cert.3
 dist_man_MANS += CMS_add1_recipient_cert.3
@@ -2206,8 +2208,6 @@ install-data-hook:
 	ln -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate.3 \
     $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_chain_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate.3 \
-    $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_chain_mem.3
-	ln -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate.3 \
     $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate.3 \
     $(DESTDIR)$(mandir)/man3/SSL_check_private_key.3
@@ -2313,18 +2313,15 @@ install-data-hook:
     $(DESTDIR)$(mandir)/man3/SSL_want_x509_lookup.3
 	ln -f $(DESTDIR)$(mandir)/man3/d2i_SSL_SESSION.3 \
     $(DESTDIR)$(mandir)/man3/i2d_SSL_SESSION.3
+if ENABLE_LIBTLS
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_new.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_free.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_config_parse_protocols.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_set_ca_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_set_ca_path.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_config_set_ca_mem.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_set_cert_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
@@ -2332,9 +2329,7 @@ install-data-hook:
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_set_ciphers.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_config_set_ecdhecurve.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_config_set_dheparams.3
+    $(DESTDIR)$(mandir)/man3/tls_config_set_ecdhcurve.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_set_key_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
@@ -2346,13 +2341,11 @@ install-data-hook:
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_clear_keys.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
+    $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyhost.3
+	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifycert.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyname.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_config_verify.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_load_file.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_client.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
@@ -2370,17 +2363,12 @@ install-data-hook:
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_connect.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_connect_fds.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_connect_servername.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_connect_socket.3
-	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
-    $(DESTDIR)$(mandir)/man3/tls_accept_socket.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_read.3
 	ln -f $(DESTDIR)$(mandir)/man3/tls_init.3 \
     $(DESTDIR)$(mandir)/man3/tls_write.3
+endif
 
 uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/ASN1_OBJECT_free.3
@@ -3338,7 +3326,6 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_RSAPrivateKey_file.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_ASN1.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_chain_file.3
-	-rm -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_chain_mem.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_CTX_use_certificate_file.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_check_private_key.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_use_PrivateKey.3
@@ -3392,26 +3379,23 @@ uninstall-local:
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_want_write.3
 	-rm -f $(DESTDIR)$(mandir)/man3/SSL_want_x509_lookup.3
 	-rm -f $(DESTDIR)$(mandir)/man3/i2d_SSL_SESSION.3
+if ENABLE_LIBTLS
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_new.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_free.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_config_parse_protocols.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_file.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_path.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ca_mem.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_cert_file.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_cert_mem.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ciphers.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ecdhecurve.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_dheparams.3
+	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_ecdhcurve.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_key_file.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_key_mem.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_protocols.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_set_verify_depth.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_clear_keys.3
+	rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyhost.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifycert.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_config_insecure_noverifyname.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_config_verify.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_load_file.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_client.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_server.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_configure.3
@@ -3420,9 +3404,7 @@ uninstall-local:
 	rm -f $(DESTDIR)$(mandir)/man3/tls_free.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_close.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_connect.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_connect_fds.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_connect_servername.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_connect_socket.3
-	rm -f $(DESTDIR)$(mandir)/man3/tls_accept_socket.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_read.3
 	rm -f $(DESTDIR)$(mandir)/man3/tls_write.3
+endif

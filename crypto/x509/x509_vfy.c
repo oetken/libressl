@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_vfy.c,v 1.40 2015/02/11 02:17:59 jsing Exp $ */
+/* $OpenBSD: x509_vfy.c,v 1.37 2014/07/17 07:13:02 logan Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -376,6 +376,16 @@ X509_verify_cert(X509_STORE_CTX *ctx)
 		ok = internal_verify(ctx);
 	if (!ok)
 		goto end;
+
+#ifndef OPENSSL_NO_RFC3779
+	/* RFC 3779 path validation, now that CRL check has been done */
+	ok = v3_asid_validate_path(ctx);
+	if (!ok)
+		goto end;
+	ok = v3_addr_validate_path(ctx);
+	if (!ok)
+		goto end;
+#endif
 
 	/* If we get this far evaluate policies */
 	if (!bad_chain && (ctx->param->flags & X509_V_FLAG_POLICY_CHECK))
@@ -1650,57 +1660,34 @@ X509_cmp_time(const ASN1_TIME *ctm, time_t *cmp_time)
 		memcpy(p, str, 10);
 		p += 10;
 		str += 10;
-		i -= 10;
 	} else {
 		if (i < 13)
 			return 0;
 		memcpy(p, str, 12);
 		p += 12;
 		str += 12;
-		i -= 12;
 	}
 
-	if (i < 1)
-		return 0;
 	if ((*str == 'Z') || (*str == '-') || (*str == '+')) {
 		*(p++) = '0';
 		*(p++) = '0';
 	} else {
-		if (i < 2)
-			return 0;
 		*(p++) = *(str++);
 		*(p++) = *(str++);
-		i -= 2;
-		if (i < 1)
-			return 0;
 		/* Skip any fractional seconds... */
 		if (*str == '.') {
 			str++;
-			i--;
-			while (i > 1 && (*str >= '0') && (*str <= '9')) {
+			while ((*str >= '0') && (*str <= '9'))
 				str++;
-				i--;
-			}
 		}
 	}
 	*(p++) = 'Z';
 	*(p++) = '\0';
 
-	if (i < 1)
-		return 0;
-	if (*str == 'Z') {
-		if (i != 1)
-			return 0;
+	if (*str == 'Z')
 		offset = 0;
-	} else {
-		if (i != 5)
-			return 0;
+	else {
 		if ((*str != '+') && (*str != '-'))
-			return 0;
-		if (str[1] < '0' || str[1] > '9' ||
-		    str[2] < '0' || str[2] > '9' ||
-		    str[3] < '0' || str[3] > '9' ||
-		    str[4] < '0' || str[4] > '9')
 			return 0;
 		offset = ((str[1] - '0') * 10 + (str[2] - '0')) * 60;
 		offset += (str[3] - '0') * 10 + (str[4] - '0');
@@ -2215,3 +2202,11 @@ X509_STORE_CTX_set0_param(X509_STORE_CTX *ctx, X509_VERIFY_PARAM *param)
 		X509_VERIFY_PARAM_free(ctx->param);
 	ctx->param = param;
 }
+
+IMPLEMENT_STACK_OF(X509)
+IMPLEMENT_ASN1_SET_OF(X509)
+
+IMPLEMENT_STACK_OF(X509_NAME)
+
+IMPLEMENT_STACK_OF(X509_ATTRIBUTE)
+IMPLEMENT_ASN1_SET_OF(X509_ATTRIBUTE)
