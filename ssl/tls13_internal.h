@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_internal.h,v 1.89 2021/03/21 18:36:34 jsing Exp $ */
+/* $OpenBSD: tls13_internal.h,v 1.93 2021/09/14 14:35:09 tb Exp $ */
 /*
  * Copyright (c) 2018 Bob Beck <beck@openbsd.org>
  * Copyright (c) 2018 Theo Buehler <tb@openbsd.org>
@@ -81,6 +81,10 @@ __BEGIN_HIDDEN_DECLS
 
 #define TLS13_INFO_HANDSHAKE_STARTED			SSL_CB_HANDSHAKE_START
 #define TLS13_INFO_HANDSHAKE_COMPLETED			SSL_CB_HANDSHAKE_DONE
+#define TLS13_INFO_ACCEPT_LOOP				SSL_CB_ACCEPT_LOOP
+#define TLS13_INFO_CONNECT_LOOP				SSL_CB_CONNECT_LOOP
+#define TLS13_INFO_ACCEPT_EXIT				SSL_CB_ACCEPT_EXIT
+#define TLS13_INFO_CONNECT_EXIT				SSL_CB_CONNECT_EXIT
 
 typedef void (*tls13_alert_cb)(uint8_t _alert_desc, void *_cb_arg);
 typedef ssize_t (*tls13_phh_recv_cb)(void *_cb_arg, CBS *_cbs);
@@ -155,7 +159,7 @@ int tls13_hkdf_expand_label_with_length(struct tls13_secret *out,
     const uint8_t *label, size_t label_len, const struct tls13_secret *context);
 
 int tls13_derive_secret(struct tls13_secret *out, const EVP_MD *digest,
-    const struct tls13_secret *secret, const char *label,   
+    const struct tls13_secret *secret, const char *label,
     const struct tls13_secret *context);
 int tls13_derive_secret_with_label_length(struct tls13_secret *out,
     const EVP_MD *digest, const struct tls13_secret *secret,
@@ -207,7 +211,7 @@ struct tls13_record_layer *tls13_record_layer_new(
 void tls13_record_layer_free(struct tls13_record_layer *rl);
 void tls13_record_layer_allow_ccs(struct tls13_record_layer *rl, int allow);
 void tls13_record_layer_allow_legacy_alerts(struct tls13_record_layer *rl, int allow);
-void tls13_record_layer_rbuf(struct tls13_record_layer *rl, CBS *cbs);
+void tls13_record_layer_rcontent(struct tls13_record_layer *rl, CBS *cbs);
 void tls13_record_layer_set_aead(struct tls13_record_layer *rl,
     const EVP_AEAD *aead);
 void tls13_record_layer_set_hash(struct tls13_record_layer *rl,

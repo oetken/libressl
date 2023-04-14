@@ -28,18 +28,13 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
-3.3.6 - Security fix
+3.4.0 - Development release
 
-	* A malicious certificate can cause an infinite loop.
-	  Reported by and fix from Tavis Ormandy and David Benjamin, Google.
+	* Add support for OpenSSL 1.1.1 TLSv1.3 APIs.
 
-3.3.5 - Security fix
+	* Enable new x509 validator.
 
-	* A stack overread could occur when checking X.509 name constraints.
-	  From GoldBinocle on GitHub.
-
-	* Enable X509_V_FLAG_TRUSTED_FIRST by default in the legacy verifier.
-	  This compensates for the expiry of the DST Root X3 certificate.
+	* More details to come, testing is appreciated.
 
 3.3.4 - Security fix
 
