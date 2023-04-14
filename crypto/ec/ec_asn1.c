@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_asn1.c,v 1.10 2014/07/12 16:03:37 miod Exp $ */
+/* $OpenBSD: ec_asn1.c,v 1.9 2014/07/10 22:45:57 jsing Exp $ */
 /*
  * Written by Nils Larsch for the OpenSSL project.
  */
@@ -918,19 +918,19 @@ d2i_ECPKParameters(EC_GROUP ** a, const unsigned char **in, long len)
 
 	if ((params = d2i_ECPKPARAMETERS(NULL, in, len)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_D2I_ECPKPARAMETERS_FAILURE);
-		goto err;
+		ECPKPARAMETERS_free(params);
+		return NULL;
 	}
 	if ((group = ec_asn1_pkparameters2group(params)) == NULL) {
 		ECerr(EC_F_D2I_ECPKPARAMETERS, EC_R_PKPARAMETERS2GROUP_FAILURE);
-		goto err;
+		ECPKPARAMETERS_free(params);
+		return NULL;
 	}
-
-	if (a != NULL) {
+	if (a && *a)
 		EC_GROUP_clear_free(*a);
+	if (a)
 		*a = group;
-	}
 
-err:
 	ECPKPARAMETERS_free(params);
 	return (group);
 }
@@ -958,6 +958,7 @@ i2d_ECPKParameters(const EC_GROUP * a, unsigned char **out)
 EC_KEY *
 d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 {
+	int ok = 0;
 	EC_KEY *ret = NULL;
 	EC_PRIVATEKEY *priv_key = NULL;
 
@@ -972,9 +973,12 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 	}
 	if (a == NULL || *a == NULL) {
 		if ((ret = EC_KEY_new()) == NULL) {
-			ECerr(EC_F_D2I_ECPRIVATEKEY, ERR_R_MALLOC_FAILURE);
+			ECerr(EC_F_D2I_ECPRIVATEKEY,
+			    ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
+		if (a)
+			*a = ret;
 	} else
 		ret = *a;
 
@@ -1024,19 +1028,17 @@ d2i_ECPrivateKey(EC_KEY ** a, const unsigned char **in, long len)
 			goto err;
 		}
 	}
-
-	EC_PRIVATEKEY_free(priv_key);
-	if (a != NULL)
-		*a = ret;
-	return (ret);
-
+	ok = 1;
 err:
-	if (a == NULL || *a != ret)
-		EC_KEY_free(ret);
+	if (!ok) {
+		if (ret)
+			EC_KEY_free(ret);
+		ret = NULL;
+	}
 	if (priv_key)
 		EC_PRIVATEKEY_free(priv_key);
 
-	return (NULL);
+	return (ret);
 }
 
 int 
@@ -1149,6 +1151,8 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 			ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_MALLOC_FAILURE);
 			return NULL;
 		}
+		if (a)
+			*a = ret;
 	} else
 		ret = *a;
 
@@ -1156,9 +1160,6 @@ d2i_ECParameters(EC_KEY ** a, const unsigned char **in, long len)
 		ECerr(EC_F_D2I_ECPARAMETERS, ERR_R_EC_LIB);
 		return NULL;
 	}
-
-	if (a != NULL)
-		*a = ret;
 	return ret;
 }
 

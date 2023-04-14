@@ -244,6 +244,7 @@ ssl_cert_dup(CERT *cert)
 		}
 	}
 	ret->ecdh_tmp_cb = cert->ecdh_tmp_cb;
+	ret->ecdh_tmp_auto = cert->ecdh_tmp_auto;
 
 	for (i = 0; i < SSL_PKEY_NUM; i++) {
 		if (cert->pkeys[i].x509 != NULL) {
@@ -407,6 +408,7 @@ ssl_sess_cert_free(SESS_CERT *sc)
 			X509_free(sc->peer_pkeys[i].x509);
 	}
 
+	RSA_free(sc->peer_rsa_tmp);
 	DH_free(sc->peer_dh_tmp);
 	EC_KEY_free(sc->peer_ecdh_tmp);
 
