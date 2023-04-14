@@ -184,6 +184,11 @@ TESTS += gost2814789t
 check_PROGRAMS += gost2814789t
 gost2814789t_SOURCES = gost2814789t.c
 
+# hkdf_test
+TESTS += hkdftest
+check_PROGRAMS += hkdftest
+hkdftest_SOURCES = hkdf_test.c
+
 # hmactest
 TESTS += hmactest
 check_PROGRAMS += hmactest
