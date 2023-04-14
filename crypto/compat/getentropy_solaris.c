@@ -1,4 +1,4 @@
-/*	$OpenBSD: getentropy_solaris.c,v 1.15 2021/10/24 21:24:20 deraadt Exp $	*/
+/*	$OpenBSD: getentropy_linux.c,v 1.14 2014/06/26 13:48:11 deraadt Exp $	*/
 
 /*
  * Copyright (c) 2014 Theo de Raadt <deraadt@openbsd.org>
@@ -15,9 +15,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Emulation of getentropy(2) as documented at:
- * http://man.openbsd.org/getentropy.2
  */
 
 #include <sys/types.h>
@@ -34,7 +31,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <link.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -47,12 +43,13 @@
 #define SHA512_Update SHA512Update
 #define SHA512_Final SHA512Final
 
+
 #include <sys/vfs.h>
 #include <sys/statfs.h>
 #include <sys/loadavg.h>
 
 #define REPEAT 5
-#define MINIMUM(a, b) (((a) < (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 #define HX(a, b) \
 	do { \
@@ -64,14 +61,13 @@
 
 #define HR(x, l) (SHA512_Update(&ctx, (char *)(x), (l)))
 #define HD(x)	 (SHA512_Update(&ctx, (char *)&(x), sizeof (x)))
-#define HF(x)    (SHA512_Update(&ctx, (char *)&(x), sizeof (void*)))
 
 int	getentropy(void *buf, size_t len);
 
-static int getentropy_urandom(void *buf, size_t len, const char *path,
-    int devfscheck);
+extern int main(int, char *argv[]);
+static int gotdata(char *buf, size_t len);
+static int getentropy_urandom(void *buf, size_t len);
 static int getentropy_fallback(void *buf, size_t len);
-static int getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data);
 
 int
 getentropy(void *buf, size_t len)
@@ -80,43 +76,24 @@ getentropy(void *buf, size_t len)
 
 	if (len > 256) {
 		errno = EIO;
-		return (-1);
+		return -1;
 	}
 
 	/*
 	 * Try to get entropy with /dev/urandom
 	 *
-	 * Solaris provides /dev/urandom as a symbolic link to
-	 * /devices/pseudo/random@0:urandom which is provided by
-	 * a devfs filesystem.  Best practice is to use O_NOFOLLOW,
-	 * so we must try the unpublished name directly.
-	 *
-	 * This can fail if the process is inside a chroot which lacks
-	 * the devfs mount, or if file descriptors are exhausted.
-	 */
-	ret = getentropy_urandom(buf, len,
-	    "/devices/pseudo/random@0:urandom", 1);
-	if (ret != -1)
-		return (ret);
-
-	/*
-	 * Unfortunately, chroot spaces on Solaris are sometimes setup
-	 * with direct device node of the well-known /dev/urandom name
-	 * (perhaps to avoid dragging all of devfs into the space).
-	 *
 	 * This can fail if the process is inside a chroot or if file
 	 * descriptors are exhausted.
 	 */
-	ret = getentropy_urandom(buf, len, "/dev/urandom", 0);
+	ret = getentropy_urandom(buf, len);
 	if (ret != -1)
 		return (ret);
-
 	/*
-	 * Entropy collection via /dev/urandom has failed.
+	 * Entropy collection via /dev/urandom and sysctl have failed.
 	 *
 	 * No other API exists for collecting entropy, and we have
-	 * no failsafe way to get it on Solaris that is not sensitive
-	 * to resource exhaustion.
+         * no failsafe way to get it on Solaris that is not sensitive
+         * to resource exhaustion.
 	 *
 	 * We have very few options:
 	 *     - Even syslog_r is unsafe to call at this low level, so
@@ -135,8 +112,8 @@ getentropy(void *buf, size_t len)
 	 * providing a new failsafe API which works in a chroot or
 	 * when file descriptors are exhausted.
 	 */
-#undef FAIL_INSTEAD_OF_TRYING_FALLBACK
-#ifdef FAIL_INSTEAD_OF_TRYING_FALLBACK
+#undef FAIL_WHEN_SYSTEM_ENTROPY_FAILS
+#ifdef FAIL_WHEN_SYSTEM_ENTROPY_FAILS
 	raise(SIGKILL);
 #endif
 	ret = getentropy_fallback(buf, len);
@@ -147,8 +124,24 @@ getentropy(void *buf, size_t len)
 	return (ret);
 }
 
+/*
+ * Basic sanity checking; wish we could do better.
+ */
 static int
-getentropy_urandom(void *buf, size_t len, const char *path, int devfscheck)
+gotdata(char *buf, size_t len)
+{
+	char	any_set = 0;
+	size_t	i;
+
+	for (i = 0; i < len; ++i)
+		any_set |= buf[i];
+	if (any_set == 0)
+		return -1;
+	return 0;
+}
+
+static int
+getentropy_urandom(void *buf, size_t len)
 {
 	struct stat st;
 	size_t i;
@@ -157,14 +150,19 @@ getentropy_urandom(void *buf, size_t len, const char *path, int devfscheck)
 
 start:
 
-	flags = O_RDONLY;
+        flags = O_RDONLY;
 #ifdef O_NOFOLLOW
-	flags |= O_NOFOLLOW;
+        flags |= O_NOFOLLOW;
 #endif
 #ifdef O_CLOEXEC
-	flags |= O_CLOEXEC;
+        flags |= O_CLOEXEC;
 #endif
-	fd = open(path, flags);
+	/* 
+	 * Solaris provides /dev/urandom as a symbolic link. 
+	 * /devices/pseudo/random@0:urandom should be the
+	 * real device path, and we do want O_NOFOLLOW. 
+	 */
+	fd = open("/devices/pseudo/random@0:urandom", flags, 0);
 	if (fd == -1) {
 		if (errno == EINTR)
 			goto start;
@@ -175,14 +173,13 @@ start:
 #endif
 
 	/* Lightly verify that the device node looks sane */
-	if (fstat(fd, &st) == -1 || !S_ISCHR(st.st_mode) ||
-	    (devfscheck && (strcmp(st.st_fstype, "devfs") != 0))) {
+	if (fstat(fd, &st) == -1 || !S_ISCHR(st.st_mode)) {
 		close(fd);
 		goto nodevrandom;
 	}
 	for (i = 0; i < len; ) {
 		size_t wanted = len - i;
-		ssize_t ret = read(fd, (char *)buf + i, wanted);
+		ssize_t ret = read(fd, buf + i, wanted);
 
 		if (ret == -1) {
 			if (errno == EAGAIN || errno == EINTR)
@@ -193,14 +190,16 @@ start:
 		i += ret;
 	}
 	close(fd);
-	errno = save_errno;
-	return (0);		/* satisfied */
+	if (gotdata(buf, len) == 0) {
+		errno = save_errno;
+		return 0;		/* satisfied */
+	}
 nodevrandom:
 	errno = EIO;
-	return (-1);
+	return -1;
 }
 
-static const int cl[] = {
+static int cl[] = {
 	CLOCK_REALTIME,
 #ifdef CLOCK_MONOTONIC
 	CLOCK_MONOTONIC,
@@ -226,19 +225,10 @@ static const int cl[] = {
 };
 
 static int
-getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data)
-{
-	SHA512_CTX *ctx = data;
-
-	SHA512_Update(ctx, &info->dlpi_addr, sizeof (info->dlpi_addr));
-	return (0);
-}
-
-static int
 getentropy_fallback(void *buf, size_t len)
 {
 	uint8_t results[SHA512_DIGEST_LENGTH];
-	int save_errno = errno, e, pgs = getpagesize(), faster = 0, repeat;
+	int save_errno = errno, e, m, pgs = getpagesize(), faster = 0, repeat;
 	static int cnt;
 	struct timespec ts;
 	struct timeval tv;
@@ -249,7 +239,7 @@ getentropy_fallback(void *buf, size_t len)
 	SHA512_CTX ctx;
 	static pid_t lastpid;
 	pid_t pid;
-	size_t i, ii, m;
+	size_t i, ii;
 	char *p;
 
 	pid = getpid();
@@ -271,16 +261,13 @@ getentropy_fallback(void *buf, size_t len)
 				cnt += (int)tv.tv_usec;
 			}
 
-			dl_iterate_phdr(getentropy_phdr, &ctx);
-
 			for (ii = 0; ii < sizeof(cl)/sizeof(cl[0]); ii++)
 				HX(clock_gettime(cl[ii], &ts) == -1, ts);
-
 			HX((pid = getpid()) == -1, pid);
 			HX((pid = getsid(pid)) == -1, pid);
 			HX((pid = getppid()) == -1, pid);
 			HX((pid = getpgid(0)) == -1, pid);
-			HX((e = getpriority(0, 0)) == -1, e);
+			HX((m = getpriority(0, 0)) == -1, m);
 			HX((getloadavg(loadavg, 3) == -1), loadavg);
 
 			if (!faster) {
@@ -293,8 +280,9 @@ getentropy_fallback(void *buf, size_t len)
 			HX(sigprocmask(SIG_BLOCK, NULL, &sigset) == -1,
 			    sigset);
 
-			HF(getentropy);	/* an addr in this library */
-			HF(printf);		/* an addr in libc */
+			HD(main);		/* an addr in program */
+			HD(getentropy);	/* an addr in this library */
+			HD(printf);		/* an addr in libc */
 			p = (char *)&p;
 			HD(p);		/* an addr on stack */
 			p = (char *)&errno;
@@ -412,11 +400,14 @@ getentropy_fallback(void *buf, size_t len)
 			HD(cnt);
 		}
 		SHA512_Final(results, &ctx);
-		memcpy((char *)buf + i, results, MINIMUM(sizeof(results), len - i));
-		i += MINIMUM(sizeof(results), len - i);
+		memcpy(buf + i, results, min(sizeof(results), len - i));
+		i += min(sizeof(results), len - i);
 	}
-	explicit_bzero(&ctx, sizeof ctx);
-	explicit_bzero(results, sizeof results);
-	errno = save_errno;
-	return (0);		/* satisfied */
+	memset(results, 0, sizeof results);
+	if (gotdata(buf, len) == 0) {
+		errno = save_errno;
+		return 0;		/* satisfied */
+	}
+	errno = EIO;
+	return -1;
 }

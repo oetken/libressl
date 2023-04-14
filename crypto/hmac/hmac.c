@@ -1,4 +1,4 @@
-/* $OpenBSD: hmac.c,v 1.31 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: hmac.c,v 1.20 2014/06/21 13:39:46 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,11 +60,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <openssl/err.h>
 #include <openssl/hmac.h>
-
-#include "evp_local.h"
-#include "hmac_local.h"
 
 int
 HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md,
@@ -73,25 +69,16 @@ HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md,
 	int i, j, reset = 0;
 	unsigned char pad[HMAC_MAX_MD_CBLOCK];
 
-	/* If we are changing MD then we must have a key */
-	if (md != NULL && md != ctx->md && (key == NULL || len < 0))
-		return 0;
-
 	if (md != NULL) {
 		reset = 1;
 		ctx->md = md;
-	} else if (ctx->md != NULL)
+	} else
 		md = ctx->md;
-	else
-		return 0;
 
 	if (key != NULL) {
 		reset = 1;
 		j = EVP_MD_block_size(md);
-		if ((size_t)j > sizeof(ctx->key)) {
-			EVPerror(EVP_R_BAD_BLOCK_LENGTH);
-			goto err;
-		}
+		OPENSSL_assert(j <= (int)sizeof(ctx->key));
 		if (j < len) {
 			if (!EVP_DigestInit_ex(&ctx->md_ctx, md, impl))
 				goto err;
@@ -101,10 +88,8 @@ HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md,
 			    &ctx->key_length))
 				goto err;
 		} else {
-			if (len < 0 || (size_t)len > sizeof(ctx->key)) {
-				EVPerror(EVP_R_BAD_KEY_LENGTH);
-				goto err;
-			}
+			OPENSSL_assert(len >= 0 &&
+			    len <= (int)sizeof(ctx->key));
 			memcpy(ctx->key, key, len);
 			ctx->key_length = len;
 		}
@@ -134,7 +119,6 @@ HMAC_Init_ex(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md,
 err:
 	return 0;
 }
-LCRYPTO_ALIAS(HMAC_Init_ex);
 
 int
 HMAC_Init(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md)
@@ -147,21 +131,14 @@ HMAC_Init(HMAC_CTX *ctx, const void *key, int len, const EVP_MD *md)
 int
 HMAC_Update(HMAC_CTX *ctx, const unsigned char *data, size_t len)
 {
-	if (ctx->md == NULL)
-		return 0;
-
 	return EVP_DigestUpdate(&ctx->md_ctx, data, len);
 }
-LCRYPTO_ALIAS(HMAC_Update);
 
 int
 HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len)
 {
 	unsigned int i;
 	unsigned char buf[EVP_MAX_MD_SIZE];
-
-	if (ctx->md == NULL)
-		goto err;
 
 	if (!EVP_DigestFinal_ex(&ctx->md_ctx, buf, &i))
 		goto err;
@@ -175,41 +152,6 @@ HMAC_Final(HMAC_CTX *ctx, unsigned char *md, unsigned int *len)
 err:
 	return 0;
 }
-LCRYPTO_ALIAS(HMAC_Final);
-
-HMAC_CTX *
-HMAC_CTX_new(void)
-{
-	HMAC_CTX *ctx;
-
-	if ((ctx = calloc(1, sizeof(*ctx))) == NULL)
-		return NULL;
-
-	HMAC_CTX_init(ctx);
-
-	return ctx;
-}
-LCRYPTO_ALIAS(HMAC_CTX_new);
-
-void
-HMAC_CTX_free(HMAC_CTX *ctx)
-{
-	if (ctx == NULL)
-		return;
-
-	HMAC_CTX_cleanup(ctx);
-
-	free(ctx);
-}
-LCRYPTO_ALIAS(HMAC_CTX_free);
-
-int
-HMAC_CTX_reset(HMAC_CTX *ctx)
-{
-	HMAC_CTX_cleanup(ctx);
-	HMAC_CTX_init(ctx);
-	return 1;
-}
 
 void
 HMAC_CTX_init(HMAC_CTX *ctx)
@@ -217,7 +159,6 @@ HMAC_CTX_init(HMAC_CTX *ctx)
 	EVP_MD_CTX_init(&ctx->i_ctx);
 	EVP_MD_CTX_init(&ctx->o_ctx);
 	EVP_MD_CTX_init(&ctx->md_ctx);
-	ctx->md = NULL;
 }
 
 int
@@ -236,7 +177,6 @@ HMAC_CTX_copy(HMAC_CTX *dctx, HMAC_CTX *sctx)
 err:
 	return 0;
 }
-LCRYPTO_ALIAS(HMAC_CTX_copy);
 
 void
 HMAC_CTX_cleanup(HMAC_CTX *ctx)
@@ -244,7 +184,29 @@ HMAC_CTX_cleanup(HMAC_CTX *ctx)
 	EVP_MD_CTX_cleanup(&ctx->i_ctx);
 	EVP_MD_CTX_cleanup(&ctx->o_ctx);
 	EVP_MD_CTX_cleanup(&ctx->md_ctx);
-	explicit_bzero(ctx, sizeof(*ctx));
+	memset(ctx, 0, sizeof *ctx);
+}
+
+unsigned char *
+HMAC(const EVP_MD *evp_md, const void *key, int key_len, const unsigned char *d,
+    size_t n, unsigned char *md, unsigned int *md_len)
+{
+	HMAC_CTX c;
+	static unsigned char m[EVP_MAX_MD_SIZE];
+
+	if (md == NULL)
+		md = m;
+	HMAC_CTX_init(&c);
+	if (!HMAC_Init(&c, key, key_len, evp_md))
+		goto err;
+	if (!HMAC_Update(&c, d, n))
+		goto err;
+	if (!HMAC_Final(&c, md, md_len))
+		goto err;
+	HMAC_CTX_cleanup(&c);
+	return md;
+err:
+	return NULL;
 }
 
 void
@@ -254,40 +216,3 @@ HMAC_CTX_set_flags(HMAC_CTX *ctx, unsigned long flags)
 	EVP_MD_CTX_set_flags(&ctx->o_ctx, flags);
 	EVP_MD_CTX_set_flags(&ctx->md_ctx, flags);
 }
-LCRYPTO_ALIAS(HMAC_CTX_set_flags);
-
-const EVP_MD *
-HMAC_CTX_get_md(const HMAC_CTX *ctx)
-{
-	return ctx->md;
-}
-LCRYPTO_ALIAS(HMAC_CTX_get_md);
-
-unsigned char *
-HMAC(const EVP_MD *evp_md, const void *key, int key_len, const unsigned char *d,
-    size_t n, unsigned char *md, unsigned int *md_len)
-{
-	HMAC_CTX c;
-	static unsigned char m[EVP_MAX_MD_SIZE];
-	const unsigned char dummy_key[1] = { 0 };
-
-	if (md == NULL)
-		md = m;
-	if (key == NULL) {
-		key = dummy_key;
-		key_len = 0;
-	}
-	HMAC_CTX_init(&c);
-	if (!HMAC_Init_ex(&c, key, key_len, evp_md, NULL))
-		goto err;
-	if (!HMAC_Update(&c, d, n))
-		goto err;
-	if (!HMAC_Final(&c, md, md_len))
-		goto err;
-	HMAC_CTX_cleanup(&c);
-	return md;
-err:
-	HMAC_CTX_cleanup(&c);
-	return NULL;
-}
-LCRYPTO_ALIAS(HMAC);

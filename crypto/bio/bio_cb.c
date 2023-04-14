@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_cb.c,v 1.18 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bio_cb.c,v 1.14 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,8 +63,6 @@
 #include <openssl/err.h>
 #include <openssl/bio.h>
 
-#include "bio_local.h"
-
 long
 BIO_debug_callback(BIO *bio, int cmd, const char *argp, int argi, long argl,
     long ret)
@@ -72,22 +70,15 @@ BIO_debug_callback(BIO *bio, int cmd, const char *argp, int argi, long argl,
 	BIO *b;
 	char buf[256];
 	char *p;
-	int nbuf;
 	long r = 1;
 	size_t p_maxlen;
 
 	if (BIO_CB_RETURN & cmd)
 		r = ret;
 
-	nbuf = snprintf(buf, sizeof(buf), "BIO[%p]: ", bio);
-	if (nbuf < 0)
-		nbuf = 0;	/* Ignore error; continue printing. */
-	if (nbuf >= sizeof(buf))
-		goto out;
-
-	p = buf + nbuf;
-	p_maxlen = sizeof(buf) - nbuf;
-
+	snprintf(buf, sizeof buf, "BIO[%08lX]:", (unsigned long)bio);
+	p = &(buf[14]);
+	p_maxlen = sizeof buf - 14;
 	switch (cmd) {
 	case BIO_CB_FREE:
 		snprintf(p, p_maxlen, "Free - %s\n", bio->method->name);
@@ -145,7 +136,6 @@ BIO_debug_callback(BIO *bio, int cmd, const char *argp, int argi, long argl,
 		break;
 	}
 
- out:
 	b = (BIO *)bio->cb_arg;
 	if (b != NULL)
 		BIO_write(b, buf, strlen(buf));

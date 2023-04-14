@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_saos.c,v 1.24 2018/09/05 00:55:33 djm Exp $ */
+/* $OpenBSD: rsa_saos.c,v 1.14 2014/07/10 13:58:23 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -80,12 +80,13 @@ RSA_sign_ASN1_OCTET_STRING(int type, const unsigned char *m, unsigned int m_len,
 	i = i2d_ASN1_OCTET_STRING(&sig, NULL);
 	j = RSA_size(rsa);
 	if (i > (j - RSA_PKCS1_PADDING_SIZE)) {
-		RSAerror(RSA_R_DIGEST_TOO_BIG_FOR_RSA_KEY);
+		RSAerr(RSA_F_RSA_SIGN_ASN1_OCTET_STRING,
+		    RSA_R_DIGEST_TOO_BIG_FOR_RSA_KEY);
 		return 0;
 	}
-	s = malloc(j + 1);
+	s = malloc((unsigned int)j + 1);
 	if (s == NULL) {
-		RSAerror(ERR_R_MALLOC_FAILURE);
+		RSAerr(RSA_F_RSA_SIGN_ASN1_OCTET_STRING, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
 	p = s;
@@ -96,7 +97,8 @@ RSA_sign_ASN1_OCTET_STRING(int type, const unsigned char *m, unsigned int m_len,
 	else
 		*siglen = i;
 
-	freezero(s, (unsigned int)j + 1);
+	OPENSSL_cleanse(s, (unsigned int)j + 1);
+	free(s);
 	return ret;
 }
 
@@ -110,13 +112,15 @@ RSA_verify_ASN1_OCTET_STRING(int dtype, const unsigned char *m,
 	ASN1_OCTET_STRING *sig = NULL;
 
 	if (siglen != (unsigned int)RSA_size(rsa)) {
-		RSAerror(RSA_R_WRONG_SIGNATURE_LENGTH);
+		RSAerr(RSA_F_RSA_VERIFY_ASN1_OCTET_STRING,
+		    RSA_R_WRONG_SIGNATURE_LENGTH);
 		return 0;
 	}
 
-	s = malloc(siglen);
+	s = malloc((unsigned int)siglen);
 	if (s == NULL) {
-		RSAerror(ERR_R_MALLOC_FAILURE);
+		RSAerr(RSA_F_RSA_VERIFY_ASN1_OCTET_STRING,
+		    ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	i = RSA_public_decrypt((int)siglen, sigbuf, s, rsa, RSA_PKCS1_PADDING);
@@ -130,12 +134,17 @@ RSA_verify_ASN1_OCTET_STRING(int dtype, const unsigned char *m,
 		goto err;
 
 	if ((unsigned int)sig->length != m_len ||
-	    timingsafe_bcmp(m, sig->data, m_len) != 0) {
-		RSAerror(RSA_R_BAD_SIGNATURE);
+	    memcmp(m, sig->data, m_len) != 0) {
+		RSAerr(RSA_F_RSA_VERIFY_ASN1_OCTET_STRING,
+		    RSA_R_BAD_SIGNATURE);
 	} else
 		ret = 1;
 err:
-	ASN1_OCTET_STRING_free(sig);
-	freezero(s, (unsigned int)siglen);
+	if (sig != NULL)
+		M_ASN1_OCTET_STRING_free(sig);
+	if (s != NULL) {
+		OPENSSL_cleanse(s, (unsigned int)siglen);
+		free(s);
+	}
 	return ret;
 }

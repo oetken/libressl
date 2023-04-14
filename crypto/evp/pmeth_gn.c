@@ -1,4 +1,4 @@
-/* $OpenBSD: pmeth_gn.c,v 1.11 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: pmeth_gn.c,v 1.3 2014/06/12 15:49:29 deraadt Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -64,9 +64,7 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 
-#include "asn1_local.h"
-#include "bn_local.h"
-#include "evp_local.h"
+#include "evp_locl.h"
 
 int
 EVP_PKEY_paramgen_init(EVP_PKEY_CTX *ctx)
@@ -74,7 +72,8 @@ EVP_PKEY_paramgen_init(EVP_PKEY_CTX *ctx)
 	int ret;
 
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->paramgen) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+		EVPerr(EVP_F_EVP_PKEY_PARAMGEN_INIT,
+		    EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
 		return -2;
 	}
 	ctx->operation = EVP_PKEY_OP_PARAMGEN;
@@ -92,12 +91,13 @@ EVP_PKEY_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
 	int ret;
 
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->paramgen) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+		EVPerr(EVP_F_EVP_PKEY_PARAMGEN,
+		    EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
 		return -2;
 	}
 
 	if (ctx->operation != EVP_PKEY_OP_PARAMGEN) {
-		EVPerror(EVP_R_OPERATON_NOT_INITIALIZED);
+		EVPerr(EVP_F_EVP_PKEY_PARAMGEN, EVP_R_OPERATON_NOT_INITIALIZED);
 		return -1;
 	}
 
@@ -121,7 +121,8 @@ EVP_PKEY_keygen_init(EVP_PKEY_CTX *ctx)
 	int ret;
 
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->keygen) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+		EVPerr(EVP_F_EVP_PKEY_KEYGEN_INIT,
+		    EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
 		return -2;
 	}
 	ctx->operation = EVP_PKEY_OP_KEYGEN;
@@ -139,11 +140,12 @@ EVP_PKEY_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY **ppkey)
 	int ret;
 
 	if (!ctx || !ctx->pmeth || !ctx->pmeth->keygen) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
+		EVPerr(EVP_F_EVP_PKEY_KEYGEN,
+		    EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
 		return -2;
 	}
 	if (ctx->operation != EVP_PKEY_OP_KEYGEN) {
-		EVPerror(EVP_R_OPERATON_NOT_INITIALIZED);
+		EVPerr(EVP_F_EVP_PKEY_KEYGEN, EVP_R_OPERATON_NOT_INITIALIZED);
 		return -1;
 	}
 
@@ -189,7 +191,7 @@ trans_cb(int a, int b, BN_GENCB *gcb)
 void
 evp_pkey_set_cb_translate(BN_GENCB *cb, EVP_PKEY_CTX *ctx)
 {
-	BN_GENCB_set(cb, trans_cb, ctx);
+	BN_GENCB_set(cb, trans_cb, ctx)
 }
 
 int
@@ -220,69 +222,7 @@ EVP_PKEY_new_mac_key(int type, ENGINE *e, const unsigned char *key, int keylen)
 		goto merr;
 
 merr:
-	EVP_PKEY_CTX_free(mac_ctx);
+	if (mac_ctx)
+		EVP_PKEY_CTX_free(mac_ctx);
 	return mac_key;
-}
-
-int
-EVP_PKEY_check(EVP_PKEY_CTX *ctx)
-{
-	EVP_PKEY *pkey;
-
-	if ((pkey = ctx->pkey) == NULL) {
-		EVPerror(EVP_R_NO_KEY_SET);
-		return 0;
-	}
-
-	if (ctx->pmeth->check != NULL)
-		return ctx->pmeth->check(pkey);
-
-	if (pkey->ameth == NULL || pkey->ameth->pkey_check == NULL) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
-		return -2;
-	}
-
-	return pkey->ameth->pkey_check(pkey);
-}
-
-int
-EVP_PKEY_public_check(EVP_PKEY_CTX *ctx)
-{
-	EVP_PKEY *pkey;
-
-	if ((pkey = ctx->pkey) == NULL) {
-		EVPerror(EVP_R_NO_KEY_SET);
-		return 0;
-	}
-
-	if (ctx->pmeth->public_check != NULL)
-		return ctx->pmeth->public_check(pkey);
-
-	if (pkey->ameth == NULL || pkey->ameth->pkey_public_check == NULL) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
-		return -2;
-	}
-
-	return pkey->ameth->pkey_public_check(pkey);
-}
-
-int
-EVP_PKEY_param_check(EVP_PKEY_CTX *ctx)
-{
-	EVP_PKEY *pkey;
-
-	if ((pkey = ctx->pkey) == NULL) {
-		EVPerror(EVP_R_NO_KEY_SET);
-		return 0;
-	}
-
-	if (ctx->pmeth->param_check != NULL)
-		return ctx->pmeth->param_check(pkey);
-
-	if (pkey->ameth == NULL || pkey->ameth->pkey_param_check == NULL) {
-		EVPerror(EVP_R_OPERATION_NOT_SUPPORTED_FOR_THIS_KEYTYPE);
-		return -2;
-	}
-
-	return pkey->ameth->pkey_param_check(pkey);
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: rc2cfb64.c,v 1.6 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <openssl/rc2.h>
-#include "rc2_local.h"
+#include "rc2_locl.h"
 
 /* The input and output encrypted as though 64bit cfb mode is being
  * used.  The extra state information to record how much of the
@@ -68,9 +68,9 @@ void RC2_cfb64_encrypt(const unsigned char *in, unsigned char *out,
 		       long length, RC2_KEY *schedule, unsigned char *ivec,
 		       int *num, int encrypt)
 	{
-	unsigned long v0,v1,t;
-	int n= *num;
-	long l=length;
+	register unsigned long v0,v1,t;
+	register int n= *num;
+	register long l=length;
 	unsigned long ti[2];
 	unsigned char *iv,c,cc;
 

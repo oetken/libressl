@@ -1,4 +1,4 @@
-/* $OpenBSD: e_aes_cbc_hmac_sha1.c,v 1.17 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: e_aes_cbc_hmac_sha1.c,v 1.6 2014/06/12 15:49:29 deraadt Exp $ */
 /* ====================================================================
  * Copyright (c) 2011-2013 The OpenSSL Project.  All rights reserved.
  *
@@ -59,9 +59,17 @@
 #include <openssl/objects.h>
 #include <openssl/aes.h>
 #include <openssl/sha.h>
+#include "evp_locl.h"
 
-#include "constant_time.h"
-#include "evp_local.h"
+#ifndef EVP_CIPH_FLAG_AEAD_CIPHER
+#define EVP_CIPH_FLAG_AEAD_CIPHER	0x200000
+#define EVP_CTRL_AEAD_TLS1_AAD		0x16
+#define EVP_CTRL_AEAD_SET_MAC_KEY	0x17
+#endif
+
+#if !defined(EVP_CIPH_FLAG_DEFAULT_ASN1)
+#define EVP_CIPH_FLAG_DEFAULT_ASN1 0
+#endif
 
 #define TLS1_1_VERSION 0x0302
 
@@ -82,11 +90,12 @@ typedef struct {
 	defined(_M_AMD64)	|| defined(_M_X64)	|| \
 	defined(__INTEL__)	)
 
-#include "x86_arch.h"
-
 #if defined(__GNUC__) && __GNUC__>=2
 # define BSWAP(x) ({ unsigned int r=(x); asm ("bswapl %0":"=r"(r):"0"(r)); r; })
 #endif
+
+extern unsigned int OPENSSL_ia32cap_P[2];
+#define AESNI_CAPABLE   (1<<(57-32))
 
 int aesni_set_encrypt_key(const unsigned char *userKey, int bits, AES_KEY *key);
 int aesni_set_decrypt_key(const unsigned char *userKey, int bits, AES_KEY *key);
@@ -250,11 +259,7 @@ aesni_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 		/* decrypt HMAC|padding at once */
 		aesni_cbc_encrypt(in, out, len, &key->ks, ctx->iv, 0);
 
-		if (plen == 0 || plen == NO_PAYLOAD_LENGTH) {
-			SHA1_Update(&key->md, out, len);
-		} else if (plen < 4) {
-			return 0;
-		} else {	/* "TLS" mode of operation */
+		if (plen) {	/* "TLS" mode of operation */
 			size_t inp_len, mask, j, i;
 			unsigned int res, maxpad, pad, bitlen;
 			int ret = 1;
@@ -280,8 +285,6 @@ aesni_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 			maxpad = len - (SHA_DIGEST_LENGTH + 1);
 			maxpad |= (255 - maxpad) >> (sizeof(maxpad) * 8 - 8);
 			maxpad &= 255;
-
-			ret &= constant_time_ge(maxpad, pad);
 
 			inp_len = len - (SHA_DIGEST_LENGTH + pad + 1);
 			mask = (0 - ((inp_len - len) >>
@@ -464,6 +467,8 @@ aesni_cbc_hmac_sha1_cipher(EVP_CIPHER_CTX *ctx, unsigned char *out,
 			ret &= (int)~res;
 #endif
 			return ret;
+		} else {
+			SHA1_Update(&key->md, out, len);
 		}
 	}
 
@@ -481,7 +486,7 @@ aesni_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 			unsigned int  i;
 			unsigned char hmac_key[64];
 
-			memset(hmac_key, 0, sizeof(hmac_key));
+			memset (hmac_key, 0, sizeof(hmac_key));
 
 			if (arg > (int)sizeof(hmac_key)) {
 				SHA1_Init(&key->head);
@@ -501,20 +506,14 @@ aesni_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 			SHA1_Init(&key->tail);
 			SHA1_Update(&key->tail, hmac_key, sizeof(hmac_key));
 
-			explicit_bzero(hmac_key, sizeof(hmac_key));
+			OPENSSL_cleanse(hmac_key, sizeof(hmac_key));
 
 			return 1;
 		}
 	case EVP_CTRL_AEAD_TLS1_AAD:
 		{
 			unsigned char *p = ptr;
-			unsigned int len;
-
-			/* RFC 5246, 6.2.3.3: additional data has length 13 */
-			if (arg != 13)
-				return -1;
-
-			len = p[arg - 2] << 8 | p[arg - 1];
+			unsigned int len = p[arg - 2] << 8 | p[arg - 1];
 
 			if (ctx->encrypt) {
 				key->payload_length = len;
@@ -530,6 +529,8 @@ aesni_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 				return (int)(((len + SHA_DIGEST_LENGTH +
 				    AES_BLOCK_SIZE) & -AES_BLOCK_SIZE) - len);
 			} else {
+				if (arg > 13)
+					arg = 13;
 				memcpy(key->aux.tls_aad, ptr, arg);
 				key->payload_length = arg;
 
@@ -543,50 +544,52 @@ aesni_cbc_hmac_sha1_ctrl(EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 
 static EVP_CIPHER aesni_128_cbc_hmac_sha1_cipher = {
 #ifdef NID_aes_128_cbc_hmac_sha1
-	.nid = NID_aes_128_cbc_hmac_sha1,
+	NID_aes_128_cbc_hmac_sha1,
 #else
-	.nid = NID_undef,
+	NID_undef,
 #endif
-	.block_size = 16,
-	.key_len = 16,
-	.iv_len = 16,
-	.flags = EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 |
-	    EVP_CIPH_FLAG_AEAD_CIPHER,
-	.init = aesni_cbc_hmac_sha1_init_key,
-	.do_cipher = aesni_cbc_hmac_sha1_cipher,
-	.ctx_size = sizeof(EVP_AES_HMAC_SHA1),
-	.ctrl = aesni_cbc_hmac_sha1_ctrl
+	16, 16, 16,
+	EVP_CIPH_CBC_MODE|EVP_CIPH_FLAG_DEFAULT_ASN1|EVP_CIPH_FLAG_AEAD_CIPHER,
+	aesni_cbc_hmac_sha1_init_key,
+	aesni_cbc_hmac_sha1_cipher,
+	NULL,
+	sizeof(EVP_AES_HMAC_SHA1),
+	EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_set_asn1_iv,
+	EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_get_asn1_iv,
+	aesni_cbc_hmac_sha1_ctrl,
+	NULL
 };
 
 static EVP_CIPHER aesni_256_cbc_hmac_sha1_cipher = {
 #ifdef NID_aes_256_cbc_hmac_sha1
-	.nid = NID_aes_256_cbc_hmac_sha1,
+	NID_aes_256_cbc_hmac_sha1,
 #else
-	.nid = NID_undef,
+	NID_undef,
 #endif
-	.block_size = 16,
-	.key_len = 32,
-	.iv_len = 16,
-	.flags = EVP_CIPH_CBC_MODE | EVP_CIPH_FLAG_DEFAULT_ASN1 |
-	    EVP_CIPH_FLAG_AEAD_CIPHER,
-	.init = aesni_cbc_hmac_sha1_init_key,
-	.do_cipher = aesni_cbc_hmac_sha1_cipher,
-	.ctx_size = sizeof(EVP_AES_HMAC_SHA1),
-	.ctrl = aesni_cbc_hmac_sha1_ctrl
+	16, 32, 16,
+	EVP_CIPH_CBC_MODE|EVP_CIPH_FLAG_DEFAULT_ASN1|EVP_CIPH_FLAG_AEAD_CIPHER,
+	aesni_cbc_hmac_sha1_init_key,
+	aesni_cbc_hmac_sha1_cipher,
+	NULL,
+	sizeof(EVP_AES_HMAC_SHA1),
+	EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_set_asn1_iv,
+	EVP_CIPH_FLAG_DEFAULT_ASN1 ? NULL : EVP_CIPHER_get_asn1_iv,
+	aesni_cbc_hmac_sha1_ctrl,
+	NULL
 };
 
 const EVP_CIPHER *
 EVP_aes_128_cbc_hmac_sha1(void)
 {
-	return (OPENSSL_cpu_caps() & CPUCAP_MASK_AESNI) ?
-	    &aesni_128_cbc_hmac_sha1_cipher : NULL;
+	return(OPENSSL_ia32cap_P[1] & AESNI_CAPABLE?
+	&aesni_128_cbc_hmac_sha1_cipher : NULL);
 }
 
 const EVP_CIPHER *
 EVP_aes_256_cbc_hmac_sha1(void)
 {
-	return (OPENSSL_cpu_caps() & CPUCAP_MASK_AESNI) ?
-	    &aesni_256_cbc_hmac_sha1_cipher : NULL;
+	return(OPENSSL_ia32cap_P[1] & AESNI_CAPABLE?
+	&aesni_256_cbc_hmac_sha1_cipher : NULL);
 }
 #else
 const EVP_CIPHER *

@@ -1,4 +1,4 @@
-/* $OpenBSD: cbc128.c,v 1.6 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2008 The OpenSSL Project.  All rights reserved.
  *
@@ -50,7 +50,7 @@
  */
 
 #include <openssl/crypto.h>
-#include "modes_local.h"
+#include "modes_lcl.h"
 #include <string.h>
 
 #ifndef MODES_DEBUG
@@ -58,6 +58,7 @@
 #  define NDEBUG
 # endif
 #endif
+#include <assert.h>
 
 #undef STRICT_ALIGNMENT
 #ifdef __STRICT_ALIGNMENT
@@ -72,6 +73,8 @@ void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out,
 {
 	size_t n;
 	const unsigned char *iv = ivec;
+
+	assert(in && out && key && ivec);
 
 #if !defined(OPENSSL_SMALL_FOOTPRINT)
 	if (STRICT_ALIGNMENT &&
@@ -110,7 +113,7 @@ void CRYPTO_cbc128_encrypt(const unsigned char *in, unsigned char *out,
 		in  += 16;
 		out += 16;
 	}
-	memmove(ivec,iv,16);
+	memcpy(ivec,iv,16);
 }
 
 void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out,
@@ -119,6 +122,8 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out,
 {
 	size_t n;
 	union { size_t t[16/sizeof(size_t)]; unsigned char c[16]; } tmp;
+
+	assert(in && out && key && ivec);
 
 #if !defined(OPENSSL_SMALL_FOOTPRINT)
 	if (in != out) {
@@ -148,7 +153,7 @@ void CRYPTO_cbc128_decrypt(const unsigned char *in, unsigned char *out,
 				out += 16;
 			}
 		}
-		memmove(ivec,iv,16);
+		memcpy(ivec,iv,16);
 	} else {
 		if (STRICT_ALIGNMENT &&
 		    ((size_t)in|(size_t)out|(size_t)ivec)%sizeof(size_t) != 0) {

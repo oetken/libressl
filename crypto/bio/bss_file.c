@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_file.c,v 1.34 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bss_file.c,v 1.29 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -90,8 +90,6 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 
-#include "bio_local.h"
-
 static int file_write(BIO *h, const char *buf, int num);
 static int file_read(BIO *h, char *buf, int size);
 static int file_puts(BIO *h, const char *str);
@@ -100,7 +98,7 @@ static long file_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int file_new(BIO *h);
 static int file_free(BIO *data);
 
-static const BIO_METHOD methods_filep = {
+static BIO_METHOD methods_filep = {
 	.type = BIO_TYPE_FILE,
 	.name = "FILE pointer",
 	.bwrite = file_write,
@@ -121,12 +119,12 @@ BIO_new_file(const char *filename, const char *mode)
 	file = fopen(filename, mode);
 
 	if (file == NULL) {
-		SYSerror(errno);
+		SYSerr(SYS_F_FOPEN, errno);
 		ERR_asprintf_error_data("fopen('%s', '%s')", filename, mode);
 		if (errno == ENOENT)
-			BIOerror(BIO_R_NO_SUCH_FILE);
+			BIOerr(BIO_F_BIO_NEW_FILE, BIO_R_NO_SUCH_FILE);
 		else
-			BIOerror(ERR_R_SYS_LIB);
+			BIOerr(BIO_F_BIO_NEW_FILE, ERR_R_SYS_LIB);
 		return (NULL);
 	}
 	if ((ret = BIO_new(BIO_s_file())) == NULL) {
@@ -150,7 +148,7 @@ BIO_new_fp(FILE *stream, int close_flag)
 	return (ret);
 }
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_file(void)
 {
 	return (&methods_filep);
@@ -187,11 +185,11 @@ file_read(BIO *b, char *out, int outl)
 {
 	int ret = 0;
 
-	if (b->init && out != NULL) {
-		ret = fread(out, 1, outl, (FILE *)b->ptr);
+	if (b->init && (out != NULL)) {
+		ret = fread(out, 1,(int)outl,(FILE *)b->ptr);
 		if (ret == 0 && ferror((FILE *)b->ptr)) {
-			SYSerror(errno);
-			BIOerror(ERR_R_SYS_LIB);
+			SYSerr(SYS_F_FREAD, errno);
+			BIOerr(BIO_F_FILE_READ, ERR_R_SYS_LIB);
 			ret = -1;
 		}
 	}
@@ -203,8 +201,15 @@ file_write(BIO *b, const char *in, int inl)
 {
 	int ret = 0;
 
-	if (b->init && in != NULL)
-		ret = fwrite(in, 1, inl, (FILE *)b->ptr);
+	if (b->init && (in != NULL)) {
+		ret = fwrite(in,(int)inl, 1,(FILE *)b->ptr);
+		if (ret)
+			ret = inl;
+		/* ret=fwrite(in,1,(int)inl,(FILE *)b->ptr); */
+		/* according to Tim Hudson <tjh@cryptsoft.com>, the commented
+		 * out version above can cause 'inl' write calls under
+		 * some stupid stdio implementations (VMS) */
+	}
 	return (ret);
 }
 
@@ -248,15 +253,15 @@ file_ctrl(BIO *b, int cmd, long num, void *ptr)
 		else if (num & BIO_FP_READ)
 			strlcpy(p, "r", sizeof p);
 		else {
-			BIOerror(BIO_R_BAD_FOPEN_MODE);
+			BIOerr(BIO_F_FILE_CTRL, BIO_R_BAD_FOPEN_MODE);
 			ret = 0;
 			break;
 		}
 		fp = fopen(ptr, p);
 		if (fp == NULL) {
-			SYSerror(errno);
+			SYSerr(SYS_F_FOPEN, errno);
 			ERR_asprintf_error_data("fopen('%s', '%s')", ptr, p);
-			BIOerror(ERR_R_SYS_LIB);
+			BIOerr(BIO_F_FILE_CTRL, ERR_R_SYS_LIB);
 			ret = 0;
 			break;
 		}

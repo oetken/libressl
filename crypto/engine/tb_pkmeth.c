@@ -1,4 +1,4 @@
-/* $OpenBSD: tb_pkmeth.c,v 1.6 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2006 The OpenSSL Project.  All rights reserved.
  *
@@ -52,8 +52,6 @@
  * Hudson (tjh@cryptsoft.com).
  *
  */
-
-#include <openssl/err.h>
 
 #include "eng_int.h"
 #include <openssl/evp.h>
@@ -131,7 +129,8 @@ ENGINE_get_pkey_meth(ENGINE *e, int nid)
 	ENGINE_PKEY_METHS_PTR fn = ENGINE_get_pkey_meths(e);
 
 	if (!fn || !fn(e, &ret, NULL, nid)) {
-		ENGINEerror(ENGINE_R_UNIMPLEMENTED_PUBLIC_KEY_METHOD);
+		ENGINEerr(ENGINE_F_ENGINE_GET_PKEY_METH,
+		    ENGINE_R_UNIMPLEMENTED_PUBLIC_KEY_METHOD);
 		return NULL;
 	}
 	return ret;

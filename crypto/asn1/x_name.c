@@ -1,4 +1,4 @@
-/* $OpenBSD: x_name.c,v 1.38 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: x_name.c,v 1.18 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -64,8 +64,7 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 
-#include "asn1_local.h"
-#include "x509_local.h"
+#include "asn1_locl.h"
 
 typedef STACK_OF(X509_NAME_ENTRY) STACK_OF_X509_NAME_ENTRY;
 DECLARE_STACK_OF(STACK_OF_X509_NAME_ENTRY)
@@ -88,99 +87,25 @@ static int i2d_name_canon(STACK_OF(STACK_OF_X509_NAME_ENTRY) *intname,
 static int x509_name_ex_print(BIO *out, ASN1_VALUE **pval, int indent,
     const char *fname, const ASN1_PCTX *pctx);
 
-static const ASN1_TEMPLATE X509_NAME_ENTRY_seq_tt[] = {
-	{
-		.offset = offsetof(X509_NAME_ENTRY, object),
-		.field_name = "object",
-		.item = &ASN1_OBJECT_it,
-	},
-	{
-		.offset = offsetof(X509_NAME_ENTRY, value),
-		.field_name = "value",
-		.item = &ASN1_PRINTABLE_it,
-	},
-};
+ASN1_SEQUENCE(X509_NAME_ENTRY) = {
+	ASN1_SIMPLE(X509_NAME_ENTRY, object, ASN1_OBJECT),
+	ASN1_SIMPLE(X509_NAME_ENTRY, value, ASN1_PRINTABLE)
+} ASN1_SEQUENCE_END(X509_NAME_ENTRY)
 
-const ASN1_ITEM X509_NAME_ENTRY_it = {
-	.itype = ASN1_ITYPE_SEQUENCE,
-	.utype = V_ASN1_SEQUENCE,
-	.templates = X509_NAME_ENTRY_seq_tt,
-	.tcount = sizeof(X509_NAME_ENTRY_seq_tt) / sizeof(ASN1_TEMPLATE),
-	.size = sizeof(X509_NAME_ENTRY),
-	.sname = "X509_NAME_ENTRY",
-};
-
-
-X509_NAME_ENTRY *
-d2i_X509_NAME_ENTRY(X509_NAME_ENTRY **a, const unsigned char **in, long len)
-{
-	return (X509_NAME_ENTRY *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
-	    &X509_NAME_ENTRY_it);
-}
-
-int
-i2d_X509_NAME_ENTRY(X509_NAME_ENTRY *a, unsigned char **out)
-{
-	return ASN1_item_i2d((ASN1_VALUE *)a, out, &X509_NAME_ENTRY_it);
-}
-
-X509_NAME_ENTRY *
-X509_NAME_ENTRY_new(void)
-{
-	return (X509_NAME_ENTRY *)ASN1_item_new(&X509_NAME_ENTRY_it);
-}
-
-void
-X509_NAME_ENTRY_free(X509_NAME_ENTRY *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &X509_NAME_ENTRY_it);
-}
-
-X509_NAME_ENTRY *
-X509_NAME_ENTRY_dup(X509_NAME_ENTRY *x)
-{
-	return ASN1_item_dup(&X509_NAME_ENTRY_it, x);
-}
+IMPLEMENT_ASN1_FUNCTIONS(X509_NAME_ENTRY)
+IMPLEMENT_ASN1_DUP_FUNCTION(X509_NAME_ENTRY)
 
 /* For the "Name" type we need a SEQUENCE OF { SET OF X509_NAME_ENTRY }
  * so declare two template wrappers for this
  */
 
-static const ASN1_TEMPLATE X509_NAME_ENTRIES_item_tt = {
-	.flags = ASN1_TFLG_SET_OF,
-	.tag = 0,
-	.offset = 0,
-	.field_name = "RDNS",
-	.item = &X509_NAME_ENTRY_it,
-};
+ASN1_ITEM_TEMPLATE(X509_NAME_ENTRIES) =
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SET_OF, 0, RDNS, X509_NAME_ENTRY)
+ASN1_ITEM_TEMPLATE_END(X509_NAME_ENTRIES)
 
-const ASN1_ITEM X509_NAME_ENTRIES_it = {
-	.itype = ASN1_ITYPE_PRIMITIVE,
-	.utype = -1,
-	.templates = &X509_NAME_ENTRIES_item_tt,
-	.tcount = 0,
-	.funcs = NULL,
-	.size = 0,
-	.sname = "X509_NAME_ENTRIES",
-};
-
-static const ASN1_TEMPLATE X509_NAME_INTERNAL_item_tt = {
-	.flags = ASN1_TFLG_SEQUENCE_OF,
-	.tag = 0,
-	.offset = 0,
-	.field_name = "Name",
-	.item = &X509_NAME_ENTRIES_it,
-};
-
-const ASN1_ITEM X509_NAME_INTERNAL_it = {
-	.itype = ASN1_ITYPE_PRIMITIVE,
-	.utype = -1,
-	.templates = &X509_NAME_INTERNAL_item_tt,
-	.tcount = 0,
-	.funcs = NULL,
-	.size = 0,
-	.sname = "X509_NAME_INTERNAL",
-};
+ASN1_ITEM_TEMPLATE(X509_NAME_INTERNAL) =
+    ASN1_EX_TEMPLATE_TYPE(ASN1_TFLG_SEQUENCE_OF, 0, Name, X509_NAME_ENTRIES)
+ASN1_ITEM_TEMPLATE_END(X509_NAME_INTERNAL)
 
 /* Normally that's where it would end: we'd have two nested STACK structures
  * representing the ASN1. Unfortunately X509_NAME uses a completely different
@@ -198,46 +123,10 @@ const ASN1_EXTERN_FUNCS x509_name_ff = {
 	x509_name_ex_print
 };
 
-const ASN1_ITEM X509_NAME_it = {
-	.itype = ASN1_ITYPE_EXTERN,
-	.utype = V_ASN1_SEQUENCE,
-	.templates = NULL,
-	.tcount = 0,
-	.funcs = &x509_name_ff,
-	.size = 0,
-	.sname = "X509_NAME",
-};
+IMPLEMENT_EXTERN_ASN1(X509_NAME, V_ASN1_SEQUENCE, x509_name_ff)
 
-X509_NAME *
-d2i_X509_NAME(X509_NAME **a, const unsigned char **in, long len)
-{
-	return (X509_NAME *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
-	    &X509_NAME_it);
-}
-
-int
-i2d_X509_NAME(X509_NAME *a, unsigned char **out)
-{
-	return ASN1_item_i2d((ASN1_VALUE *)a, out, &X509_NAME_it);
-}
-
-X509_NAME *
-X509_NAME_new(void)
-{
-	return (X509_NAME *)ASN1_item_new(&X509_NAME_it);
-}
-
-void
-X509_NAME_free(X509_NAME *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &X509_NAME_it);
-}
-
-X509_NAME *
-X509_NAME_dup(X509_NAME *x)
-{
-	return ASN1_item_dup(&X509_NAME_it, x);
-}
+IMPLEMENT_ASN1_FUNCTIONS(X509_NAME)
+IMPLEMENT_ASN1_DUP_FUNCTION(X509_NAME)
 
 static int
 x509_name_ex_new(ASN1_VALUE **val, const ASN1_ITEM *it)
@@ -257,8 +146,8 @@ x509_name_ex_new(ASN1_VALUE **val, const ASN1_ITEM *it)
 	*val = (ASN1_VALUE *)ret;
 	return 1;
 
- memerr:
-	ASN1error(ERR_R_MALLOC_FAILURE);
+memerr:
+	ASN1err(ASN1_F_X509_NAME_EX_NEW, ERR_R_MALLOC_FAILURE);
 	if (ret) {
 		if (ret->entries)
 			sk_X509_NAME_ENTRY_free(ret->entries);
@@ -303,7 +192,7 @@ x509_name_ex_d2i(ASN1_VALUE **val, const unsigned char **in, long len,
 
 	/* Get internal representation of Name */
 	ret = ASN1_item_ex_d2i(&intname.a, &p, len,
-	    &X509_NAME_INTERNAL_it, tag, aclass, opt, ctx);
+	    ASN1_ITEM_rptr(X509_NAME_INTERNAL), tag, aclass, opt, ctx);
 
 	if (ret <= 0)
 		return ret;
@@ -337,10 +226,10 @@ x509_name_ex_d2i(ASN1_VALUE **val, const unsigned char **in, long len,
 	*in = p;
 	return ret;
 
- err:
+err:
 	if (nm.x != NULL)
 		X509_NAME_free(nm.x);
-	ASN1error(ERR_R_NESTED_ASN1_ERROR);
+	ASN1err(ASN1_F_X509_NAME_EX_D2I, ERR_R_NESTED_ASN1_ERROR);
 	return 0;
 }
 
@@ -406,26 +295,25 @@ x509_name_encode(X509_NAME *a)
 				goto memerr;
 			set = entry->set;
 		}
-		if (entries == NULL /* if entry->set is bogusly -1 */ ||
-		    !sk_X509_NAME_ENTRY_push(entries, entry))
+		if (!sk_X509_NAME_ENTRY_push(entries, entry))
 			goto memerr;
 	}
 	len = ASN1_item_ex_i2d(&intname.a, NULL,
-	    &X509_NAME_INTERNAL_it, -1, -1);
+	    ASN1_ITEM_rptr(X509_NAME_INTERNAL), -1, -1);
 	if (!BUF_MEM_grow(a->bytes, len))
 		goto memerr;
 	p = (unsigned char *)a->bytes->data;
-	ASN1_item_ex_i2d(&intname.a, &p, &X509_NAME_INTERNAL_it,
+	ASN1_item_ex_i2d(&intname.a, &p, ASN1_ITEM_rptr(X509_NAME_INTERNAL),
 	    -1, -1);
 	sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname.s,
 	    local_sk_X509_NAME_ENTRY_free);
 	a->modified = 0;
 	return len;
 
- memerr:
+memerr:
 	sk_STACK_OF_X509_NAME_ENTRY_pop_free(intname.s,
 	    local_sk_X509_NAME_ENTRY_free);
-	ASN1error(ERR_R_MALLOC_FAILURE);
+	ASN1err(ASN1_F_X509_NAME_ENCODE, ERR_R_MALLOC_FAILURE);
 	return -1;
 }
 
@@ -447,7 +335,7 @@ x509_name_ex_print(BIO *out, ASN1_VALUE **pval, int indent, const char *fname,
  * In future we could also normalize the UTF8 too.
  *
  * By doing this comparison of Name structures can be rapidly
- * performed by just using memcmp() of the canonical encoding.
+ * perfomed by just using memcmp() of the canonical encoding.
  * By omitting the leading SEQUENCE name constraints of type
  * dirName can also be checked with a simple memcmp().
  */
@@ -459,7 +347,7 @@ x509_name_canon(X509_NAME *a)
 	STACK_OF(STACK_OF_X509_NAME_ENTRY) *intname = NULL;
 	STACK_OF(X509_NAME_ENTRY) *entries = NULL;
 	X509_NAME_ENTRY *entry, *tmpentry = NULL;
-	int i, len, set = -1, ret = 0;
+	int i, set = -1, ret = 0;
 
 	if (a->canon_enc) {
 		free(a->canon_enc);
@@ -479,40 +367,30 @@ x509_name_canon(X509_NAME *a)
 			entries = sk_X509_NAME_ENTRY_new_null();
 			if (!entries)
 				goto err;
-			if (sk_STACK_OF_X509_NAME_ENTRY_push(intname,
-			    entries) == 0) {
-				sk_X509_NAME_ENTRY_free(entries);
+			if (!sk_STACK_OF_X509_NAME_ENTRY_push(intname, entries))
 				goto err;
-			}
 			set = entry->set;
 		}
 		tmpentry = X509_NAME_ENTRY_new();
-		if (tmpentry == NULL)
-			goto err;
 		tmpentry->object = OBJ_dup(entry->object);
-		if (tmpentry->object == NULL)
-			goto err;
 		if (!asn1_string_canon(tmpentry->value, entry->value))
 			goto err;
-		if (entries == NULL /* if entry->set is bogusly -1 */ ||
-		    !sk_X509_NAME_ENTRY_push(entries, tmpentry))
+		if (!sk_X509_NAME_ENTRY_push(entries, tmpentry))
 			goto err;
 		tmpentry = NULL;
 	}
 
 	/* Finally generate encoding */
-	len = i2d_name_canon(intname, NULL);
-	if (len < 0)
-		goto err;
-	p = malloc(len);
-	if (p == NULL)
+	a->canon_enclen = i2d_name_canon(intname, NULL);
+	p = malloc(a->canon_enclen);
+	if (!p)
 		goto err;
 	a->canon_enc = p;
-	a->canon_enclen = len;
 	i2d_name_canon(intname, &p);
 	ret = 1;
 
- err:
+err:
+
 	if (tmpentry)
 		X509_NAME_ENTRY_free(tmpentry);
 	if (intname)
@@ -616,7 +494,7 @@ i2d_name_canon(STACK_OF(STACK_OF_X509_NAME_ENTRY) *_intname, unsigned char **in)
 	for (i = 0; i < sk_ASN1_VALUE_num(intname); i++) {
 		v = sk_ASN1_VALUE_value(intname, i);
 		ltmp = ASN1_item_ex_i2d(&v, in,
-		    &X509_NAME_ENTRIES_it, -1, -1);
+		    ASN1_ITEM_rptr(X509_NAME_ENTRIES), -1, -1);
 		if (ltmp < 0)
 			return ltmp;
 		len += ltmp;
@@ -627,24 +505,20 @@ i2d_name_canon(STACK_OF(STACK_OF_X509_NAME_ENTRY) *_intname, unsigned char **in)
 int
 X509_NAME_set(X509_NAME **xn, X509_NAME *name)
 {
-	if (*xn == name)
-		return *xn != NULL;
-	if ((name = X509_NAME_dup(name)) == NULL)
-		return 0;
-	X509_NAME_free(*xn);
-	*xn = name;
-	return 1;
+	X509_NAME *in;
+
+	if (!xn || !name)
+		return (0);
+
+	if (*xn != name) {
+		in = X509_NAME_dup(name);
+		if (in != NULL) {
+			X509_NAME_free(*xn);
+			*xn = in;
+		}
+	}
+	return (*xn != NULL);
 }
 
-int
-X509_NAME_get0_der(X509_NAME *nm, const unsigned char **pder, size_t *pderlen)
-{
-	/* Make sure encoding is valid. */
-	if (i2d_X509_NAME(nm, NULL) <= 0)
-		return 0;
-	if (pder != NULL)
-		*pder = (unsigned char *)nm->bytes->data;
-	if (pderlen != NULL)
-		*pderlen = nm->bytes->length;
-	return 1;
-}
+IMPLEMENT_STACK_OF(X509_NAME_ENTRY)
+IMPLEMENT_ASN1_SET_OF(X509_NAME_ENTRY)

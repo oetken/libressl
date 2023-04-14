@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_mpi.c,v 1.12 2023/02/13 04:25:37 jsing Exp $ */
+/* $OpenBSD: bn_mpi.c,v 1.6 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,7 +60,7 @@
 
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 int
 BN_bn2mpi(const BIGNUM *a, unsigned char *d)
@@ -92,20 +92,19 @@ BN_bn2mpi(const BIGNUM *a, unsigned char *d)
 }
 
 BIGNUM *
-BN_mpi2bn(const unsigned char *d, int n, BIGNUM *ain)
+BN_mpi2bn(const unsigned char *d, int n, BIGNUM *a)
 {
-	BIGNUM *a = ain;
 	long len;
 	int neg = 0;
 
 	if (n < 4) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_MPI2BN, BN_R_INVALID_LENGTH);
 		return (NULL);
 	}
 	len = ((long)d[0] << 24) | ((long)d[1] << 16) | ((int)d[2] << 8) |
 	    (int)d[3];
 	if ((len + 4) != n) {
-		BNerror(BN_R_ENCODING_ERROR);
+		BNerr(BN_F_BN_MPI2BN, BN_R_ENCODING_ERROR);
 		return (NULL);
 	}
 
@@ -122,14 +121,12 @@ BN_mpi2bn(const unsigned char *d, int n, BIGNUM *ain)
 	d += 4;
 	if ((*d) & 0x80)
 		neg = 1;
-	if (BN_bin2bn(d, (int)len, a) == NULL) {
-		if (ain == NULL)
-			BN_free(a);
+	if (BN_bin2bn(d, (int)len, a) == NULL)
 		return (NULL);
-	}
-	BN_set_negative(a, neg);
+	a->neg = neg;
 	if (neg) {
 		BN_clear_bit(a, BN_num_bits(a) - 1);
 	}
+	bn_check_top(a);
 	return (a);
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: wp_block.c,v 1.15 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: wp_block.c,v 1.8 2014/07/08 16:15:20 miod Exp $ */
 /**
  * The Whirlpool hashing function.
  *
@@ -36,11 +36,9 @@
  *
  */
 
-#include <endian.h>
+#include "wp_locl.h"
 #include <string.h>
-#include <openssl/crypto.h>
-
-#include "wp_local.h"
+#include <machine/endian.h>
 
 typedef unsigned char		u8;
 #if defined(_LP64)
@@ -59,17 +57,16 @@ typedef unsigned long long	u64;
 #      define OPENSSL_SMALL_FOOTPRINT	/* it appears that for elder non-MMX
 					   CPUs this is actually faster! */
 #    endif
-#include "x86_arch.h"
-#    define GO_FOR_MMX(ctx,inp,num)				\
-do {								\
+#    define GO_FOR_MMX(ctx,inp,num)	do {			\
+	extern unsigned int OPENSSL_ia32cap_P[];		\
 	void whirlpool_block_mmx(void *,const void *,size_t);	\
-	if ((OPENSSL_cpu_caps() & CPUCAP_MASK_MMX) == 0)	\
-		break;						\
-        whirlpool_block_mmx(ctx->H.c,inp,num);			\
-	return;							\
-} while (0)
+	if (!(OPENSSL_ia32cap_P[0] & (1<<23)))	break;		\
+        whirlpool_block_mmx(ctx->H.c,inp,num);	return;		\
+					} while (0)
 #  endif
 #elif defined(__arm__)
+#  define SMALL_REGISTER_BANK
+#elif defined(__vax__)
 #  define SMALL_REGISTER_BANK
 #endif
 
@@ -78,6 +75,14 @@ do {								\
 #  if defined(__x86_64) || defined(__x86_64__)
 #      define ROTATE(a,n)	({ u64 ret; asm ("rolq %1,%0"	\
 				   : "=r"(ret) : "J"(n),"0"(a) : "cc"); ret; })
+#  elif defined(__ia64) || defined(__ia64__)
+#    if BYTE_ORDER == LITTLE_ENDIAN
+#      define ROTATE(a,n)	({ u64 ret; asm ("shrp %0=%1,%1,%2"	\
+				   : "=r"(ret) : "r"(a),"M"(64-(n))); ret; })
+#    else
+#      define ROTATE(a,n)	({ u64 ret; asm ("shrp %0=%1,%1,%2"	\
+				   : "=r"(ret) : "r"(a),"M"(n)); ret; })
+#    endif
 #  endif
 #endif
 
@@ -110,7 +115,7 @@ do {								\
  * one quadword load. One can argue that that many single-byte loads
  * is too excessive, as one could load a quadword and "milk" it for
  * eight 8-bit values instead. Well, yes, but in order to do so *and*
- * avoid excessive loads you have to accommodate a handful of 64-bit
+ * avoid excessive loads you have to accomodate a handful of 64-bit
  * values in the register bank and issue a bunch of shifts and mask.
  * It's a tradeoff: loads vs. shift and mask in big register bank[!].
  * On most CPUs eight single-byte loads are faster and I let other

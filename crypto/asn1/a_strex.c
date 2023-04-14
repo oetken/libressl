@@ -1,4 +1,4 @@
-/* $OpenBSD: a_strex.c,v 1.32 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: a_strex.c,v 1.23 2014/07/10 20:42:45 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */
@@ -63,7 +63,7 @@
 #include <openssl/crypto.h>
 #include <openssl/x509.h>
 
-#include "asn1_local.h"
+#include "asn1_locl.h"
 
 #include "charmap.h"
 
@@ -84,6 +84,20 @@
 /* Three IO functions for sending data to memory, a BIO and
  * and a FILE pointer.
  */
+#if 0				/* never used */
+static int
+send_mem_chars(void *arg, const void *buf, int len)
+{
+	unsigned char **out = arg;
+
+	if (!out)
+		return 1;
+	memcpy(*out, buf, len);
+	*out += len;
+	return 1;
+}
+#endif
+
 static int
 send_bio_chars(void *arg, const void *buf, int len)
 {
@@ -289,7 +303,7 @@ do_hex_dump(char_io *io_ch, void *arg, unsigned char *buf, int buflen)
  */
 
 static int
-do_dump(unsigned long lflags, char_io *io_ch, void *arg, const ASN1_STRING *str)
+do_dump(unsigned long lflags, char_io *io_ch, void *arg, ASN1_STRING *str)
 {
 	/* Placing the ASN1_STRING in a temp ASN1_TYPE allows
 	 * the DER encoding to readily obtained
@@ -322,6 +336,22 @@ do_dump(unsigned long lflags, char_io *io_ch, void *arg, const ASN1_STRING *str)
 	return outlen + 1;
 }
 
+/* Lookup table to convert tags to character widths,
+ * 0 = UTF8 encoded, -1 is used for non string types
+ * otherwise it is the number of bytes per character
+ */
+
+static const signed char tag2nbyte[] = {
+	-1, -1, -1, -1, -1,	/* 0-4 */
+	-1, -1, -1, -1, -1,	/* 5-9 */
+	-1, -1, 0, -1,		/* 10-13 */
+	-1, -1, -1, -1,		/* 15-17 */
+	-1, 1, 1,		/* 18-20 */
+	-1, 1, 1, 1,		/* 21-24 */
+	-1, 1, -1,		/* 25-27 */
+	4, -1, 2		/* 28-30 */
+};
+
 /* This is the main function, print out an
  * ASN1_STRING taking note of various escape
  * and display options. Returns number of
@@ -330,8 +360,7 @@ do_dump(unsigned long lflags, char_io *io_ch, void *arg, const ASN1_STRING *str)
  */
 
 static int
-do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
-    const ASN1_STRING *str)
+do_print_ex(char_io *io_ch, void *arg, unsigned long lflags, ASN1_STRING *str)
 {
 	int outlen, len;
 	int type;
@@ -355,16 +384,19 @@ do_print_ex(char_io *io_ch, void *arg, unsigned long lflags,
 
 	/* Decide what to do with type, either dump content or display it */
 
-	if (lflags & ASN1_STRFLGS_DUMP_ALL) {
-		/* Dump everything. */
+	/* Dump everything */
+	if (lflags & ASN1_STRFLGS_DUMP_ALL)
 		type = -1;
-	} else if (lflags & ASN1_STRFLGS_IGNORE_TYPE) {
-		/* Ignore the string type. */
+	/* Ignore the string type */
+	else if (lflags & ASN1_STRFLGS_IGNORE_TYPE)
 		type = 1;
-	} else {
-		/* Else determine width based on type. */
-		type = asn1_tag2charwidth(type);
-		if (type == -1 && !(lflags & ASN1_STRFLGS_DUMP_UNKNOWN))
+	else {
+		/* Else determine width based on type */
+		if ((type > 0) && (type < 31))
+			type = tag2nbyte[type];
+		else
+			type = -1;
+		if ((type == -1) && !(lflags & ASN1_STRFLGS_DUMP_UNKNOWN))
 			type = 1;
 	}
 
@@ -421,7 +453,7 @@ do_indent(char_io *io_ch, void *arg, int indent)
 #define FN_WIDTH_SN	10
 
 static int
-do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
+do_name_ex(char_io *io_ch, void *arg, X509_NAME *n, int indent,
     unsigned long flags)
 {
 	int i, prev = -1, orflags, cnt;
@@ -494,7 +526,7 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 		else
 			ent = X509_NAME_get_entry(n, i);
 		if (prev != -1) {
-			if (prev == X509_NAME_ENTRY_set(ent)) {
+			if (prev == ent->set) {
 				if (!io_ch(arg, sep_mv, sep_mv_len))
 					return -1;
 				outlen += sep_mv_len;
@@ -507,7 +539,7 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 				outlen += indent;
 			}
 		}
-		prev = X509_NAME_ENTRY_set(ent);
+		prev = ent->set;
 		fn = X509_NAME_ENTRY_get_object(ent);
 		val = X509_NAME_ENTRY_get_data(ent);
 		fn_nid = OBJ_obj2nid(fn);
@@ -563,8 +595,7 @@ do_name_ex(char_io *io_ch, void *arg, const X509_NAME *n, int indent,
 /* Wrappers round the main functions */
 
 int
-X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
-    unsigned long flags)
+X509_NAME_print_ex(BIO *out, X509_NAME *nm, int indent, unsigned long flags)
 {
 	if (flags == XN_FLAG_COMPAT)
 		return X509_NAME_print(out, nm, indent);
@@ -572,8 +603,7 @@ X509_NAME_print_ex(BIO *out, const X509_NAME *nm, int indent,
 }
 
 int
-X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
-    unsigned long flags)
+X509_NAME_print_ex_fp(FILE *fp, X509_NAME *nm, int indent, unsigned long flags)
 {
 	if (flags == XN_FLAG_COMPAT) {
 		BIO *btmp;
@@ -589,13 +619,42 @@ X509_NAME_print_ex_fp(FILE *fp, const X509_NAME *nm, int indent,
 }
 
 int
-ASN1_STRING_print_ex(BIO *out, const ASN1_STRING *str, unsigned long flags)
+ASN1_STRING_print_ex(BIO *out, ASN1_STRING *str, unsigned long flags)
 {
 	return do_print_ex(send_bio_chars, out, flags, str);
 }
 
 int
-ASN1_STRING_print_ex_fp(FILE *fp, const ASN1_STRING *str, unsigned long flags)
+ASN1_STRING_print_ex_fp(FILE *fp, ASN1_STRING *str, unsigned long flags)
 {
 	return do_print_ex(send_fp_chars, fp, flags, str);
+}
+
+/* Utility function: convert any string type to UTF8, returns number of bytes
+ * in output string or a negative error code
+ */
+
+int
+ASN1_STRING_to_UTF8(unsigned char **out, ASN1_STRING *in)
+{
+	ASN1_STRING stmp, *str = &stmp;
+	int mbflag, type, ret;
+
+	if (!in)
+		return -1;
+	type = in->type;
+	if ((type < 0) || (type > 30))
+		return -1;
+	mbflag = tag2nbyte[type];
+	if (mbflag == -1)
+		return -1;
+	mbflag |= MBSTRING_FLAG;
+	stmp.data = NULL;
+	stmp.length = 0;
+	ret = ASN1_mbstring_copy(&str, in->data, in->length, mbflag,
+	    B_ASN1_UTF8STRING);
+	if (ret < 0)
+		return ret;
+	*out = stmp.data;
+	return stmp.length;
 }

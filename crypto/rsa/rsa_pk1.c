@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_pk1.c,v 1.15 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: rsa_pk1.c,v 1.12 2014/07/10 13:58:23 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,12 +57,12 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/rsa.h>
+#include <openssl/rand.h>
 
 int
 RSA_padding_add_PKCS1_type_1(unsigned char *to, int tlen,
@@ -72,7 +72,8 @@ RSA_padding_add_PKCS1_type_1(unsigned char *to, int tlen,
 	unsigned char *p;
 
 	if (flen > (tlen - RSA_PKCS1_PADDING_SIZE)) {
-		RSAerror(RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
+		RSAerr(RSA_F_RSA_PADDING_ADD_PKCS1_TYPE_1,
+		    RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
 		return 0;
 	}
 
@@ -100,7 +101,8 @@ RSA_padding_check_PKCS1_type_1(unsigned char *to, int tlen,
 
 	p = from;
 	if (num != flen + 1 || *(p++) != 01) {
-		RSAerror(RSA_R_BLOCK_TYPE_IS_NOT_01);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1,
+		    RSA_R_BLOCK_TYPE_IS_NOT_01);
 		return -1;
 	}
 
@@ -113,7 +115,8 @@ RSA_padding_check_PKCS1_type_1(unsigned char *to, int tlen,
 				p++;
 				break;
 			} else {
-				RSAerror(RSA_R_BAD_FIXED_HEADER_DECRYPT);
+				RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1,
+				    RSA_R_BAD_FIXED_HEADER_DECRYPT);
 				return -1;
 			}
 		}
@@ -121,18 +124,21 @@ RSA_padding_check_PKCS1_type_1(unsigned char *to, int tlen,
 	}
 
 	if (i == j) {
-		RSAerror(RSA_R_NULL_BEFORE_BLOCK_MISSING);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1,
+		    RSA_R_NULL_BEFORE_BLOCK_MISSING);
 		return -1;
 	}
 
 	if (i < 8) {
-		RSAerror(RSA_R_BAD_PAD_BYTE_COUNT);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1,
+		    RSA_R_BAD_PAD_BYTE_COUNT);
 		return -1;
 	}
 	i++; /* Skip over the '\0' */
 	j -= i;
 	if (j > tlen) {
-		RSAerror(RSA_R_DATA_TOO_LARGE);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_1,
+		    RSA_R_DATA_TOO_LARGE);
 		return -1;
 	}
 	memcpy(to, p, j);
@@ -148,7 +154,8 @@ RSA_padding_add_PKCS1_type_2(unsigned char *to, int tlen,
 	unsigned char *p;
 
 	if (flen > tlen - 11) {
-		RSAerror(RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
+		RSAerr(RSA_F_RSA_PADDING_ADD_PKCS1_TYPE_2,
+		    RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
 		return 0;
 	}
 
@@ -160,10 +167,13 @@ RSA_padding_add_PKCS1_type_2(unsigned char *to, int tlen,
 	/* pad out with non-zero random data */
 	j = tlen - 3 - flen;
 
-	arc4random_buf(p, j);
+	if (RAND_bytes(p, j) <= 0)
+		return 0;
 	for (i = 0; i < j; i++) {
-		while (*p == '\0')
-			arc4random_buf(p, 1);
+		while (*p == '\0') {
+			if (RAND_bytes(p, 1) <= 0)
+				return 0;
+		}
 		p++;
 	}
 
@@ -182,7 +192,8 @@ RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
 
 	p = from;
 	if (num != flen + 1 || *(p++) != 02) {
-		RSAerror(RSA_R_BLOCK_TYPE_IS_NOT_02);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_2,
+		    RSA_R_BLOCK_TYPE_IS_NOT_02);
 		return -1;
 	}
 
@@ -193,18 +204,21 @@ RSA_padding_check_PKCS1_type_2(unsigned char *to, int tlen,
 			break;
 
 	if (i == j) {
-		RSAerror(RSA_R_NULL_BEFORE_BLOCK_MISSING);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_2,
+		    RSA_R_NULL_BEFORE_BLOCK_MISSING);
 		return -1;
 	}
 
 	if (i < 8) {
-		RSAerror(RSA_R_BAD_PAD_BYTE_COUNT);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_2,
+		    RSA_R_BAD_PAD_BYTE_COUNT);
 		return -1;
 	}
 	i++; /* Skip over the '\0' */
 	j -= i;
 	if (j > tlen) {
-		RSAerror(RSA_R_DATA_TOO_LARGE);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_PKCS1_TYPE_2,
+		    RSA_R_DATA_TOO_LARGE);
 		return -1;
 	}
 	memcpy(to, p, j);

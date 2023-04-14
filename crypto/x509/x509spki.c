@@ -1,4 +1,4 @@
-/* $OpenBSD: x509spki.c,v 1.16 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: x509spki.c,v 1.11 2014/07/10 13:58:23 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,7 +57,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/err.h>
@@ -70,7 +69,6 @@ NETSCAPE_SPKI_set_pubkey(NETSCAPE_SPKI *x, EVP_PKEY *pkey)
 		return (0);
 	return (X509_PUBKEY_set(&(x->spkac->pubkey), pkey));
 }
-LCRYPTO_ALIAS(NETSCAPE_SPKI_set_pubkey);
 
 EVP_PKEY *
 NETSCAPE_SPKI_get_pubkey(NETSCAPE_SPKI *x)
@@ -79,7 +77,6 @@ NETSCAPE_SPKI_get_pubkey(NETSCAPE_SPKI *x)
 		return (NULL);
 	return (X509_PUBKEY_get(x->spkac->pubkey));
 }
-LCRYPTO_ALIAS(NETSCAPE_SPKI_get_pubkey);
 
 /* Load a Netscape SPKI from a base64 encoded string */
 
@@ -94,12 +91,13 @@ NETSCAPE_SPKI_b64_decode(const char *str, int len)
 	if (len <= 0)
 		len = strlen(str);
 	if (!(spki_der = malloc(len + 1))) {
-		X509error(ERR_R_MALLOC_FAILURE);
+		X509err(X509_F_NETSCAPE_SPKI_B64_DECODE, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
 	spki_len = EVP_DecodeBlock(spki_der, (const unsigned char *)str, len);
 	if (spki_len < 0) {
-		X509error(X509_R_BASE64_DECODE_ERROR);
+		X509err(X509_F_NETSCAPE_SPKI_B64_DECODE,
+		    X509_R_BASE64_DECODE_ERROR);
 		free(spki_der);
 		return NULL;
 	}
@@ -108,7 +106,6 @@ NETSCAPE_SPKI_b64_decode(const char *str, int len)
 	free(spki_der);
 	return spki;
 }
-LCRYPTO_ALIAS(NETSCAPE_SPKI_b64_decode);
 
 /* Generate a base64 encoded string from an SPKI */
 
@@ -122,7 +119,7 @@ NETSCAPE_SPKI_b64_encode(NETSCAPE_SPKI *spki)
 	der_spki = malloc(der_len);
 	b64_str = reallocarray(NULL, der_len, 2);
 	if (!der_spki || !b64_str) {
-		X509error(ERR_R_MALLOC_FAILURE);
+		X509err(X509_F_NETSCAPE_SPKI_B64_ENCODE, ERR_R_MALLOC_FAILURE);
 		free(der_spki);
 		free(b64_str);
 		return NULL;
@@ -133,4 +130,3 @@ NETSCAPE_SPKI_b64_encode(NETSCAPE_SPKI *spki)
 	free(der_spki);
 	return b64_str;
 }
-LCRYPTO_ALIAS(NETSCAPE_SPKI_b64_encode);

@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_cl.c,v 1.22 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: ocsp_cl.c,v 1.6 2014/06/12 15:49:30 deraadt Exp $ */
 /* Written by Tom Titchener <Tom_Titchener@groove.net> for the OpenSSL
  * project. */
 
@@ -68,10 +68,9 @@
 #include <openssl/ocsp.h>
 #include <openssl/objects.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include "ocsp_local.h"
 
 /* Utility functions related to sending OCSP requests and extracting
  * relevant information from the response.
@@ -83,19 +82,18 @@
 OCSP_ONEREQ *
 OCSP_request_add0_id(OCSP_REQUEST *req, OCSP_CERTID *cid)
 {
-	OCSP_ONEREQ *one;
+	OCSP_ONEREQ *one = NULL;
 
-	if ((one = OCSP_ONEREQ_new()) == NULL)
+	if (!(one = OCSP_ONEREQ_new()))
 		goto err;
-	if (req != NULL) {
-		if (!sk_OCSP_ONEREQ_push(req->tbsRequest->requestList, one))
-			goto err;
-	}
-	OCSP_CERTID_free(one->reqCert);
+	if (one->reqCert)
+		OCSP_CERTID_free(one->reqCert);
 	one->reqCert = cid;
+	if (req && !sk_OCSP_ONEREQ_push(req->tbsRequest->requestList, one))
+		goto err;
 	return one;
 
- err:
+err:
 	OCSP_ONEREQ_free(one);
 	return NULL;
 }
@@ -138,11 +136,11 @@ OCSP_request_add1_cert(OCSP_REQUEST *req, X509 *cert)
 
 	if (!sk_X509_push(sig->certs, cert))
 		return 0;
-	X509_up_ref(cert);
+	CRYPTO_add(&cert->references, 1, CRYPTO_LOCK_X509);
 	return 1;
 }
 
-/* Sign an OCSP request set the requestorName to the subject
+/* Sign an OCSP request set the requestorName to the subjec
  * name of an optional signers certificate and include one
  * or more optional certificates in the request. Behaves
  * like PKCS7_sign().
@@ -162,7 +160,8 @@ OCSP_request_sign(OCSP_REQUEST *req, X509 *signer, EVP_PKEY *key,
 		goto err;
 	if (key) {
 		if (!X509_check_private_key(signer, key)) {
-			OCSPerror(OCSP_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE);
+			OCSPerr(OCSP_F_OCSP_REQUEST_SIGN,
+			    OCSP_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE);
 			goto err;
 		}
 		if (!OCSP_REQUEST_sign(req, key, dgst))
@@ -204,18 +203,20 @@ OCSP_response_get1_basic(OCSP_RESPONSE *resp)
 
 	rb = resp->responseBytes;
 	if (!rb) {
-		OCSPerror(OCSP_R_NO_RESPONSE_DATA);
+		OCSPerr(OCSP_F_OCSP_RESPONSE_GET1_BASIC,
+		    OCSP_R_NO_RESPONSE_DATA);
 		return NULL;
 	}
 	if (OBJ_obj2nid(rb->responseType) != NID_id_pkix_OCSP_basic) {
-		OCSPerror(OCSP_R_NOT_BASIC_RESPONSE);
+		OCSPerr(OCSP_F_OCSP_RESPONSE_GET1_BASIC,
+		    OCSP_R_NOT_BASIC_RESPONSE);
 		return NULL;
 	}
 
-	return ASN1_item_unpack(rb->response, &OCSP_BASICRESP_it);
+	return ASN1_item_unpack(rb->response, ASN1_ITEM_rptr(OCSP_BASICRESP));
 }
 
-/* Return number of OCSP_SINGLERESP responses present in
+/* Return number of OCSP_SINGLERESP reponses present in
  * a basic response.
  */
 int
@@ -233,55 +234,6 @@ OCSP_resp_get0(OCSP_BASICRESP *bs, int idx)
 	if (!bs)
 		return NULL;
 	return sk_OCSP_SINGLERESP_value(bs->tbsResponseData->responses, idx);
-}
-
-const ASN1_GENERALIZEDTIME *
-OCSP_resp_get0_produced_at(const OCSP_BASICRESP *bs)
-{
-	return bs->tbsResponseData->producedAt;
-}
-
-const STACK_OF(X509) *
-OCSP_resp_get0_certs(const OCSP_BASICRESP *bs)
-{
-	return bs->certs;
-}
-
-int
-OCSP_resp_get0_id(const OCSP_BASICRESP *bs, const ASN1_OCTET_STRING **pid,
-    const X509_NAME **pname)
-{
-	const OCSP_RESPID *rid = bs->tbsResponseData->responderId;
-
-	if (rid->type == V_OCSP_RESPID_NAME) {
-		*pname = rid->value.byName;
-		*pid = NULL;
-	} else if (rid->type == V_OCSP_RESPID_KEY) {
-		*pid = rid->value.byKey;
-		*pname = NULL;
-	} else {
-		return 0;
-	}
-
-	return 1;
-}
-
-const ASN1_OCTET_STRING *
-OCSP_resp_get0_signature(const OCSP_BASICRESP *bs)
-{
-	return bs->signature;
-}
-
-const X509_ALGOR *
-OCSP_resp_get0_tbs_sigalg(const OCSP_BASICRESP *bs)
-{
-	return bs->signatureAlgorithm;
-}
-
-const OCSP_RESPDATA *
-OCSP_resp_get0_respdata(const OCSP_BASICRESP *bs)
-{
-	return bs->tbsResponseData;
 }
 
 /* Look single response matching a given certificate ID */
@@ -376,75 +328,57 @@ int
 OCSP_check_validity(ASN1_GENERALIZEDTIME *thisupd,
     ASN1_GENERALIZEDTIME *nextupd, long nsec, long maxsec)
 {
+	int ret = 1;
 	time_t t_now, t_tmp;
-	struct tm tm_this, tm_next, tm_tmp;
 
 	time(&t_now);
-
-	/*
-	 * Times must explicitly be a GENERALIZEDTIME as per section
-	 * 4.2.2.1 of RFC 6960 - It is invalid to accept other times
-	 * (such as UTCTIME permitted/required by RFC 5280 for certificates)
-	 */
-
 	/* Check thisUpdate is valid and not more than nsec in the future */
-	if (ASN1_time_parse(thisupd->data, thisupd->length, &tm_this,
-	    V_ASN1_GENERALIZEDTIME) != V_ASN1_GENERALIZEDTIME) {
-		OCSPerror(OCSP_R_ERROR_IN_THISUPDATE_FIELD);
-		return 0;
+	if (!ASN1_GENERALIZEDTIME_check(thisupd)) {
+		OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+		    OCSP_R_ERROR_IN_THISUPDATE_FIELD);
+		ret = 0;
 	} else {
 		t_tmp = t_now + nsec;
-		if (gmtime_r(&t_tmp, &tm_tmp) == NULL)
-			return 0;
-		if (ASN1_time_tm_cmp(&tm_this, &tm_tmp) > 0) {
-			OCSPerror(OCSP_R_STATUS_NOT_YET_VALID);
-			return 0;
+		if (X509_cmp_time(thisupd, &t_tmp) > 0) {
+			OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+			    OCSP_R_STATUS_NOT_YET_VALID);
+			ret = 0;
 		}
 
-		/*
-		 * If maxsec specified check thisUpdate is not more than maxsec
-		 * in the past
-		 */
+		/* If maxsec specified check thisUpdate is not more than maxsec in the past */
 		if (maxsec >= 0) {
 			t_tmp = t_now - maxsec;
-			if (gmtime_r(&t_tmp, &tm_tmp) == NULL)
-				return 0;
-			if (ASN1_time_tm_cmp(&tm_this, &tm_tmp) < 0) {
-				OCSPerror(OCSP_R_STATUS_TOO_OLD);
-				return 0;
+			if (X509_cmp_time(thisupd, &t_tmp) < 0) {
+				OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+				    OCSP_R_STATUS_TOO_OLD);
+				ret = 0;
 			}
 		}
 	}
 
 	if (!nextupd)
-		return 1;
+		return ret;
 
 	/* Check nextUpdate is valid and not more than nsec in the past */
-	if (ASN1_time_parse(nextupd->data, nextupd->length, &tm_next,
-	    V_ASN1_GENERALIZEDTIME) != V_ASN1_GENERALIZEDTIME) {
-		OCSPerror(OCSP_R_ERROR_IN_NEXTUPDATE_FIELD);
-		return 0;
+	if (!ASN1_GENERALIZEDTIME_check(nextupd)) {
+		OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+		    OCSP_R_ERROR_IN_NEXTUPDATE_FIELD);
+		ret = 0;
 	} else {
 		t_tmp = t_now - nsec;
-		if (gmtime_r(&t_tmp, &tm_tmp) == NULL)
-			return 0;
-		if (ASN1_time_tm_cmp(&tm_next, &tm_tmp) < 0) {
-			OCSPerror(OCSP_R_STATUS_EXPIRED);
-			return 0;
+		if (X509_cmp_time(nextupd, &t_tmp) < 0) {
+			OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+			    OCSP_R_STATUS_EXPIRED);
+			ret = 0;
 		}
 	}
 
 	/* Also don't allow nextUpdate to precede thisUpdate */
-	if (ASN1_time_tm_cmp(&tm_next, &tm_this) < 0) {
-		OCSPerror(OCSP_R_NEXTUPDATE_BEFORE_THISUPDATE);
-		return 0;
+	if (ASN1_STRING_cmp(nextupd, thisupd) < 0) {
+		OCSPerr(OCSP_F_OCSP_CHECK_VALIDITY,
+		    OCSP_R_NEXTUPDATE_BEFORE_THISUPDATE);
+		ret = 0;
 	}
 
-	return 1;
-}
-
-const OCSP_CERTID *
-OCSP_SINGLERESP_get0_id(const OCSP_SINGLERESP *single)
-{
-	return single->certId;
+	return ret;
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_int.h,v 1.10 2019/01/19 01:07:00 tb Exp $ */
+/* $OpenBSD: eng_int.h,v 1.7 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Geoff Thorpe (geoff@geoffthorpe.net) for the OpenSSL
  * project 2000.
  */
@@ -67,7 +67,9 @@
 /* Take public definitions from engine.h */
 #include <openssl/engine.h>
 
-__BEGIN_HIDDEN_DECLS
+#ifdef  __cplusplus
+extern "C" {
+#endif
 
 /* If we compile with this symbol defined, then both reference counts in the
  * ENGINE structure will be monitored with a line of output on stderr for each
@@ -159,7 +161,6 @@ struct engine_st {
 	const DH_METHOD *dh_meth;
 	const ECDH_METHOD *ecdh_meth;
 	const ECDSA_METHOD *ecdsa_meth;
-	const EC_KEY_METHOD *ec_meth;
 	const RAND_METHOD *rand_meth;
 	const STORE_METHOD *store_meth;
 	/* Cipher handling is via this callback */
@@ -198,6 +199,8 @@ struct engine_st {
 	struct engine_st *next;
 };
 
-__END_HIDDEN_DECLS
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* HEADER_ENGINE_INT_H */

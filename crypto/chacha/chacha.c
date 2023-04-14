@@ -1,4 +1,4 @@
-/* $OpenBSD: chacha.c,v 1.9 2022/08/20 18:44:58 jsing Exp $ */
+/* $OpenBSD: chacha.c,v 1.5 2014/06/24 18:12:09 jsing Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -40,7 +40,6 @@ void
 ChaCha(ChaCha_ctx *ctx, unsigned char *out, const unsigned char *in, size_t len)
 {
 	unsigned char *k;
-	uint64_t n;
 	int i, l;
 
 	/* Consume remaining keystream, if any exists. */
@@ -53,24 +52,14 @@ ChaCha(ChaCha_ctx *ctx, unsigned char *out, const unsigned char *in, size_t len)
 		len -= l;
 	}
 
-	while (len > 0) {
-		if ((n = len) > UINT32_MAX)
-			n = UINT32_MAX;
-
-		chacha_encrypt_bytes((chacha_ctx *)ctx, in, out, (uint32_t)n);
-
-		in += n;
-		out += n;
-		len -= n;
-	}
+	chacha_encrypt_bytes((chacha_ctx *)ctx, in, out, (uint32_t)len);
 }
 
 void
 CRYPTO_chacha_20(unsigned char *out, const unsigned char *in, size_t len,
-    const unsigned char key[32], const unsigned char iv[8], uint64_t counter)
+    const unsigned char key[32], const unsigned char iv[8], size_t counter)
 {
 	struct chacha_ctx ctx;
-	uint64_t n;
 
 	/*
 	 * chacha_ivsetup expects the counter to be in u8. Rather than
@@ -81,27 +70,8 @@ CRYPTO_chacha_20(unsigned char *out, const unsigned char *in, size_t len,
 	chacha_ivsetup(&ctx, iv, NULL);
 	if (counter != 0) {
 		ctx.input[12] = (uint32_t)counter;
-		ctx.input[13] = (uint32_t)(counter >> 32);
+		ctx.input[13] = (uint32_t)(((uint64_t)counter) >> 32);
 	}
 
-	while (len > 0) {
-		if ((n = len) > UINT32_MAX)
-			n = UINT32_MAX;
-
-		chacha_encrypt_bytes(&ctx, in, out, (uint32_t)n);
-
-		in += n;
-		out += n;
-		len -= n;
-	}
-}
-
-void
-CRYPTO_xchacha_20(unsigned char *out, const unsigned char *in, size_t len,
-    const unsigned char key[32], const unsigned char iv[24])
-{
-	uint8_t subkey[32];
-
-	CRYPTO_hchacha_20(subkey, key, iv);
-	CRYPTO_chacha_20(out, in, len, subkey, iv + 16, 0);
+	chacha_encrypt_bytes(&ctx, in, out, (uint32_t)len);
 }

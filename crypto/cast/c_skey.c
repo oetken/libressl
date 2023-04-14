@@ -1,4 +1,4 @@
-/* $OpenBSD: c_skey.c,v 1.12 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -58,7 +58,7 @@
 
 #include <openssl/crypto.h>
 #include <openssl/cast.h>
-#include "cast_local.h"
+#include "cast_lcl.h"
 #include "cast_s.h"
 
 #define CAST_exp(l,A,a,n) \

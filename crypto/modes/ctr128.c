@@ -1,4 +1,4 @@
-/* $OpenBSD: ctr128.c,v 1.9 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: ctr128.c,v 1.4 2014/06/12 15:49:30 deraadt Exp $ */
 /* ====================================================================
  * Copyright (c) 2008 The OpenSSL Project.  All rights reserved.
  *
@@ -50,7 +50,7 @@
  */
 
 #include <openssl/crypto.h>
-#include "modes_local.h"
+#include "modes_lcl.h"
 #include <string.h>
 
 #ifndef MODES_DEBUG
@@ -81,21 +81,22 @@ static void ctr128_inc(unsigned char *counter) {
 static void
 ctr128_inc_aligned(unsigned char *counter)
 {
-#if BYTE_ORDER == LITTLE_ENDIAN
-	ctr128_inc(counter);
-#else
-	size_t *data, c, n;
+	size_t *data,c,n;
+
+	if (BYTE_ORDER == LITTLE_ENDIAN) {
+		ctr128_inc(counter);
+		return;
+	}
+
 	data = (size_t *)counter;
-	n = 16 / sizeof(size_t);
+	n = 16/sizeof(size_t);
 	do {
 		--n;
 		c = data[n];
 		++c;
 		data[n] = c;
-		if (c)
-			return;
+		if (c) return;
 	} while (n);
-#endif
 }
 #endif
 
@@ -109,7 +110,7 @@ ctr128_inc_aligned(unsigned char *counter)
  * This algorithm assumes that the counter is in the x lower bits
  * of the IV (ivec), and that the application has full control over
  * overflow and the rest of the IV.  This implementation takes NO
- * responsibility for checking that the counter doesn't overflow
+ * responsability for checking that the counter doesn't overflow
  * into the rest of the IV when incremented.
  */
 void CRYPTO_ctr128_encrypt(const unsigned char *in, unsigned char *out,
@@ -120,6 +121,7 @@ void CRYPTO_ctr128_encrypt(const unsigned char *in, unsigned char *out,
 	unsigned int n;
 	size_t l=0;
 
+	assert(in && out && key && ecount_buf && num);
 	assert(*num < 16);
 
 	n = *num;
@@ -194,6 +196,7 @@ void CRYPTO_ctr128_encrypt_ctr32(const unsigned char *in, unsigned char *out,
 {
 	unsigned int n,ctr32;
 
+	assert(in && out && key && ecount_buf && num);
 	assert(*num < 16);
 
 	n = *num;
@@ -228,7 +231,7 @@ void CRYPTO_ctr128_encrypt_ctr32(const unsigned char *in, unsigned char *out,
 		(*func)(in,out,blocks,key,ivec);
 		/* (*ctr) does not update ivec, caller does: */
 		PUTU32(ivec+12,ctr32);
-		/* ... overflow was detected, propagate carry. */
+		/* ... overflow was detected, propogate carry. */
 		if (ctr32 == 0)	ctr96_inc(ivec);
 		blocks *= 16;
 		len -= blocks;

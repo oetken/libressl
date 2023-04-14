@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_obj.c,v 1.22 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: x509_obj.c,v 1.15 2014/07/10 13:58:23 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -65,10 +65,8 @@
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 
-#include "x509_local.h"
-
 char *
-X509_NAME_oneline(const X509_NAME *a, char *buf, int len)
+X509_NAME_oneline(X509_NAME *a, char *buf, int len)
 {
 	X509_NAME_ENTRY *ne;
 	int i;
@@ -174,9 +172,8 @@ X509_NAME_oneline(const X509_NAME *a, char *buf, int len)
 	return (p);
 
 err:
-	X509error(ERR_R_MALLOC_FAILURE);
+	X509err(X509_F_X509_NAME_ONELINE, ERR_R_MALLOC_FAILURE);
 	if (b != NULL)
 		BUF_MEM_free(b);
 	return (NULL);
 }
-LCRYPTO_ALIAS(X509_NAME_oneline);

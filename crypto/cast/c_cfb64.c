@@ -1,4 +1,4 @@
-/* $OpenBSD: c_cfb64.c,v 1.6 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <openssl/cast.h>
-#include "cast_local.h"
+#include "cast_lcl.h"
 
 /* The input and output encrypted as though 64bit cfb mode is being
  * used.  The extra state information to record how much of the
@@ -68,9 +68,9 @@ void CAST_cfb64_encrypt(const unsigned char *in, unsigned char *out,
 			long length, const CAST_KEY *schedule, unsigned char *ivec,
 			int *num, int enc)
 	{
-	CAST_LONG v0,v1,t;
-	int n= *num;
-	long l=length;
+	register CAST_LONG v0,v1,t;
+	register int n= *num;
+	register long l=length;
 	CAST_LONG ti[2];
 	unsigned char *iv,c,cc;
 

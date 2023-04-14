@@ -1,161 +1,98 @@
-# Copyright (c) 2014-2015 Brent Cook
-#
-# Permission to use, copy, modify, and distribute this software for any
-# purpose with or without fee is hereby granted, provided that the above
-# copyright notice and this permission notice appear in all copies.
-#
-# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-# WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-# MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-# ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-# WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-# ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-# OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-AC_INIT([libressl], m4_esyscmd(tr -d '\n' < VERSION))
-AC_SUBST([LIBCRYPTO_VERSION], m4_esyscmd([tr -d '\n' < crypto/VERSION]))
-AC_SUBST([LIBSSL_VERSION], m4_esyscmd([tr -d '\n' < ssl/VERSION]))
-AC_SUBST([LIBTLS_VERSION], m4_esyscmd([tr -d '\n' < tls/VERSION]))
-
-AC_CANONICAL_HOST
-AM_INIT_AUTOMAKE([subdir-objects foreign])
+AC_INIT([libressl], [2.0.0])
+AC_CANONICAL_TARGET
+AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
 
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-# This must be saved before AC_PROG_CC
-USER_CFLAGS="$CFLAGS"
+AC_SUBST([USER_CFLAGS], "-O2 $CFLAGS")
+CFLAGS="$CFLAGS -Wall -Werror -std=c99 -g -Wno-pointer-sign"
 
-AC_PROG_CC([cc gcc])
+case $target_os in
+	*darwin*)
+		TARGET_OS=darwin;
+		LDFLAGS="$LDFLAGS -Qunused-arguments"
+		;;
+	*linux*)
+		TARGET_OS=linux;
+		CFLAGS="$CFLAGS -D_BSD_SOURCE -D_POSIX_SOURCE -D_GNU_SOURCE"
+		;;
+	*solaris*)
+		TARGET_OS=solaris;
+		CFLAGS="$CFLAGS -D__EXTENSIONS__ -D_XOPEN_SOURCE=600 -DBSD_COMP"
+		AC_SUBST([PLATFORM_LDADD], ['-lnsl -lsocket'])
+		;;
+	*openbsd*)
+		AC_DEFINE([HAVE_ATTRIBUTE__BOUNDED__], [1], [OpenBSD gcc has bounded])
+		;;
+	*) ;;
+esac
+
+AM_CONDITIONAL(TARGET_DARWIN, test x$TARGET_OS = xdarwin)
+AM_CONDITIONAL(TARGET_LINUX, test x$TARGET_OS = xlinux)
+AM_CONDITIONAL(TARGET_SOLARIS, test x$TARGET_OS = xsolaris)
+
+AC_PROG_CC
+AC_PROG_LIBTOOL
+AC_PROG_CC_STDC
 AM_PROG_CC_C_O
-LT_INIT([pic-only])
 
-CHECK_OS_OPTIONS
+AC_CHECK_FUNC(strlcpy,[AC_SEARCH_LIBS(strlcpy,, [NO_STRLCPY=],
+			  [NO_STRLCPY=yes])], [NO_STRLCPY=yes])
+AC_SUBST(NO_STRLCPY)
+AM_CONDITIONAL(NO_STRLCPY, test "x$NO_STRLCPY" = "xyes")
 
-CHECK_C_HARDENING_OPTIONS
+AC_CHECK_FUNC(strlcat,[AC_SEARCH_LIBS(strlcat,, [NO_STRLCAT=],
+			  [NO_STRLCAT=yes])], [NO_STRLCAT=yes])
+AC_SUBST(NO_STRLCAT)
+AM_CONDITIONAL(NO_STRLCAT, test "x$NO_STRLCAT" = "xyes")
 
-DISABLE_AS_EXECUTABLE_STACK
-AM_PROG_AS
+AC_CHECK_FUNC(reallocarray,[AC_SEARCH_LIBS(reallocarray,, [NO_REALLOCARRAY=],
+			  [NO_REALLOCARRAY=yes])], [NO_REALLOCARRAY=yes])
+AC_SUBST(NO_REALLOCARRAY)
+AM_CONDITIONAL(NO_REALLOCARRAY, test "x$NO_REALLOCARRAY" = "xyes")
 
-DISABLE_COMPILER_WARNINGS
+AC_CHECK_FUNC(timingsafe_bcmp,[AC_SEARCH_LIBS(timingsafe_bcmp,, [NO_TIMINGSAFE_BCMP=],
+			  [NO_TIMINGSAFE_BCMP=yes])], [NO_TIMINGSAFE_BCMP=yes])
+AC_SUBST(NO_TIMINGSAFE_BCMP)
+AM_CONDITIONAL(NO_TIMINGSAFE_BCMP, test "x$NO_TIMINGSAFE_BCMP" = "xyes")
 
-# Check if the certhash command should be built
-AC_CHECK_FUNCS([symlink])
-AM_CONDITIONAL([BUILD_CERTHASH], [test "x$ac_cv_func_symlink" = xyes])
+AC_CHECK_FUNC(timingsafe_memcmp,[AC_SEARCH_LIBS(timingsafe_memcmp,, [NO_TIMINGSAFE_MEMCMP=],
+			  [NO_TIMINGSAFE_MEMCMP=yes])], [NO_TIMINGSAFE_MEMCMP=yes])
+AC_SUBST(NO_TIMINGSAFE_MEMCMP)
+AM_CONDITIONAL(NO_TIMINGSAFE_MEMCMP, test "x$NO_TIMINGSAFE_MEMCMP" = "xyes")
 
-# Check if funopen exists
-AC_CHECK_FUNC([funopen])
+AC_CHECK_FUNC(arc4random_buf,[AC_SEARCH_LIBS(write,, [NO_ARC4RANDOM_BUF=],
+			  [NO_ARC4RANDOM_BUF=yes])], [NO_ARC4RANDOM_BUF=yes])
+AC_SUBST(NO_ARC4RANDOM_BUF)
+AM_CONDITIONAL(NO_ARC4RANDOM_BUF, test "x$NO_ARC4RANDOM_BUF" = "xyes")
 
-CHECK_LIBC_COMPAT
-CHECK_SYSCALL_COMPAT
-CHECK_CRYPTO_COMPAT
-CHECK_VA_COPY
-CHECK_B64_NTOP
+# overrides for arc4random_buf implementations with known issues
+AM_CONDITIONAL(NO_ARC4RANDOM_BUF,
+   test x$TARGET_OS = xdarwin \
+     -o x$TARGET_OS = xsolaris \
+	 -o x$NO_ARC4RANDOM_BUF = xyes)
 
-AC_ARG_WITH([openssldir],
-	AS_HELP_STRING([--with-openssldir],
-		       [Set the default openssl directory]),
-	OPENSSLDIR="$withval"
-	AC_SUBST(OPENSSLDIR)
-)
-AM_CONDITIONAL([OPENSSLDIR_DEFINED], [test x$with_openssldir != x])
+AC_CHECK_FUNC(getentropy,[AC_SEARCH_LIBS(write,, [NO_GETENTROPY=],
+			  [NO_GETENTROPY=yes])], [NO_GETENTROPY=yes])
+AC_SUBST(NO_GETENTROPY)
+AM_CONDITIONAL(NO_GETENTROPY, test "x$NO_GETENTROPY" = "xyes")
 
-AC_ARG_ENABLE([extratests],
-	AS_HELP_STRING([--enable-extratests], [Enable extra tests that may be unreliable on some platforms]))
-AM_CONDITIONAL([ENABLE_EXTRATESTS], [test "x$enable_extratests" = xyes])
+AC_CHECK_FUNC(issetugid,[AC_SEARCH_LIBS(write,, [NO_ISSETUGID=],
+			  [NO_ISSETUGID=yes])], [NO_ISSETUGID=yes])
+AC_SUBST(NO_ISSETUGID)
+AM_CONDITIONAL(NO_ISSETUGID, test "x$NO_ISSETUGID" = "xyes")
 
-AC_ARG_ENABLE([tests],
-       [AS_HELP_STRING([--disable-tests], [Disable tests @<:@default=enabled@:>@])],
-       [
-        if ! test "x${enable_tests}" = "xyes"; then
-		enable_tests="no"
-	fi],
-       [enable_tests="yes"])
-AM_CONDITIONAL([ENABLE_TESTS], [test "x$enable_tests" = xyes])
+AC_CHECK_FUNC(strtonum,[AC_SEARCH_LIBS(write,, [NO_STRTONUM=],
+			  [NO_STRTONUM=yes])], [NO_STRTONUM=yes])
+AC_SUBST(NO_STRTONUM)
+AM_CONDITIONAL(NO_STRTONUM, test "x$NO_STRTONUM" = "xyes")
 
-AS_CASE([$host_cpu],
-	[arm64], [host_cpu=aarch64],
-	[*arm*], [host_cpu=arm],
-	[*amd64*], [host_cpu=x86_64 HOSTARCH=intel],
-	[i?86], [host_cpu=i386 HOSTARCH=intel enable_asm=no],
-	[mips64*], [host_cpu=mips64 enable_asm=no],
-	[mips*], [host_cpu=mips enable_asm=no],
-	[powerpc*], [host_cpu=powerpc],
-	[ppc64*], [host_cpu=powerpc64],
-	[x86_64], [HOSTARCH=intel]
-)
-AM_CONDITIONAL([HOST_CPU_IS_INTEL], [test "x$HOSTARCH" = "xintel"])
+AC_CHECK_FUNC(getauxval, AC_DEFINE(HAVE_GETAUXVAL))
 
-AM_CONDITIONAL([HOST_AARCH64],   [test "$host_cpu" = "aarch64"])
-AM_CONDITIONAL([HOST_ARM],       [test "$host_cpu" = "arm"])
-AM_CONDITIONAL([HOST_I386],      [test "$host_cpu" = "i386"])
-AM_CONDITIONAL([HOST_MIPS],      [test "$host_cpu" = "mips"])
-AM_CONDITIONAL([HOST_MIPS64],    [test "$host_cpu" = "mips64"])
-AM_CONDITIONAL([HOST_POWERPC],   [test "$host_cpu" = "powerpc"])
-AM_CONDITIONAL([HOST_POWERPC64], [test "$host_cpu" = "ppc64"])
-AM_CONDITIONAL([HOST_RISCV64],   [test "$host_cpu" = "riscv64"])
-AM_CONDITIONAL([HOST_SPARC64],   [test "$host_cpu" = "sparc64"])
-AM_CONDITIONAL([HOST_X86_64],    [test "$host_cpu" = "x86_64"])
+AC_CHECK_FUNC(funopen, AC_DEFINE(HAVE_FUNOPEN))
 
-AC_MSG_CHECKING([if .gnu.warning accepts long strings])
-AC_LINK_IFELSE([AC_LANG_SOURCE([[
-extern void SSLv3_method();
-__asm__(".section .gnu.warning.SSLv3_method\n\t.ascii \"SSLv3_method is insecure\"\n\t.text");
-int main() {return 0;}
-]])], [
-    AC_DEFINE(HAS_GNU_WARNING_LONG, 1, [Define if .gnu.warning accepts long strings.])
-    AC_MSG_RESULT(yes)
-], [
-   AC_MSG_RESULT(no)
-])
+LT_INIT
 
-AC_ARG_ENABLE([asm], AS_HELP_STRING([--disable-asm], [Disable assembly]))
-AM_CONDITIONAL([OPENSSL_NO_ASM], [test "x$enable_asm" = "xno"])
-
-# Conditionally enable assembly by default
-AM_CONDITIONAL([HOST_ASM_ELF_ARM],
-    [test "x$HOST_ABI" = "xelf" -a "$host_cpu" = "arm" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_ELF_MIPS],
-    [test "x$HOST_ABI" = "xelf" -a "$host_cpu" = "mips" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_ELF_MIPS64],
-    [test "x$HOST_ABI" = "xelf" -a "$host_cpu" = "mips64" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_ELF_X86_64],
-    [test "x$HOST_ABI" = "xelf" -a "$host_cpu" = "x86_64" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_MACOSX_X86_64],
-    [test "x$HOST_ABI" = "xmacosx" -a "$host_cpu" = "x86_64" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_MASM_X86_64],
-    [test "x$HOST_ABI" = "xmasm" -a "$host_cpu" = "x86_64" -a "x$enable_asm" != "xno"])
-AM_CONDITIONAL([HOST_ASM_MINGW64_X86_64],
-    [test "x$HOST_ABI" = "xmingw64" -a "$host_cpu" = "x86_64" -a "x$enable_asm" != "xno"])
-
-AC_CONFIG_FILES([
-	Makefile
-	include/Makefile
-	include/openssl/Makefile
-	crypto/Makefile
-	ssl/Makefile
-	tls/Makefile
-	tests/Makefile
-	apps/Makefile
-	apps/ocspcheck/Makefile
-	apps/openssl/Makefile
-	apps/nc/Makefile
-	man/Makefile
-	libcrypto.pc
-	libssl.pc
-	libtls.pc
-	openssl.pc
-])
-
-AC_ARG_ENABLE([nc],
-	AS_HELP_STRING([--enable-nc], [Enable installing TLS-enabled nc(1)]))
-AM_CONDITIONAL([ENABLE_NC], [test "x$enable_nc" = xyes])
-AM_CONDITIONAL([BUILD_NC],  [test x$BUILD_NC = xyes -o "x$enable_nc" = xyes])
-
-AC_ARG_ENABLE([libtls-only],
-	AS_HELP_STRING([--enable-libtls-only], [Enable installing libtls only]))
-AM_CONDITIONAL([ENABLE_LIBTLS_ONLY], [test "x$enable_libtls_only" = xyes])
-
-AC_REQUIRE_AUX_FILE([tap-driver.sh])
-
-AC_OUTPUT
+AC_OUTPUT(Makefile include/Makefile include/openssl/Makefile ssl/Makefile
+          crypto/Makefile tests/Makefile apps/Makefile man/Makefile)

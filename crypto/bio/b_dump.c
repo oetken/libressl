@@ -1,10 +1,10 @@
-/* $OpenBSD: b_dump.c,v 1.23 2022/10/17 18:26:41 jsing Exp $ */
+/* $OpenBSD: b_dump.c,v 1.18 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
  * This package is an SSL implementation written
  * by Eric Young (eay@cryptsoft.com).
-* The implementation was written so as to conform with Netscapes SSL.
+ * The implementation was written so as to conform with Netscapes SSL.
  *
  * This library is free for commercial and non-commercial use as long as
  * the following conditions are aheared to.  The following conditions
@@ -80,11 +80,11 @@ int
 BIO_dump_indent_cb(int (*cb)(const void *data, size_t len, void *u),
     void *u, const char *s, int len, int indent)
 {
+	int ret = 0;
 	char buf[288 + 1], tmp[20], str[128 + 1];
-	int i, j, rows, trc, written;
+	int i, j, rows, trc;
 	unsigned char ch;
 	int dump_width;
-	int ret = 0;
 
 	trc = 0;
 
@@ -95,17 +95,19 @@ BIO_dump_indent_cb(int (*cb)(const void *data, size_t len, void *u),
 
 	if (indent < 0)
 		indent = 0;
-	if (indent > 64)
-		indent = 64;
-	memset(str, ' ', indent);
+	if (indent) {
+		if (indent > 128)
+			indent = 128;
+		memset(str, ' ', indent);
+	}
 	str[indent] = '\0';
 
-	if ((dump_width = DUMP_WIDTH_LESS_INDENT(indent)) <= 0)
-		return -1;
+	dump_width = DUMP_WIDTH_LESS_INDENT(indent);
 	rows = (len / dump_width);
 	if ((rows * dump_width) < len)
 		rows++;
 	for (i = 0; i < rows; i++) {
+		buf[0] = '\0';	/* start with empty string */
 		strlcpy(buf, str, sizeof buf);
 		snprintf(tmp, sizeof tmp, "%04x - ", i*dump_width);
 		strlcat(buf, tmp, sizeof buf);
@@ -132,18 +134,13 @@ BIO_dump_indent_cb(int (*cb)(const void *data, size_t len, void *u),
 		/* if this is the last call then update the ddt_dump thing so
 		 * that we will move the selection point in the debug window
 		 */
-		if ((written = cb((void *)buf, strlen(buf), u)) < 0)
-			return -1;
-		ret += written;
-
+		ret += cb((void *)buf, strlen(buf), u);
 	}
 #ifdef TRUNCATE
 	if (trc > 0) {
 		snprintf(buf, sizeof buf, "%s%04x - <SPACES/NULS>\n",
 		    str, len + trc);
-		if ((written = cb((void *)buf, strlen(buf), u)) < 0)
-			return -1;
-		ret += written;
+		ret += cb((void *)buf, strlen(buf), u);
 	}
 #endif
 	return (ret);
@@ -152,7 +149,7 @@ BIO_dump_indent_cb(int (*cb)(const void *data, size_t len, void *u),
 static int
 write_fp(const void *data, size_t len, void *fp)
 {
-	return fwrite(data, 1, len, fp);
+	return fwrite(data, len, 1, fp);
 }
 
 int

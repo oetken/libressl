@@ -1,4 +1,4 @@
-/* $OpenBSD: conf_api.c,v 1.15 2015/04/11 16:03:21 deraadt Exp $ */
+/* $OpenBSD: conf_api.c,v 1.10 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,6 +63,7 @@
 # define NDEBUG
 #endif
 
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -130,6 +131,7 @@ char *
 _CONF_get_string(const CONF *conf, const char *section, const char *name)
 {
 	CONF_VALUE *v, vv;
+	char *p;
 
 	if (name == NULL)
 		return (NULL);
@@ -140,6 +142,14 @@ _CONF_get_string(const CONF *conf, const char *section, const char *name)
 			v = lh_CONF_VALUE_retrieve(conf->data, &vv);
 			if (v != NULL)
 				return (v->value);
+			if (strcmp(section, "ENV") == 0) {
+				if (issetugid() == 0)
+					p = getenv(name);
+				else
+					p = NULL;
+				if (p != NULL)
+					return (p);
+			}
 		}
 		vv.section = "default";
 		vv.name = (char *)name;
@@ -148,9 +158,34 @@ _CONF_get_string(const CONF *conf, const char *section, const char *name)
 			return (v->value);
 		else
 			return (NULL);
-	} else
-		return (NULL);
+	} else {
+		if (issetugid())
+			return (NULL);
+		return (getenv(name));
+	}
 }
+
+#if 0 /* There's no way to provide error checking with this function, so
+	 force implementors of the higher levels to get a string and read
+	 the number themselves. */
+long
+_CONF_get_number(CONF *conf, char *section, char *name)
+{
+	char *str;
+	long ret = 0;
+
+	str = _CONF_get_string(conf, section, name);
+	if (str == NULL)
+		return (0);
+	for (;;) {
+		if (conf->meth->is_number(conf, *str))
+			ret = ret * 10 + conf->meth->to_int(conf, *str);
+		else
+			return (ret);
+		str++;
+	}
+}
+#endif
 
 static unsigned long
 conf_value_hash(const CONF_VALUE *v)
@@ -277,3 +312,5 @@ err:
 	}
 	return (v);
 }
+
+IMPLEMENT_STACK_OF(CONF_VALUE)

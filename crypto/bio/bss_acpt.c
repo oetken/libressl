@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_acpt.c,v 1.30 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bss_acpt.c,v 1.22 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -67,8 +67,6 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
-#include "bio_local.h"
-
 #define SOCKET_PROTOCOL IPPROTO_TCP
 
 typedef struct bio_accept_st {
@@ -102,7 +100,7 @@ static void BIO_ACCEPT_free(BIO_ACCEPT *a);
 #define ACPT_S_GET_ACCEPT_SOCKET	2
 #define ACPT_S_OK			3
 
-static const BIO_METHOD methods_acceptp = {
+static BIO_METHOD methods_acceptp = {
 	.type = BIO_TYPE_ACCEPT,
 	.name = "socket accept",
 	.bwrite = acpt_write,
@@ -113,7 +111,7 @@ static const BIO_METHOD methods_acceptp = {
 	.destroy = acpt_free
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_accept(void)
 {
 	return (&methods_acceptp);
@@ -155,7 +153,8 @@ BIO_ACCEPT_free(BIO_ACCEPT *a)
 
 	free(a->param_addr);
 	free(a->addr);
-	BIO_free(a->bio_chain);
+	if (a->bio_chain != NULL)
+		BIO_free(a->bio_chain);
 	free(a);
 }
 
@@ -203,7 +202,7 @@ again:
 	switch (c->state) {
 	case ACPT_S_BEFORE:
 		if (c->param_addr == NULL) {
-			BIOerror(BIO_R_NO_ACCEPT_PORT_SPECIFIED);
+			BIOerr(BIO_F_ACPT_STATE, BIO_R_NO_ACCEPT_PORT_SPECIFIED);
 			return (-1);
 		}
 		s = BIO_get_accept_socket(c->param_addr, c->bind_mode);
@@ -213,7 +212,7 @@ again:
 		if (c->accept_nbio) {
 			if (!BIO_socket_nbio(s, 1)) {
 				close(s);
-				BIOerror(BIO_R_ERROR_SETTING_NBIO_ON_ACCEPT_SOCKET);
+				BIOerr(BIO_F_ACPT_STATE, BIO_R_ERROR_SETTING_NBIO_ON_ACCEPT_SOCKET);
 				return (-1);
 			}
 		}
@@ -250,7 +249,7 @@ again:
 
 		if (c->nbio) {
 			if (!BIO_socket_nbio(i, 1)) {
-				BIOerror(BIO_R_ERROR_SETTING_NBIO_ON_ACCEPTED_SOCKET);
+				BIOerr(BIO_F_ACPT_STATE, BIO_R_ERROR_SETTING_NBIO_ON_ACCEPTED_SOCKET);
 				goto err;
 			}
 		}
@@ -272,6 +271,8 @@ again:
 err:
 		if (bio != NULL)
 			BIO_free(bio);
+		else if (s >= 0)
+			close(s);
 		return (0);
 		/* break; */
 	case ACPT_S_OK:
@@ -353,11 +354,12 @@ acpt_ctrl(BIO *b, int cmd, long num, void *ptr)
 			if (num == 0) {
 				b->init = 1;
 				free(data->param_addr);
-				data->param_addr = strdup(ptr);
+				data->param_addr = BUF_strdup(ptr);
 			} else if (num == 1) {
 				data->accept_nbio = (ptr != NULL);
 			} else if (num == 2) {
-				BIO_free(data->bio_chain);
+				if (data->bio_chain != NULL)
+					BIO_free(data->bio_chain);
 				data->bio_chain = (BIO *)ptr;
 			}
 		}
@@ -438,7 +440,7 @@ acpt_puts(BIO *bp, const char *str)
 }
 
 BIO *
-BIO_new_accept(const char *str)
+BIO_new_accept(char *str)
 {
 	BIO *ret;
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: err.h,v 1.28 2022/08/29 06:49:24 jsing Exp $ */
+/* $OpenBSD: err.h,v 1.20 2014/07/11 08:44:48 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -195,13 +195,9 @@ typedef struct err_state_st {
 #define ERR_LIB_TS		47
 #define ERR_LIB_HMAC		48
 #define ERR_LIB_JPAKE		49
-#define ERR_LIB_GOST		50
-#define ERR_LIB_CT		51
-#define ERR_LIB_KDF		52
 
 #define ERR_LIB_USER		128
 
-#ifndef LIBRESSL_INTERNAL
 #define SYSerr(f,r)  ERR_PUT_error(ERR_LIB_SYS,(f),(r),__FILE__,__LINE__)
 #define BNerr(f,r)   ERR_PUT_error(ERR_LIB_BN,(f),(r),__FILE__,__LINE__)
 #define RSAerr(f,r)  ERR_PUT_error(ERR_LIB_RSA,(f),(r),__FILE__,__LINE__)
@@ -216,6 +212,7 @@ typedef struct err_state_st {
 #define CONFerr(f,r) ERR_PUT_error(ERR_LIB_CONF,(f),(r),__FILE__,__LINE__)
 #define CRYPTOerr(f,r) ERR_PUT_error(ERR_LIB_CRYPTO,(f),(r),__FILE__,__LINE__)
 #define ECerr(f,r)   ERR_PUT_error(ERR_LIB_EC,(f),(r),__FILE__,__LINE__)
+#define SSLerr(f,r)  ERR_PUT_error(ERR_LIB_SSL,(f),(r),__FILE__,__LINE__)
 #define BIOerr(f,r)  ERR_PUT_error(ERR_LIB_BIO,(f),(r),__FILE__,__LINE__)
 #define PKCS7err(f,r) ERR_PUT_error(ERR_LIB_PKCS7,(f),(r),__FILE__,__LINE__)
 #define X509V3err(f,r) ERR_PUT_error(ERR_LIB_X509V3,(f),(r),__FILE__,__LINE__)
@@ -234,49 +231,6 @@ typedef struct err_state_st {
 #define TSerr(f,r) ERR_PUT_error(ERR_LIB_TS,(f),(r),__FILE__,__LINE__)
 #define HMACerr(f,r) ERR_PUT_error(ERR_LIB_HMAC,(f),(r),__FILE__,__LINE__)
 #define JPAKEerr(f,r) ERR_PUT_error(ERR_LIB_JPAKE,(f),(r),__FILE__,__LINE__)
-#define GOSTerr(f,r) ERR_PUT_error(ERR_LIB_GOST,(f),(r),__FILE__,__LINE__)
-#define SSLerr(f,r)  ERR_PUT_error(ERR_LIB_SSL,(f),(r),__FILE__,__LINE__)
-#define CTerr(f, r) ERR_PUT_error(ERR_LIB_CT,(f),(r),__FILE__,__LINE__)
-#define KDFerr(f, r) ERR_PUT_error(ERR_LIB_KDF,(f),(r),__FILE__,__LINE__)
-#endif
-
-#ifdef LIBRESSL_INTERNAL
-#define SYSerror(r)  ERR_PUT_error(ERR_LIB_SYS,(0xfff),(r),__FILE__,__LINE__)
-#define BNerror(r)   ERR_PUT_error(ERR_LIB_BN,(0xfff),(r),__FILE__,__LINE__)
-#define RSAerror(r)  ERR_PUT_error(ERR_LIB_RSA,(0xfff),(r),__FILE__,__LINE__)
-#define DHerror(r)   ERR_PUT_error(ERR_LIB_DH,(0xfff),(r),__FILE__,__LINE__)
-#define EVPerror(r)  ERR_PUT_error(ERR_LIB_EVP,(0xfff),(r),__FILE__,__LINE__)
-#define BUFerror(r)  ERR_PUT_error(ERR_LIB_BUF,(0xfff),(r),__FILE__,__LINE__)
-#define OBJerror(r)  ERR_PUT_error(ERR_LIB_OBJ,(0xfff),(r),__FILE__,__LINE__)
-#define PEMerror(r)  ERR_PUT_error(ERR_LIB_PEM,(0xfff),(r),__FILE__,__LINE__)
-#define DSAerror(r)  ERR_PUT_error(ERR_LIB_DSA,(0xfff),(r),__FILE__,__LINE__)
-#define X509error(r) ERR_PUT_error(ERR_LIB_X509,(0xfff),(r),__FILE__,__LINE__)
-#define ASN1error(r) ERR_PUT_error(ERR_LIB_ASN1,(0xfff),(r),__FILE__,__LINE__)
-#define CONFerror(r) ERR_PUT_error(ERR_LIB_CONF,(0xfff),(r),__FILE__,__LINE__)
-#define CRYPTOerror(r) ERR_PUT_error(ERR_LIB_CRYPTO,(0xfff),(r),__FILE__,__LINE__)
-#define ECerror(r)   ERR_PUT_error(ERR_LIB_EC,(0xfff),(r),__FILE__,__LINE__)
-#define BIOerror(r)  ERR_PUT_error(ERR_LIB_BIO,(0xfff),(r),__FILE__,__LINE__)
-#define PKCS7error(r) ERR_PUT_error(ERR_LIB_PKCS7,(0xfff),(r),__FILE__,__LINE__)
-#define X509V3error(r) ERR_PUT_error(ERR_LIB_X509V3,(0xfff),(r),__FILE__,__LINE__)
-#define PKCS12error(r) ERR_PUT_error(ERR_LIB_PKCS12,(0xfff),(r),__FILE__,__LINE__)
-#define RANDerror(r) ERR_PUT_error(ERR_LIB_RAND,(0xfff),(r),__FILE__,__LINE__)
-#define DSOerror(r) ERR_PUT_error(ERR_LIB_DSO,(0xfff),(r),__FILE__,__LINE__)
-#define ENGINEerror(r) ERR_PUT_error(ERR_LIB_ENGINE,(0xfff),(r),__FILE__,__LINE__)
-#define OCSPerror(r) ERR_PUT_error(ERR_LIB_OCSP,(0xfff),(r),__FILE__,__LINE__)
-#define UIerror(r) ERR_PUT_error(ERR_LIB_UI,(0xfff),(r),__FILE__,__LINE__)
-#define COMPerror(r) ERR_PUT_error(ERR_LIB_COMP,(0xfff),(r),__FILE__,__LINE__)
-#define ECDSAerror(r)  ERR_PUT_error(ERR_LIB_ECDSA,(0xfff),(r),__FILE__,__LINE__)
-#define ECDHerror(r)  ERR_PUT_error(ERR_LIB_ECDH,(0xfff),(r),__FILE__,__LINE__)
-#define STOREerror(r) ERR_PUT_error(ERR_LIB_STORE,(0xfff),(r),__FILE__,__LINE__)
-#define FIPSerror(r) ERR_PUT_error(ERR_LIB_FIPS,(0xfff),(r),__FILE__,__LINE__)
-#define CMSerror(r) ERR_PUT_error(ERR_LIB_CMS,(0xfff),(r),__FILE__,__LINE__)
-#define TSerror(r) ERR_PUT_error(ERR_LIB_TS,(0xfff),(r),__FILE__,__LINE__)
-#define HMACerror(r) ERR_PUT_error(ERR_LIB_HMAC,(0xfff),(r),__FILE__,__LINE__)
-#define JPAKEerror(r) ERR_PUT_error(ERR_LIB_JPAKE,(0xfff),(r),__FILE__,__LINE__)
-#define GOSTerror(r) ERR_PUT_error(ERR_LIB_GOST,(0xfff),(r),__FILE__,__LINE__)
-#define CTerror(r) ERR_PUT_error(ERR_LIB_CT,(0xfff),(r),__FILE__,__LINE__)
-#define KDFerror(r) ERR_PUT_error(ERR_LIB_KDF,(0xfff),(r),__FILE__,__LINE__)
-#endif
 
 #define ERR_PACK(l,f,r)		(((((unsigned long)l)&0xffL)<<24L)| \
 				((((unsigned long)f)&0xfffL)<<12L)| \
@@ -346,10 +300,10 @@ typedef struct err_state_st {
 #define	ERR_R_PASSED_NULL_PARAMETER		(3|ERR_R_FATAL)
 #define	ERR_R_INTERNAL_ERROR			(4|ERR_R_FATAL)
 #define	ERR_R_DISABLED				(5|ERR_R_FATAL)
-#define	ERR_R_INIT_FAIL				(6|ERR_R_FATAL)
 
 /* 99 is the maximum possible ERR_R_... code, higher values
  * are reserved for the individual libraries */
+
 
 typedef struct ERR_string_data_st {
 	unsigned long error;
@@ -384,10 +338,8 @@ void ERR_print_errors_fp(FILE *fp);
 void ERR_print_errors(BIO *bp);
 #endif
 void ERR_asprintf_error_data(char * format, ...);
-#ifndef LIBRESSL_INTERNAL
 void ERR_add_error_data(int num, ...);
 void ERR_add_error_vdata(int num, va_list args);
-#endif
 void ERR_load_strings(int lib, ERR_STRING_DATA str[]);
 void ERR_unload_strings(int lib, ERR_STRING_DATA str[]);
 void ERR_load_ERR_strings(void);

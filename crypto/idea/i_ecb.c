@@ -1,4 +1,4 @@
-/* $OpenBSD: i_ecb.c,v 1.4 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: i_ecb.c,v 1.2 2014/06/12 15:49:29 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <openssl/idea.h>
-#include "idea_local.h"
+#include "idea_lcl.h"
 #include <openssl/opensslv.h>
 
 const char *idea_options(void)

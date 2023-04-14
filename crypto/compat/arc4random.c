@@ -1,10 +1,9 @@
-/*	$OpenBSD: arc4random.c,v 1.58 2022/07/31 13:41:45 tb Exp $	*/
+/*	$OpenBSD: arc4random.c,v 1.38 2014/06/26 19:23:15 deraadt Exp $	*/
 
 /*
  * Copyright (c) 1996, David Mazieres <dm@uun.org>
  * Copyright (c) 2008, Damien Miller <djm@openbsd.org>
  * Copyright (c) 2013, Markus Friedl <markus@openbsd.org>
- * Copyright (c) 2014, Theo de Raadt <deraadt@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -31,41 +30,38 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/param.h>
 #include <sys/time.h>
+#include <sys/mman.h>
+
+#include "thread_private.h"
 
 #define KEYSTREAM_ONLY
 #include "chacha_private.h"
 
-#define minimum(a, b) ((a) < (b) ? (a) : (b))
-
-#if defined(__GNUC__) || defined(_MSC_VER)
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#ifdef __GNUC__
 #define inline __inline
-#else				/* __GNUC__ || _MSC_VER */
+#else				/* !__GNUC__ */
 #define inline
-#endif				/* !__GNUC__ && !_MSC_VER */
+#endif				/* !__GNUC__ */
 
 #define KEYSZ	32
 #define IVSZ	8
 #define BLOCKSZ	64
 #define RSBUFSZ	(16*BLOCKSZ)
 
-#define REKEY_BASE	(1024*1024) /* NB. should be a power of 2 */
-
 /* Marked MAP_INHERIT_ZERO, so zero'd out in fork children. */
-static struct _rs {
+static struct {
 	size_t		rs_have;	/* valid bytes at end of rs_buf */
 	size_t		rs_count;	/* bytes till reseed */
 } *rs;
 
-/* Maybe be preserved in fork children, if _rs_allocate() decides. */
-static struct _rsx {
+/* Preserved in fork children. */
+static struct {
 	chacha_ctx	rs_chacha;	/* chacha context for random keystream */
 	u_char		rs_buf[RSBUFSZ];	/* keystream blocks */
 } *rsx;
-
-static inline int _rs_allocate(struct _rs **, struct _rsx **);
-static inline void _rs_forkdetect(void);
-#include "arc4random.h"
 
 static inline void _rs_rekey(u_char *dat, size_t datlen);
 
@@ -76,11 +72,21 @@ _rs_init(u_char *buf, size_t n)
 		return;
 
 	if (rs == NULL) {
-		if (_rs_allocate(&rs, &rsx) == -1)
-			_exit(1);
+		if ((rs = mmap(NULL, sizeof(*rs), PROT_READ|PROT_WRITE,
+		    MAP_ANON|MAP_PRIVATE, -1, 0)) == MAP_FAILED)
+			abort();
+#ifdef MAP_INHERIT_ZERO
+		if (minherit(rs, sizeof(*rs), MAP_INHERIT_ZERO) == -1)
+			abort();
+#endif
+	}
+	if (rsx == NULL) {
+		if ((rsx = mmap(NULL, sizeof(*rsx), PROT_READ|PROT_WRITE,
+		    MAP_ANON|MAP_PRIVATE, -1, 0)) == MAP_FAILED)
+			abort();
 	}
 
-	chacha_keysetup(&rsx->rs_chacha, buf, KEYSZ * 8);
+	chacha_keysetup(&rsx->rs_chacha, buf, KEYSZ * 8, 0);
 	chacha_ivsetup(&rsx->rs_chacha, buf + KEYSZ);
 }
 
@@ -88,10 +94,9 @@ static void
 _rs_stir(void)
 {
 	u_char rnd[KEYSZ + IVSZ];
-	uint32_t rekey_fuzz = 0;
 
 	if (getentropy(rnd, sizeof rnd) == -1)
-		_getentropy_fail();
+		raise(SIGKILL);
 
 	if (!rs)
 		_rs_init(rnd, sizeof(rnd));
@@ -103,16 +108,23 @@ _rs_stir(void)
 	rs->rs_have = 0;
 	memset(rsx->rs_buf, 0, sizeof(rsx->rs_buf));
 
-	/* rekey interval should not be predictable */
-	chacha_encrypt_bytes(&rsx->rs_chacha, (uint8_t *)&rekey_fuzz,
-	    (uint8_t *)&rekey_fuzz, sizeof(rekey_fuzz));
-	rs->rs_count = REKEY_BASE + (rekey_fuzz % REKEY_BASE);
+	rs->rs_count = 1600000;
 }
 
 static inline void
 _rs_stir_if_needed(size_t len)
 {
-	_rs_forkdetect();
+#ifndef MAP_INHERIT_ZERO
+	static pid_t _rs_pid = 0;
+	pid_t pid = getpid();
+
+	/* If a system lacks MAP_INHERIT_ZERO, resort to getpid() */
+	if (_rs_pid == 0 || _rs_pid != pid) {
+		_rs_pid = pid;
+		if (rs)
+			rs->rs_count = 0;
+	}
+#endif
 	if (!rs || rs->rs_count <= len)
 		_rs_stir();
 	if (rs->rs_count <= len)
@@ -134,7 +146,7 @@ _rs_rekey(u_char *dat, size_t datlen)
 	if (dat) {
 		size_t i, m;
 
-		m = minimum(datlen, KEYSZ + IVSZ);
+		m = min(datlen, KEYSZ + IVSZ);
 		for (i = 0; i < m; i++)
 			rsx->rs_buf[i] ^= dat[i];
 	}
@@ -154,7 +166,7 @@ _rs_random_buf(void *_buf, size_t n)
 	_rs_stir_if_needed(n);
 	while (n > 0) {
 		if (rs->rs_have > 0) {
-			m = minimum(n, rs->rs_have);
+			m = min(n, rs->rs_have);
 			keystream = rsx->rs_buf + sizeof(rsx->rs_buf)
 			    - rs->rs_have;
 			memcpy(buf, keystream, m);
@@ -172,7 +184,6 @@ static inline void
 _rs_random_u32(uint32_t *val)
 {
 	u_char *keystream;
-
 	_rs_stir_if_needed(sizeof(*val));
 	if (rs->rs_have < sizeof(*val))
 		_rs_rekey(NULL, 0);
@@ -199,4 +210,40 @@ arc4random_buf(void *buf, size_t n)
 	_ARC4_LOCK();
 	_rs_random_buf(buf, n);
 	_ARC4_UNLOCK();
+}
+
+/*
+ * Calculate a uniformly distributed random number less than upper_bound
+ * avoiding "modulo bias".
+ *
+ * Uniformity is achieved by generating new random numbers until the one
+ * returned is outside the range [0, 2**32 % upper_bound).  This
+ * guarantees the selected random number will be inside
+ * [2**32 % upper_bound, 2**32) which maps back to [0, upper_bound)
+ * after reduction modulo upper_bound.
+ */
+uint32_t
+arc4random_uniform(uint32_t upper_bound)
+{
+	uint32_t r, min;
+
+	if (upper_bound < 2)
+		return 0;
+
+	/* 2**32 % x == (2**32 - x) % x */
+	min = -upper_bound % upper_bound;
+
+	/*
+	 * This could theoretically loop forever but each retry has
+	 * p > 0.5 (worst case, usually far better) of selecting a
+	 * number inside the range we need, so it should rarely need
+	 * to re-roll.
+	 */
+	for (;;) {
+		r = arc4random();
+		if (r >= min)
+			break;
+	}
+
+	return r % upper_bound;
 }

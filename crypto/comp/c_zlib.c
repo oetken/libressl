@@ -1,128 +1,10 @@
-/* $OpenBSD: c_zlib.c,v 1.25 2022/12/26 07:18:51 jmc Exp $ */
-/*
- * ---------------------------------------------------------------------------
- * Major patches to this file were contributed by
- * Richard Levitte <levitte@openssl.org>, Nils Larsch <nils@openssl.org>,
- * and Dr. Stephen Henson <steve@openssl.org>.
- * ---------------------------------------------------------------------------
- * Copyright (c) 2002, 2003, 2007, 2008, 2010 The OpenSSL Project.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in
- *    the documentation and/or other materials provided with the
- *    distribution.
- *
- * 3. All advertising materials mentioning features or use of this
- *    software must display the following acknowledgment:
- *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit. (http://www.OpenSSL.org/)"
- *
- * 4. The names "OpenSSL Toolkit" and "OpenSSL Project" must not be used to
- *    endorse or promote products derived from this software without
- *    prior written permission. For written permission, please contact
- *    licensing@OpenSSL.org.
- *
- * 5. Products derived from this software may not be called "OpenSSL"
- *    nor may "OpenSSL" appear in their names without prior written
- *    permission of the OpenSSL Project.
- *
- * 6. Redistributions of any form whatsoever must retain the following
- *    acknowledgment:
- *    "This product includes software developed by the OpenSSL Project
- *    for use in the OpenSSL Toolkit (http://www.OpenSSL.org/)"
- *
- * THIS SOFTWARE IS PROVIDED BY THE OpenSSL PROJECT ``AS IS'' AND ANY
- * EXPRESSED OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE OpenSSL PROJECT OR
- * ITS CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
- * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
- * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * ---------------------------------------------------------------------------
- * Parts of this file are derived from SSLeay code
- * which is covered by the following Copyright and license:
- * ---------------------------------------------------------------------------
- * Copyright (c) 1998 Eric Young <eay@cryptsoft.com>
- * All rights reserved.
- *
- * This package is an SSL implementation written
- * by Eric Young <eay@cryptsoft.com>.
- * The implementation was written so as to conform with Netscapes SSL.
- *
- * This library is free for commercial and non-commercial use as long as
- * the following conditions are aheared to.  The following conditions
- * apply to all code found in this distribution, be it the RC4, RSA,
- * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
- * included with this distribution is covered by the same copyright terms
- * except that the holder is Tim Hudson <tjh@cryptsoft.com>.
- *
- * Copyright remains Eric Young's, and as such any Copyright notices in
- * the code are not to be removed.
- * If this package is used in a product, Eric Young should be given
- * attribution as the author of the parts of the library used.
- * This can be in the form of a textual message at program startup or
- * in documentation (online or textual) provided with the package.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *    "This product includes cryptographic software written by
- *     Eric Young <eay@cryptsoft.com>"
- *    The word 'cryptographic' can be left out if the rouines from the
- *    library being used are not cryptographic related :-).
- * 4. If you include any Windows specific code (or a derivative thereof)
- *    from the apps directory (application code) you must include an
- *    acknowledgement: "This product includes software written
- *    by Tim Hudson <tjh@cryptsoft.com>"
- *
- * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * The licence and distribution terms for any publically available version
- * or derivative of this code cannot be changed.  i.e. this code cannot
- * simply be copied and put under another distribution licence
- * [including the GNU Public Licence.]
- */
-
+/* $OpenBSD$ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include <openssl/objects.h>
 #include <openssl/comp.h>
 #include <openssl/err.h>
-
-#include "comp_local.h"
 
 COMP_METHOD *COMP_zlib(void );
 
@@ -131,7 +13,9 @@ static COMP_METHOD zlib_method_nozlib = {
 	.name = "(undef)"
 };
 
-#ifdef ZLIB
+#ifndef ZLIB
+#undef ZLIB_SHARED
+#else
 
 #include <zlib.h>
 
@@ -143,7 +27,7 @@ static int zlib_stateful_expand_block(COMP_CTX *ctx, unsigned char *out,
     unsigned int olen, unsigned char *in, unsigned int ilen);
 
 
-/* memory allocations functions for zlib initialization */
+/* memory allocations functions for zlib intialization */
 static void*
 zlib_zalloc(void* opaque, unsigned int no, unsigned int size)
 {
@@ -156,6 +40,23 @@ zlib_zfree(void* opaque, void* address)
 	free(address);
 }
 
+#if 0
+static int zlib_compress_block(COMP_CTX *ctx, unsigned char *out,
+    unsigned int olen, unsigned char *in, unsigned int ilen);
+static int zlib_expand_block(COMP_CTX *ctx, unsigned char *out,
+    unsigned int olen, unsigned char *in, unsigned int ilen);
+
+static int zz_uncompress(Bytef *dest, uLongf *destLen, const Bytef *source,
+    uLong sourceLen);
+
+static COMP_METHOD zlib_stateless_method = {
+	.type = NID_zlib_compression,
+	.name = LN_zlib_compression,
+	.compress = zlib_compress_block,
+	.expand = zlib_expand_block
+};
+#endif
+
 static COMP_METHOD zlib_stateful_method = {
 	.type = NID_zlib_compression,
 	.name = LN_zlib_compression,
@@ -164,6 +65,43 @@ static COMP_METHOD zlib_stateful_method = {
 	.compress = zlib_stateful_compress_block,
 	.expand = zlib_stateful_expand_block
 };
+
+#ifdef ZLIB_SHARED
+#include <openssl/dso.h>
+
+/* Function pointers */
+typedef int (*compress_ft)(Bytef *dest, uLongf *destLen, const Bytef *source,
+    uLong sourceLen);
+typedef int (*inflateEnd_ft)(z_streamp strm);
+typedef int (*inflate_ft)(z_streamp strm, int flush);
+typedef int (*inflateInit__ft)(z_streamp strm, const char * version,
+    int stream_size);
+typedef int (*deflateEnd_ft)(z_streamp strm);
+typedef int (*deflate_ft)(z_streamp strm, int flush);
+typedef int (*deflateInit__ft)(z_streamp strm, int level, const char * version,
+    int stream_size);
+typedef const char * (*zError__ft)(int err);
+static compress_ft	p_compress = NULL;
+static inflateEnd_ft	p_inflateEnd = NULL;
+static inflate_ft	p_inflate = NULL;
+static inflateInit__ft	p_inflateInit_ = NULL;
+static deflateEnd_ft	p_deflateEnd = NULL;
+static deflate_ft	p_deflate = NULL;
+static deflateInit__ft	p_deflateInit_ = NULL;
+static zError__ft	p_zError = NULL;
+
+static int zlib_loaded = 0;     /* only attempt to init func pts once */
+static DSO *zlib_dso = NULL;
+
+#define compress                p_compress
+#define inflateEnd              p_inflateEnd
+#define inflate                 p_inflate
+#define inflateInit_            p_inflateInit_
+#define deflateEnd              p_deflateEnd
+#define deflate                 p_deflate
+#define deflateInit_            p_deflateInit_
+#define zError			p_zError
+#endif /* ZLIB_SHARED */
 
 struct zlib_state {
 	z_stream istream;
@@ -287,6 +225,102 @@ zlib_stateful_expand_block(COMP_CTX *ctx, unsigned char *out,
 	return olen - state->istream.avail_out;
 }
 
+#if 0
+static int
+zlib_compress_block(COMP_CTX *ctx, unsigned char *out,
+    unsigned int olen, unsigned char *in, unsigned int ilen)
+{
+	unsigned long l;
+	int i;
+	int clear = 1;
+
+	if (ilen > 128) {
+		out[0] = 1;
+		l = olen - 1;
+		i = compress(&(out[1]), &l, in, (unsigned long)ilen);
+		if (i != Z_OK)
+			return (-1);
+		if (ilen > l) {
+			clear = 0;
+			l++;
+		}
+	}
+	if (clear) {
+		out[0] = 0;
+		memcpy(&(out[1]), in, ilen);
+		l = ilen + 1;
+	}
+
+#ifdef DEBUG_ZLIB
+	fprintf(stderr, "compress(%4d)->%4d %s\n",
+	    ilen,(int)l, (clear)?"clear":"zlib");
+#endif
+
+	return ((int)l);
+}
+
+static int
+zlib_expand_block(COMP_CTX *ctx, unsigned char *out, unsigned int olen,
+    unsigned char *in, unsigned int ilen)
+{
+	unsigned long l;
+	int i;
+
+	if (in[0]) {
+		l = olen;
+		i = zz_uncompress(out, &l, &(in[1]), (unsigned long)ilen - 1);
+		if (i != Z_OK)
+			return (-1);
+	} else {
+		memcpy(out, &(in[1]), ilen - 1);
+		l = ilen - 1;
+	}
+
+#ifdef DEBUG_ZLIB
+	fprintf(stderr, "expand  (%4d)->%4d %s\n",
+	    ilen,(int)l, in[0]?"zlib":"clear");
+#endif
+
+	return ((int)l);
+}
+
+static int
+zz_uncompress(Bytef *dest, uLongf *destLen, const Bytef *source,
+    uLong sourceLen)
+{
+	z_stream stream;
+	int err;
+
+	stream.next_in = (Bytef*)source;
+	stream.avail_in = (uInt)sourceLen;
+	/* Check for source > 64K on 16-bit machine: */
+	if ((uLong)stream.avail_in != sourceLen)
+		return Z_BUF_ERROR;
+
+	stream.next_out = dest;
+	stream.avail_out = (uInt)*destLen;
+	if ((uLong)stream.avail_out != *destLen)
+		return Z_BUF_ERROR;
+
+	stream.zalloc = (alloc_func)0;
+	stream.zfree = (free_func)0;
+
+	err = inflateInit_(&stream, ZLIB_VERSION, sizeof(z_stream));
+	if (err != Z_OK)
+		return err;
+
+	err = inflate(&stream, Z_FINISH);
+	if (err != Z_STREAM_END) {
+		inflateEnd(&stream);
+		return err;
+	}
+	*destLen = stream.total_out;
+
+	err = inflateEnd(&stream);
+	return err;
+}
+#endif
+
 #endif
 
 COMP_METHOD *
@@ -294,10 +328,42 @@ COMP_zlib(void)
 {
 	COMP_METHOD *meth = &zlib_method_nozlib;
 
-#ifdef ZLIB
+#ifdef ZLIB_SHARED
+	if (!zlib_loaded) {
+		zlib_dso = DSO_load(NULL, "z", NULL, 0);
+		if (zlib_dso != NULL) {
+			p_compress = (compress_ft)DSO_bind_func(
+			    zlib_dso, "compress");
+			p_inflateEnd = (inflateEnd_ft)DSO_bind_func(
+			    zlib_dso, "inflateEnd");
+			p_inflate = (inflate_ft)DSO_bind_func(
+			    zlib_dso, "inflate");
+			p_inflateInit_ = (inflateInit__ft)DSO_bind_func(
+			    zlib_dso, "inflateInit_");
+			p_deflateEnd = (deflateEnd_ft)DSO_bind_func(
+			    zlib_dso, "deflateEnd");
+			p_deflate = (deflate_ft)DSO_bind_func(
+			    zlib_dso, "deflate");
+			p_deflateInit_ = (deflateInit__ft)DSO_bind_func(
+			    zlib_dso, "deflateInit_");
+			p_zError = (zError__ft)DSO_bind_func(
+			    zlib_dso, "zError");
+
+			if (p_compress && p_inflateEnd && p_inflate &&
+			    p_inflateInit_ && p_deflateEnd && p_deflate &&
+			    p_deflateInit_ && p_zError)
+				zlib_loaded++;
+		}
+	}
+
+#endif
+#ifdef ZLIB_SHARED
+	if (zlib_loaded)
+#endif
+#if defined(ZLIB) || defined(ZLIB_SHARED)
 	{
 		/* init zlib_stateful_ex_idx here so that in a multi-process
-		 * application it's enough to initialize openssl before forking
+		 * application it's enough to intialize openssl before forking
 		 * (idx will be inherited in all the children) */
 		if (zlib_stateful_ex_idx == -1) {
 			CRYPTO_w_lock(CRYPTO_LOCK_COMP);
@@ -309,8 +375,6 @@ COMP_zlib(void)
 			if (zlib_stateful_ex_idx == -1)
 				goto err;
 		}
-		if (!OPENSSL_init_crypto(0, NULL))
-			goto err;
 
 		meth = &zlib_stateful_method;
 	}
@@ -324,6 +388,10 @@ err:
 void
 COMP_zlib_cleanup(void)
 {
+#ifdef ZLIB_SHARED
+	if (zlib_dso)
+		DSO_free(zlib_dso);
+#endif
 }
 
 #ifdef ZLIB
@@ -350,7 +418,7 @@ static int bio_zlib_free(BIO *bi);
 static int bio_zlib_read(BIO *b, char *out, int outl);
 static int bio_zlib_write(BIO *b, const char *in, int inl);
 static long bio_zlib_ctrl(BIO *b, int cmd, long num, void *ptr);
-static long bio_zlib_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp);
+static long bio_zlib_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp);
 
 static BIO_METHOD bio_meth_zlib = {
 	.type = BIO_TYPE_COMP,
@@ -375,9 +443,16 @@ bio_zlib_new(BIO *bi)
 {
 	BIO_ZLIB_CTX *ctx;
 
+#ifdef ZLIB_SHARED
+	(void)COMP_zlib();
+	if (!zlib_loaded) {
+		COMPerr(COMP_F_BIO_ZLIB_NEW, COMP_R_ZLIB_NOT_SUPPORTED);
+		return 0;
+	}
+#endif
 	ctx = malloc(sizeof(BIO_ZLIB_CTX));
 	if (!ctx) {
-		COMPerror(ERR_R_MALLOC_FAILURE);
+		COMPerr(COMP_F_BIO_ZLIB_NEW, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
 	ctx->ibuf = NULL;
@@ -444,7 +519,7 @@ bio_zlib_read(BIO *b, char *out, int outl)
 	if (!ctx->ibuf) {
 		ctx->ibuf = malloc(ctx->ibufsize);
 		if (!ctx->ibuf) {
-			COMPerror(ERR_R_MALLOC_FAILURE);
+			COMPerr(COMP_F_BIO_ZLIB_READ, ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 		inflateInit(zin);
@@ -460,7 +535,8 @@ bio_zlib_read(BIO *b, char *out, int outl)
 		while (zin->avail_in) {
 			ret = inflate(zin, 0);
 			if ((ret != Z_OK) && (ret != Z_STREAM_END)) {
-				COMPerror(COMP_R_ZLIB_INFLATE_ERROR);
+				COMPerr(COMP_F_BIO_ZLIB_READ,
+				    COMP_R_ZLIB_INFLATE_ERROR);
 				ERR_asprintf_error_data("zlib error:%s",
 				    zError(ret));
 				return 0;
@@ -505,7 +581,7 @@ bio_zlib_write(BIO *b, const char *in, int inl)
 		ctx->obuf = malloc(ctx->obufsize);
 		/* Need error here */
 		if (!ctx->obuf) {
-			COMPerror(ERR_R_MALLOC_FAILURE);
+			COMPerr(COMP_F_BIO_ZLIB_WRITE, ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 		ctx->optr = ctx->obuf;
@@ -546,7 +622,8 @@ bio_zlib_write(BIO *b, const char *in, int inl)
 		/* Compress some more */
 		ret = deflate(zout, 0);
 		if (ret != Z_OK) {
-			COMPerror(COMP_R_ZLIB_DEFLATE_ERROR);
+			COMPerr(COMP_F_BIO_ZLIB_WRITE,
+			    COMP_R_ZLIB_DEFLATE_ERROR);
 			ERR_asprintf_error_data("zlib error:%s", zError(ret));
 			return 0;
 		}
@@ -595,7 +672,8 @@ bio_zlib_flush(BIO *b)
 		if (ret == Z_STREAM_END)
 			ctx->odone = 1;
 		else if (ret != Z_OK) {
-			COMPerror(COMP_R_ZLIB_DEFLATE_ERROR);
+			COMPerr(COMP_F_BIO_ZLIB_FLUSH,
+			    COMP_R_ZLIB_DEFLATE_ERROR);
 			ERR_asprintf_error_data("zlib error:%s", zError(ret));
 			return 0;
 		}
@@ -641,14 +719,18 @@ bio_zlib_ctrl(BIO *b, int cmd, long num, void *ptr)
 		}
 
 		if (ibs != -1) {
-			free(ctx->ibuf);
-			ctx->ibuf = NULL;
+			if (ctx->ibuf) {
+				free(ctx->ibuf);
+				ctx->ibuf = NULL;
+			}
 			ctx->ibufsize = ibs;
 		}
 
 		if (obs != -1) {
-			free(ctx->obuf);
-			ctx->obuf = NULL;
+			if (ctx->obuf) {
+				free(ctx->obuf);
+				ctx->obuf = NULL;
+			}
 			ctx->obufsize = obs;
 		}
 		ret = 1;
@@ -671,7 +753,7 @@ bio_zlib_ctrl(BIO *b, int cmd, long num, void *ptr)
 
 
 static long
-bio_zlib_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+bio_zlib_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	if (!b->next_bio)
 		return 0;

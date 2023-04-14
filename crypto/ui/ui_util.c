@@ -1,4 +1,4 @@
-/* $OpenBSD: ui_util.c,v 1.14 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2001-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -57,7 +57,7 @@
 
 #include <openssl/ui_compat.h>
 
-#include "ui_local.h"
+#include "ui_locl.h"
 
 int
 UI_UTIL_read_pw_string(char *buf, int length, const char *prompt, int verify)
@@ -67,10 +67,9 @@ UI_UTIL_read_pw_string(char *buf, int length, const char *prompt, int verify)
 
 	ret = UI_UTIL_read_pw(buf, buff, (length > BUFSIZ) ? BUFSIZ : length,
 	    prompt, verify);
-	explicit_bzero(buff, BUFSIZ);
+	OPENSSL_cleanse(buff, BUFSIZ);
 	return (ret);
 }
-LCRYPTO_ALIAS(UI_UTIL_read_pw_string);
 
 int
 UI_UTIL_read_pw(char *buf, char *buff, int size, const char *prompt, int verify)
@@ -95,4 +94,18 @@ UI_UTIL_read_pw(char *buf, char *buff, int size, const char *prompt, int verify)
 		ok = 0;
 	return (ok);
 }
-LCRYPTO_ALIAS(UI_UTIL_read_pw);
+
+/*
+ * Old compatibility glue - see comment in ui_compat.h.
+ */
+int
+_ossl_old_des_read_pw_string(char *buf, int length, const char *prompt, int verify)
+{
+	return UI_UTIL_read_pw_string(buf, length, prompt, verify);
+}
+
+int
+_ossl_old_des_read_pw(char *buf, char *buff, int size, const char *prompt, int verify)
+{
+	return UI_UTIL_read_pw(buf, buff, size, prompt, verify);
+}

@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_pss.c,v 1.16 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: rsa_pss.c,v 1.8 2014/07/10 13:58:23 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2005.
  */
@@ -57,17 +57,14 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
-
-#include "evp_local.h"
-#include "rsa_local.h"
 
 static const unsigned char zeroes[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -110,14 +107,16 @@ RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
 	else if (sLen == -2)
 		sLen = -2;
 	else if (sLen < -2) {
-		RSAerror(RSA_R_SLEN_CHECK_FAILED);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1,
+		    RSA_R_SLEN_CHECK_FAILED);
 		goto err;
 	}
 
 	MSBits = (BN_num_bits(rsa->n) - 1) & 0x7;
 	emLen = RSA_size(rsa);
 	if (EM[0] & (0xFF << MSBits)) {
-		RSAerror(RSA_R_FIRST_OCTET_INVALID);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1,
+		    RSA_R_FIRST_OCTET_INVALID);
 		goto err;
 	}
 	if (MSBits == 0) {
@@ -126,18 +125,19 @@ RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
 	}
 	if (emLen < (hLen + sLen + 2)) {
 		/* sLen can be small negative */
-		RSAerror(RSA_R_DATA_TOO_LARGE);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1, RSA_R_DATA_TOO_LARGE);
 		goto err;
 	}
 	if (EM[emLen - 1] != 0xbc) {
-		RSAerror(RSA_R_LAST_OCTET_INVALID);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1,
+		    RSA_R_LAST_OCTET_INVALID);
 		goto err;
 	}
 	maskedDBLen = emLen - hLen - 1;
 	H = EM + maskedDBLen;
 	DB = malloc(maskedDBLen);
 	if (!DB) {
-		RSAerror(ERR_R_MALLOC_FAILURE);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	if (PKCS1_MGF1(DB, maskedDBLen, H, hLen, mgf1Hash) < 0)
@@ -149,11 +149,13 @@ RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
 	for (i = 0; DB[i] == 0 && i < (maskedDBLen - 1); i++)
 		;
 	if (DB[i++] != 0x1) {
-		RSAerror(RSA_R_SLEN_RECOVERY_FAILED);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1,
+		    RSA_R_SLEN_RECOVERY_FAILED);
 		goto err;
 	}
 	if (sLen >= 0 && (maskedDBLen - i) != sLen) {
-		RSAerror(RSA_R_SLEN_CHECK_FAILED);
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1,
+		    RSA_R_SLEN_CHECK_FAILED);
 		goto err;
 	}
 	if (!EVP_DigestInit_ex(&ctx, Hash, NULL) ||
@@ -166,8 +168,8 @@ RSA_verify_PKCS1_PSS_mgf1(RSA *rsa, const unsigned char *mHash,
 	}
 	if (!EVP_DigestFinal_ex(&ctx, H_, NULL))
 		goto err;
-	if (timingsafe_bcmp(H_, H, hLen)) {
-		RSAerror(RSA_R_BAD_SIGNATURE);
+	if (memcmp(H_, H, hLen)) {
+		RSAerr(RSA_F_RSA_VERIFY_PKCS1_PSS_MGF1, RSA_R_BAD_SIGNATURE);
 		ret = 0;
 	} else
 		ret = 1;
@@ -197,8 +199,6 @@ RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 	unsigned char *H, *salt = NULL, *p;
 	EVP_MD_CTX ctx;
 
-	EVP_MD_CTX_init(&ctx);
-
 	if (mgf1Hash == NULL)
 		mgf1Hash = Hash;
 
@@ -216,7 +216,8 @@ RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 	else if (sLen == -2)
 		sLen = -2;
 	else if (sLen < -2) {
-		RSAerror(RSA_R_SLEN_CHECK_FAILED);
+		RSAerr(RSA_F_RSA_PADDING_ADD_PKCS1_PSS_MGF1,
+		    RSA_R_SLEN_CHECK_FAILED);
 		goto err;
 	}
 
@@ -229,19 +230,23 @@ RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 	if (sLen == -2)
 		sLen = emLen - hLen - 2;
 	else if (emLen < (hLen + sLen + 2)) {
-		RSAerror(RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
+		RSAerr(RSA_F_RSA_PADDING_ADD_PKCS1_PSS_MGF1,
+		    RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
 		goto err;
 	}
 	if (sLen > 0) {
 		salt = malloc(sLen);
 		if (!salt) {
-			RSAerror(ERR_R_MALLOC_FAILURE);
+			RSAerr(RSA_F_RSA_PADDING_ADD_PKCS1_PSS_MGF1,
+			    ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
-		arc4random_buf(salt, sLen);
+		if (RAND_bytes(salt, sLen) <= 0)
+			goto err;
 	}
 	maskedDBLen = emLen - hLen - 1;
 	H = EM + maskedDBLen;
+	EVP_MD_CTX_init(&ctx);
 	if (!EVP_DigestInit_ex(&ctx, Hash, NULL) ||
 	    !EVP_DigestUpdate(&ctx, zeroes, sizeof zeroes) ||
 	    !EVP_DigestUpdate(&ctx, mHash, hLen))
@@ -250,6 +255,7 @@ RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 		goto err;
 	if (!EVP_DigestFinal_ex(&ctx, H, NULL))
 		goto err;
+	EVP_MD_CTX_cleanup(&ctx);
 
 	/* Generate dbMask in place then perform XOR on it */
 	if (PKCS1_MGF1(EM, maskedDBLen, H, hLen, mgf1Hash))
@@ -278,7 +284,6 @@ RSA_padding_add_PKCS1_PSS_mgf1(RSA *rsa, unsigned char *EM,
 
 err:
 	free(salt);
-	EVP_MD_CTX_cleanup(&ctx);
 
 	return ret;
 }

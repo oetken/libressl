@@ -1,4 +1,4 @@
-/* $OpenBSD: err.c,v 1.50 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: err.c,v 1.37 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -109,7 +109,6 @@
  *
  */
 
-#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
@@ -158,7 +157,6 @@ static ERR_STRING_DATA ERR_str_libraries[] = {
 	{ERR_PACK(ERR_LIB_FIPS,0,0),		"FIPS routines"},
 	{ERR_PACK(ERR_LIB_CMS,0,0),		"CMS routines"},
 	{ERR_PACK(ERR_LIB_HMAC,0,0),		"HMAC routines"},
-	{ERR_PACK(ERR_LIB_GOST,0,0),		"GOST routines"},
 	{0, NULL},
 };
 
@@ -215,7 +213,6 @@ static ERR_STRING_DATA ERR_str_reasons[] = {
 	{ERR_R_PASSED_NULL_PARAMETER,		"passed a null parameter"},
 	{ERR_R_INTERNAL_ERROR,			"internal error"},
 	{ERR_R_DISABLED	,			"called a function that was disabled at compile-time"},
-	{ERR_R_INIT_FAIL,			"initialization failure"},
 
 	{0, NULL},
 };
@@ -283,8 +280,6 @@ static LHASH_OF(ERR_STRING_DATA) *int_error_hash = NULL;
 static LHASH_OF(ERR_STATE) *int_thread_hash = NULL;
 static int int_thread_hash_references = 0;
 static int int_err_library_number = ERR_LIB_USER;
-
-static pthread_t err_init_thread;
 
 /* Internal function that checks whether "err_fns" is set and if not, sets it to
  * the defaults. */
@@ -570,7 +565,7 @@ static ERR_STRING_DATA SYS_str_reasons[NUM_SYS_STR_REASONS + 1];
  * others will be displayed numerically by ERR_error_string.
  * It is crucial that we have something for each reason code
  * that occurs in ERR_str_reasons, or bogus reason strings
- * will be returned for SYSerror(which always gets an errno
+ * will be returned for SYSerr(), which always gets an errno
  * value and never one of those 'standard' reason codes. */
 
 static void
@@ -601,7 +596,7 @@ build_SYS_str_reasons(void)
 		if (str->string == NULL) {
 			char (*dest)[LEN_SYS_STR_REASON] =
 			    &(strerror_tab[i - 1]);
-			const char *src = strerror(i);
+			char *src = strerror(i);
 			if (src != NULL) {
 				strlcpy(*dest, src, sizeof *dest);
 				str->string = *dest;
@@ -654,9 +649,8 @@ ERR_STATE_free(ERR_STATE *s)
 }
 
 void
-ERR_load_ERR_strings_internal(void)
+ERR_load_ERR_strings(void)
 {
-	err_init_thread = pthread_self();
 	err_fns_check();
 #ifndef OPENSSL_NO_ERR
 	err_load_strings(0, ERR_str_libraries);
@@ -665,21 +659,6 @@ ERR_load_ERR_strings_internal(void)
 	build_SYS_str_reasons();
 	err_load_strings(ERR_LIB_SYS, SYS_str_reasons);
 #endif
-}
-
-
-void
-ERR_load_ERR_strings(void)
-{
-	static pthread_once_t once = PTHREAD_ONCE_INIT;
-
-	if (pthread_equal(pthread_self(), err_init_thread))
-		return; /* don't recurse */
-
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
-	(void) pthread_once(&once, ERR_load_ERR_strings_internal);
 }
 
 static void
@@ -703,9 +682,6 @@ ERR_load_strings(int lib, ERR_STRING_DATA *str)
 void
 ERR_unload_strings(int lib, ERR_STRING_DATA *str)
 {
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
 	while (str->error) {
 		if (lib)
 			str->error |= ERR_PACK(lib, 0, 0);
@@ -717,9 +693,6 @@ ERR_unload_strings(int lib, ERR_STRING_DATA *str)
 void
 ERR_free_strings(void)
 {
-	/* Prayer and clean living lets you ignore errors, OpenSSL style */
-	(void) OPENSSL_init_crypto(0, NULL);
-
 	err_fns_check();
 	ERRFN(err_del)();
 }
@@ -979,9 +952,6 @@ ERR_lib_error_string(unsigned long e)
 	ERR_STRING_DATA d, *p;
 	unsigned long l;
 
-	if (!OPENSSL_init_crypto(0, NULL))
-		return NULL;
-
 	err_fns_check();
 	l = ERR_GET_LIB(e);
 	d.error = ERR_PACK(l, 0, 0);
@@ -1075,7 +1045,7 @@ ERR_get_state(void)
 			ERR_STATE_free(ret); /* could not insert it */
 			return (&fallback);
 		}
-		/* If a race occurred in this function and we came second, tmpp
+		/* If a race occured in this function and we came second, tmpp
 		 * is the first one that we just replaced. */
 		if (tmpp)
 			ERR_STATE_free(tmpp);
@@ -1108,8 +1078,7 @@ ERR_set_error_data(char *data, int flags)
 }
 
 void
-ERR_asprintf_error_data(char * format, ...)
-{
+ERR_asprintf_error_data(char * format, ...) {
 	char *errbuf = NULL;
 	va_list ap;
 	int r;
@@ -1122,15 +1091,22 @@ ERR_asprintf_error_data(char * format, ...)
 	else
 		ERR_set_error_data(errbuf, ERR_TXT_MALLOCED|ERR_TXT_STRING);
 }
+void
+ERR_add_error_data(int num, ...)
+{
+	va_list args;
+	va_start(args, num);
+	ERR_add_error_vdata(num, args);
+	va_end(args);
+}
 
 void
 ERR_add_error_vdata(int num, va_list args)
 {
 	char format[129];
 	char *errbuf;
-	int i;
-
 	format[0] = '\0';
+	int i;
 	for (i = 0; i < num; i++) {
 		if (strlcat(format, "%s", sizeof(format)) >= sizeof(format)) {
 			ERR_set_error_data("too many errors", ERR_TXT_STRING);
@@ -1141,15 +1117,6 @@ ERR_add_error_vdata(int num, va_list args)
 		ERR_set_error_data("malloc failed", ERR_TXT_STRING);
 	else
 		ERR_set_error_data(errbuf, ERR_TXT_MALLOCED|ERR_TXT_STRING);
-}
-
-void
-ERR_add_error_data(int num, ...)
-{
-	va_list args;
-	va_start(args, num);
-	ERR_add_error_vdata(num, args);
-	va_end(args);
 }
 
 int
@@ -1184,25 +1151,4 @@ ERR_pop_to_mark(void)
 		return 0;
 	es->err_flags[es->top]&=~ERR_FLAG_MARK;
 	return 1;
-}
-
-void
-err_clear_last_constant_time(int clear)
-{
-	ERR_STATE *es;
-	int top;
-
-	es = ERR_get_state();
-	if (es == NULL)
-        return;
-
-	top = es->top;
-
-	es->err_flags[top] &= ~(0 - clear);
-	es->err_buffer[top] &= ~(0UL - clear);
-	es->err_file[top] = (const char *)((uintptr_t)es->err_file[top] &
-	    ~((uintptr_t)0 - clear));
-	es->err_line[top] |= 0 - clear;
-
-	es->top = (top + ERR_NUM_ERRORS - clear) % ERR_NUM_ERRORS;
 }

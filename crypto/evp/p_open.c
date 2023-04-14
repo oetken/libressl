@@ -1,4 +1,4 @@
-/* $OpenBSD: p_open.c,v 1.21 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: p_open.c,v 1.15 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,6 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 
 #include <openssl/opensslconf.h>
 
@@ -68,8 +67,6 @@
 #include <openssl/objects.h>
 #include <openssl/rsa.h>
 #include <openssl/x509.h>
-
-#include "evp_local.h"
 
 int
 EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
@@ -88,7 +85,7 @@ EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
 		return 1;
 
 	if (priv->type != EVP_PKEY_RSA) {
-		EVPerror(EVP_R_PUBLIC_KEY_NOT_RSA);
+		EVPerr(EVP_F_EVP_OPENINIT, EVP_R_PUBLIC_KEY_NOT_RSA);
 		goto err;
 	}
 
@@ -96,7 +93,7 @@ EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
 	key = malloc(size + 2);
 	if (key == NULL) {
 		/* ERROR */
-		EVPerror(ERR_R_MALLOC_FAILURE);
+		EVPerr(EVP_F_EVP_OPENINIT, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
@@ -111,7 +108,9 @@ EVP_OpenInit(EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type,
 	ret = 1;
 
 err:
-	freezero(key, size);
+	if (key != NULL)
+		OPENSSL_cleanse(key, size);
+	free(key);
 	return (ret);
 }
 

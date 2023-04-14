@@ -1,4 +1,4 @@
-/* $OpenBSD: ccm128.c,v 1.6 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2011 The OpenSSL Project.  All rights reserved.
  *
@@ -49,7 +49,7 @@
  */
 
 #include <openssl/crypto.h>
-#include "modes_local.h"
+#include "modes_lcl.h"
 #include <string.h>
 
 #ifndef MODES_DEBUG
@@ -57,6 +57,7 @@
 #  define NDEBUG
 # endif
 #endif
+#include <assert.h>
 
 /* First you setup M and L parameters and pass the key schedule.
  * This is called once per session setup... */
@@ -435,7 +436,7 @@ size_t CRYPTO_ccm128_tag(CCM128_CONTEXT *ctx,unsigned char *tag,size_t len)
 {	unsigned int M = (ctx->nonce.c[0]>>3)&7;	/* the M parameter */
 
 	M *= 2; M += 2;
-	if (len != M)	return 0;
+	if (len<M)	return 0;
 	memcpy(tag,ctx->cmac.c,M);
 	return M;
 }

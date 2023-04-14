@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_srv.c,v 1.12 2022/01/07 09:45:52 tb Exp $ */
+/* $OpenBSD: ocsp_srv.c,v 1.5 2014/06/12 15:49:30 deraadt Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2001.
  */
@@ -62,10 +62,9 @@
 #include <openssl/objects.h>
 #include <openssl/ocsp.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include "ocsp_local.h"
 
 /* Utility functions related to sending OCSP responses and extracting
  * relevant information from the request.
@@ -129,7 +128,7 @@ OCSP_response_create(int status, OCSP_BASICRESP *bs)
 	if (!(rsp->responseBytes = OCSP_RESPBYTES_new()))
 		goto err;
 	rsp->responseBytes->responseType = OBJ_nid2obj(NID_id_pkix_OCSP_basic);
-	if (!ASN1_item_pack(bs, &OCSP_BASICRESP_it,
+	if (!ASN1_item_pack(bs, ASN1_ITEM_rptr(OCSP_BASICRESP),
 	    &rsp->responseBytes->response))
 		goto err;
 	return rsp;
@@ -170,7 +169,8 @@ OCSP_basic_add1_status(OCSP_BASICRESP *rsp, OCSP_CERTID *cid, int status,
 	switch (cs->type = status) {
 	case V_OCSP_CERTSTATUS_REVOKED:
 		if (!revtime) {
-			OCSPerror(OCSP_R_NO_REVOKED_TIME);
+			OCSPerr(OCSP_F_OCSP_BASIC_ADD1_STATUS,
+			    OCSP_R_NO_REVOKED_TIME);
 			goto err;
 		}
 		if (!(cs->value.revoked = ri = OCSP_REVOKEDINFO_new()))
@@ -215,7 +215,7 @@ OCSP_basic_add1_cert(OCSP_BASICRESP *resp, X509 *cert)
 
 	if (!sk_X509_push(resp->certs, cert))
 		return 0;
-	X509_up_ref(cert);
+	CRYPTO_add(&cert->references, 1, CRYPTO_LOCK_X509);
 	return 1;
 }
 
@@ -227,7 +227,8 @@ OCSP_basic_sign(OCSP_BASICRESP *brsp, X509 *signer, EVP_PKEY *key,
 	OCSP_RESPID *rid;
 
 	if (!X509_check_private_key(signer, key)) {
-		OCSPerror(OCSP_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE);
+		OCSPerr(OCSP_F_OCSP_BASIC_SIGN,
+		    OCSP_R_PRIVATE_KEY_DOES_NOT_MATCH_CERTIFICATE);
 		goto err;
 	}
 
@@ -260,7 +261,7 @@ OCSP_basic_sign(OCSP_BASICRESP *brsp, X509 *signer, EVP_PKEY *key,
 	}
 
 	if (!(flags & OCSP_NOTIME) &&
-	    !ASN1_GENERALIZEDTIME_set(brsp->tbsResponseData->producedAt, time(NULL)))
+	    !X509_gmtime_adj(brsp->tbsResponseData->producedAt, 0))
 		goto err;
 
 	/* Right now, I think that not doing double hashing is the right

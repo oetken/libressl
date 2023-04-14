@@ -1,4 +1,4 @@
-/* $OpenBSD: p5_pbe.c,v 1.23 2021/12/25 13:17:48 jsing Exp $ */
+/* $OpenBSD: p5_pbe.c,v 1.15 2014/07/10 13:58:22 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,62 +57,21 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/asn1t.h>
 #include <openssl/err.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 
 /* PKCS#5 password based encryption structure */
 
-static const ASN1_TEMPLATE PBEPARAM_seq_tt[] = {
-	{
-		.offset = offsetof(PBEPARAM, salt),
-		.field_name = "salt",
-		.item = &ASN1_OCTET_STRING_it,
-	},
-	{
-		.offset = offsetof(PBEPARAM, iter),
-		.field_name = "iter",
-		.item = &ASN1_INTEGER_it,
-	},
-};
+ASN1_SEQUENCE(PBEPARAM) = {
+	ASN1_SIMPLE(PBEPARAM, salt, ASN1_OCTET_STRING),
+	ASN1_SIMPLE(PBEPARAM, iter, ASN1_INTEGER)
+} ASN1_SEQUENCE_END(PBEPARAM)
 
-const ASN1_ITEM PBEPARAM_it = {
-	.itype = ASN1_ITYPE_SEQUENCE,
-	.utype = V_ASN1_SEQUENCE,
-	.templates = PBEPARAM_seq_tt,
-	.tcount = sizeof(PBEPARAM_seq_tt) / sizeof(ASN1_TEMPLATE),
-	.size = sizeof(PBEPARAM),
-	.sname = "PBEPARAM",
-};
-
-
-PBEPARAM *
-d2i_PBEPARAM(PBEPARAM **a, const unsigned char **in, long len)
-{
-	return (PBEPARAM *)ASN1_item_d2i((ASN1_VALUE **)a, in, len,
-	    &PBEPARAM_it);
-}
-
-int
-i2d_PBEPARAM(PBEPARAM *a, unsigned char **out)
-{
-	return ASN1_item_i2d((ASN1_VALUE *)a, out, &PBEPARAM_it);
-}
-
-PBEPARAM *
-PBEPARAM_new(void)
-{
-	return (PBEPARAM *)ASN1_item_new(&PBEPARAM_it);
-}
-
-void
-PBEPARAM_free(PBEPARAM *a)
-{
-	ASN1_item_free((ASN1_VALUE *)a, &PBEPARAM_it);
-}
+IMPLEMENT_ASN1_FUNCTIONS(PBEPARAM)
 
 
 /* Set an algorithm identifier for a PKCS#5 PBE algorithm */
@@ -127,29 +86,29 @@ PKCS5_pbe_set0_algor(X509_ALGOR *algor, int alg, int iter,
 
 	pbe = PBEPARAM_new();
 	if (!pbe) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+		ASN1err(ASN1_F_PKCS5_PBE_SET0_ALGOR, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	if (iter <= 0)
 		iter = PKCS5_DEFAULT_ITER;
 	if (!ASN1_INTEGER_set(pbe->iter, iter)) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+		ASN1err(ASN1_F_PKCS5_PBE_SET0_ALGOR, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	if (!saltlen)
 		saltlen = PKCS5_SALT_LEN;
 	if (!ASN1_STRING_set(pbe->salt, NULL, saltlen)) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+		ASN1err(ASN1_F_PKCS5_PBE_SET0_ALGOR, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	sstr = ASN1_STRING_data(pbe->salt);
 	if (salt)
 		memcpy(sstr, salt, saltlen);
-	else
-		arc4random_buf(sstr, saltlen);
+	else if (RAND_pseudo_bytes(sstr, saltlen) < 0)
+		goto err;
 
-	if (!ASN1_item_pack(pbe, &PBEPARAM_it, &pbe_str)) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+	if (!ASN1_item_pack(pbe, ASN1_ITEM_rptr(PBEPARAM), &pbe_str)) {
+		ASN1err(ASN1_F_PKCS5_PBE_SET0_ALGOR, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
@@ -159,7 +118,7 @@ PKCS5_pbe_set0_algor(X509_ALGOR *algor, int alg, int iter,
 	if (X509_ALGOR_set0(algor, OBJ_nid2obj(alg), V_ASN1_SEQUENCE, pbe_str))
 		return 1;
 
- err:
+err:
 	if (pbe != NULL)
 		PBEPARAM_free(pbe);
 	ASN1_STRING_free(pbe_str);
@@ -174,7 +133,7 @@ PKCS5_pbe_set(int alg, int iter, const unsigned char *salt, int saltlen)
 	X509_ALGOR *ret;
 	ret = X509_ALGOR_new();
 	if (!ret) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
+		ASN1err(ASN1_F_PKCS5_PBE_SET, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
 

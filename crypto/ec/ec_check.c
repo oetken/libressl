@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_check.c,v 1.12 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -53,11 +53,11 @@
  *
  */
 
-#include "ec_local.h"
+#include "ec_lcl.h"
 #include <openssl/err.h>
 
-int
-EC_GROUP_check(const EC_GROUP *group, BN_CTX *ctx)
+int 
+EC_GROUP_check(const EC_GROUP * group, BN_CTX * ctx)
 {
 	int ret = 0;
 	BIGNUM *order;
@@ -67,7 +67,7 @@ EC_GROUP_check(const EC_GROUP *group, BN_CTX *ctx)
 	if (ctx == NULL) {
 		ctx = new_ctx = BN_CTX_new();
 		if (ctx == NULL) {
-			ECerror(ERR_R_MALLOC_FAILURE);
+			ECerr(EC_F_EC_GROUP_CHECK, ERR_R_MALLOC_FAILURE);
 			goto err;
 		}
 	}
@@ -77,16 +77,16 @@ EC_GROUP_check(const EC_GROUP *group, BN_CTX *ctx)
 
 	/* check the discriminant */
 	if (!EC_GROUP_check_discriminant(group, ctx)) {
-		ECerror(EC_R_DISCRIMINANT_IS_ZERO);
+		ECerr(EC_F_EC_GROUP_CHECK, EC_R_DISCRIMINANT_IS_ZERO);
 		goto err;
 	}
 	/* check the generator */
 	if (group->generator == NULL) {
-		ECerror(EC_R_UNDEFINED_GENERATOR);
+		ECerr(EC_F_EC_GROUP_CHECK, EC_R_UNDEFINED_GENERATOR);
 		goto err;
 	}
-	if (EC_POINT_is_on_curve(group, group->generator, ctx) <= 0) {
-		ECerror(EC_R_POINT_IS_NOT_ON_CURVE);
+	if (!EC_POINT_is_on_curve(group, group->generator, ctx)) {
+		ECerr(EC_F_EC_GROUP_CHECK, EC_R_POINT_IS_NOT_ON_CURVE);
 		goto err;
 	}
 	/* check the order of the generator */
@@ -95,21 +95,23 @@ EC_GROUP_check(const EC_GROUP *group, BN_CTX *ctx)
 	if (!EC_GROUP_get_order(group, order, ctx))
 		goto err;
 	if (BN_is_zero(order)) {
-		ECerror(EC_R_UNDEFINED_ORDER);
+		ECerr(EC_F_EC_GROUP_CHECK, EC_R_UNDEFINED_ORDER);
 		goto err;
 	}
 	if (!EC_POINT_mul(group, point, order, NULL, NULL, ctx))
 		goto err;
-	if (EC_POINT_is_at_infinity(group, point) <= 0) {
-		ECerror(EC_R_INVALID_GROUP_ORDER);
+	if (!EC_POINT_is_at_infinity(group, point)) {
+		ECerr(EC_F_EC_GROUP_CHECK, EC_R_INVALID_GROUP_ORDER);
 		goto err;
 	}
 	ret = 1;
 
- err:
+err:
 	if (ctx != NULL)
 		BN_CTX_end(ctx);
-	BN_CTX_free(new_ctx);
-	EC_POINT_free(point);
+	if (new_ctx != NULL)
+		BN_CTX_free(new_ctx);
+	if (point)
+		EC_POINT_free(point);
 	return ret;
 }

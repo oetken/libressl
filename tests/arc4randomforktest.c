@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 
 #define CHECK(x) assert(x)
 #define CHECK_EQ(a, b) assert((a) == (b))
@@ -70,7 +69,8 @@ fillbuf(Buf *buf)
 static void
 usage()
 {
-	errx(1, "usage: arc4random-fork [-bp]");
+	extern const char *__progname;
+	errx(1, "usage: %s [-bp]", __progname);
 }
 
 static pid_t

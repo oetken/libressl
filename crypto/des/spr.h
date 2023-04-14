@@ -1,4 +1,4 @@
-/* $OpenBSD: spr.h,v 1.6 2016/12/21 15:49:29 jsing Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -55,8 +55,6 @@
  * copied and put under another distribution licence
  * [including the GNU Public Licence.]
  */
-
-__BEGIN_HIDDEN_DECLS
 
 const DES_LONG DES_SPtrans[8][64]={
 {
@@ -204,5 +202,3 @@ const DES_LONG DES_SPtrans[8][64]={
 0x00000080L, 0x20820000L, 0x00820080L, 0x00000000L,
 0x20000000L, 0x20800080L, 0x00020000L, 0x00820080L,
 }};
-
-__END_HIDDEN_DECLS

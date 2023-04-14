@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_ht.c,v 1.25 2018/05/13 10:42:03 tb Exp $ */
+/* $OpenBSD$ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -108,10 +108,8 @@ static int parse_http_line1(char *line);
 void
 OCSP_REQ_CTX_free(OCSP_REQ_CTX *rctx)
 {
-	if (rctx == NULL)
-		return;
-
-	BIO_free(rctx->mem);
+	if (rctx->mem)
+		BIO_free(rctx->mem);
 	free(rctx->iobuf);
 	free(rctx);
 }
@@ -119,8 +117,11 @@ OCSP_REQ_CTX_free(OCSP_REQ_CTX *rctx)
 int
 OCSP_REQ_CTX_set1_req(OCSP_REQ_CTX *rctx, OCSP_REQUEST *req)
 {
-	if (BIO_printf(rctx->mem, "Content-Type: application/ocsp-request\r\n"
-	    "Content-Length: %d\r\n\r\n", i2d_OCSP_REQUEST(req, NULL)) <= 0)
+	static const char req_hdr[] =
+	    "Content-Type: application/ocsp-request\r\n"
+	    "Content-Length: %d\r\n\r\n";
+
+	if (BIO_printf(rctx->mem, req_hdr, i2d_OCSP_REQUEST(req, NULL)) <= 0)
 		return 0;
 	if (i2d_OCSP_REQUEST_bio(rctx->mem, req) <= 0)
 		return 0;
@@ -149,18 +150,16 @@ OCSP_REQ_CTX_add1_header(OCSP_REQ_CTX *rctx, const char *name,
 }
 
 OCSP_REQ_CTX *
-OCSP_sendreq_new(BIO *io, const char *path, OCSP_REQUEST *req, int maxline)
+OCSP_sendreq_new(BIO *io, char *path, OCSP_REQUEST *req, int maxline)
 {
+	static const char post_hdr[] = "POST %s HTTP/1.0\r\n";
 	OCSP_REQ_CTX *rctx;
 
 	rctx = malloc(sizeof(OCSP_REQ_CTX));
 	if (rctx == NULL)
 		return NULL;
 	rctx->state = OHS_ERROR;
-	if ((rctx->mem = BIO_new(BIO_s_mem())) == NULL) {
-		free(rctx);
-		return NULL;
-	}
+	rctx->mem = BIO_new(BIO_s_mem());
 	rctx->io = io;
 	rctx->asn1_len = 0;
 	if (maxline > 0)
@@ -176,7 +175,7 @@ OCSP_sendreq_new(BIO *io, const char *path, OCSP_REQUEST *req, int maxline)
 	if (!path)
 		path = "/";
 
-	if (BIO_printf(rctx->mem, "POST %s HTTP/1.0\r\n", path) <= 0) {
+	if (BIO_printf(rctx->mem, post_hdr, path) <= 0) {
 		free(rctx->iobuf);
 		BIO_free(rctx->mem);
 		free(rctx);
@@ -207,7 +206,8 @@ parse_http_line1(char *line)
 	for (p = line; *p && !isspace((unsigned char)*p); p++)
 		continue;
 	if (!*p) {
-		OCSPerror(OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
+		OCSPerr(OCSP_F_PARSE_HTTP_LINE1,
+		    OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
 		return 0;
 	}
 
@@ -215,7 +215,8 @@ parse_http_line1(char *line)
 	while (*p && isspace((unsigned char)*p))
 		p++;
 	if (!*p) {
-		OCSPerror(OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
+		OCSPerr(OCSP_F_PARSE_HTTP_LINE1,
+		    OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
 		return 0;
 	}
 
@@ -223,7 +224,8 @@ parse_http_line1(char *line)
 	for (q = p; *q && !isspace((unsigned char)*q); q++)
 		continue;
 	if (!*q) {
-		OCSPerror(OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
+		OCSPerr(OCSP_F_PARSE_HTTP_LINE1,
+		    OCSP_R_SERVER_RESPONSE_PARSE_ERROR);
 		return 0;
 	}
 
@@ -248,7 +250,7 @@ parse_http_line1(char *line)
 			*r = 0;
 	}
 	if (retcode != 200) {
-		OCSPerror(OCSP_R_SERVER_RESPONSE_ERROR);
+		OCSPerr(OCSP_F_PARSE_HTTP_LINE1, OCSP_R_SERVER_RESPONSE_ERROR);
 		if (!*q)
 			ERR_asprintf_error_data("Code=%s", p);
 		else
@@ -440,7 +442,7 @@ next_line:
 
 /* Blocking OCSP request handler: now a special case of non-blocking I/O */
 OCSP_RESPONSE *
-OCSP_sendreq_bio(BIO *b, const char *path, OCSP_REQUEST *req)
+OCSP_sendreq_bio(BIO *b, char *path, OCSP_REQUEST *req)
 {
 	OCSP_RESPONSE *resp = NULL;
 	OCSP_REQ_CTX *ctx;

@@ -1,4 +1,4 @@
-/* $OpenBSD: p12_crpt.c,v 1.17 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: p12_crpt.c,v 1.10 2014/07/08 09:24:53 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,7 +57,6 @@
  */
 
 #include <stdio.h>
-#include <string.h>
 
 #include <openssl/err.h>
 #include <openssl/pkcs12.h>
@@ -68,7 +67,6 @@ void
 PKCS12_PBE_add(void)
 {
 }
-LCRYPTO_ALIAS(PKCS12_PBE_add);
 
 int
 PKCS12_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
@@ -83,41 +81,37 @@ PKCS12_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 	/* Extract useful info from parameter */
 	if (param == NULL || param->type != V_ASN1_SEQUENCE ||
 	    param->value.sequence == NULL) {
-		PKCS12error(PKCS12_R_DECODE_ERROR);
+		PKCS12err(PKCS12_F_PKCS12_PBE_KEYIVGEN, PKCS12_R_DECODE_ERROR);
 		return 0;
 	}
 
 	pbuf = param->value.sequence->data;
 	if (!(pbe = d2i_PBEPARAM(NULL, &pbuf, param->value.sequence->length))) {
-		PKCS12error(PKCS12_R_DECODE_ERROR);
+		PKCS12err(PKCS12_F_PKCS12_PBE_KEYIVGEN, PKCS12_R_DECODE_ERROR);
 		return 0;
 	}
 
 	if (!pbe->iter)
 		iter = 1;
-	else if ((iter = ASN1_INTEGER_get(pbe->iter)) <= 0) {
-		PKCS12error(PKCS12_R_DECODE_ERROR);
-		PBEPARAM_free(pbe);
-		return 0;
-	}
+	else
+		iter = ASN1_INTEGER_get (pbe->iter);
 	salt = pbe->salt->data;
 	saltlen = pbe->salt->length;
-	if (!PKCS12_key_gen(pass, passlen, salt, saltlen, PKCS12_KEY_ID,
+	if (!PKCS12_key_gen (pass, passlen, salt, saltlen, PKCS12_KEY_ID,
 	    iter, EVP_CIPHER_key_length(cipher), key, md)) {
-		PKCS12error(PKCS12_R_KEY_GEN_ERROR);
+		PKCS12err(PKCS12_F_PKCS12_PBE_KEYIVGEN, PKCS12_R_KEY_GEN_ERROR);
 		PBEPARAM_free(pbe);
 		return 0;
 	}
-	if (!PKCS12_key_gen(pass, passlen, salt, saltlen, PKCS12_IV_ID,
+	if (!PKCS12_key_gen (pass, passlen, salt, saltlen, PKCS12_IV_ID,
 	    iter, EVP_CIPHER_iv_length(cipher), iv, md)) {
-		PKCS12error(PKCS12_R_IV_GEN_ERROR);
+		PKCS12err(PKCS12_F_PKCS12_PBE_KEYIVGEN, PKCS12_R_IV_GEN_ERROR);
 		PBEPARAM_free(pbe);
 		return 0;
 	}
 	PBEPARAM_free(pbe);
 	ret = EVP_CipherInit_ex(ctx, cipher, NULL, key, iv, en_de);
-	explicit_bzero(key, EVP_MAX_KEY_LENGTH);
-	explicit_bzero(iv, EVP_MAX_IV_LENGTH);
+	OPENSSL_cleanse(key, EVP_MAX_KEY_LENGTH);
+	OPENSSL_cleanse(iv, EVP_MAX_IV_LENGTH);
 	return ret;
 }
-LCRYPTO_ALIAS(PKCS12_PBE_keyivgen);

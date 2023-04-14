@@ -1,4 +1,4 @@
-/* $OpenBSD: dh_ameth.c,v 1.26 2022/12/26 07:18:51 jmc Exp $ */
+/* $OpenBSD: dh_ameth.c,v 1.10 2014/07/09 22:55:17 tedu Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -10,7 +10,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer. 
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -64,9 +64,7 @@
 #include <openssl/err.h>
 #include <openssl/x509.h>
 
-#include "asn1_local.h"
-#include "dh_local.h"
-#include "evp_local.h"
+#include "asn1_locl.h"
 
 static void
 int_dh_free(EVP_PKEY *pkey)
@@ -80,8 +78,8 @@ dh_pub_decode(EVP_PKEY *pkey, X509_PUBKEY *pubkey)
 	const unsigned char *p, *pm;
 	int pklen, pmlen;
 	int ptype;
-	const void *pval;
-	const ASN1_STRING *pstr;
+	void *pval;
+	ASN1_STRING *pstr;
 	X509_ALGOR *palg;
 	ASN1_INTEGER *public_key = NULL;
 	DH *dh = NULL;
@@ -91,27 +89,27 @@ dh_pub_decode(EVP_PKEY *pkey, X509_PUBKEY *pubkey)
 	X509_ALGOR_get0(NULL, &ptype, &pval, palg);
 
 	if (ptype != V_ASN1_SEQUENCE) {
-		DHerror(DH_R_PARAMETER_ENCODING_ERROR);
+		DHerr(DH_F_DH_PUB_DECODE, DH_R_PARAMETER_ENCODING_ERROR);
 		goto err;
 	}
 
-	pstr = pval;
+	pstr = pval;	
 	pm = pstr->data;
 	pmlen = pstr->length;
 
 	if (!(dh = d2i_DHparams(NULL, &pm, pmlen))) {
-		DHerror(DH_R_DECODE_ERROR);
+		DHerr(DH_F_DH_PUB_DECODE, DH_R_DECODE_ERROR);
 		goto err;
 	}
 
 	if (!(public_key=d2i_ASN1_INTEGER(NULL, &p, pklen))) {
-		DHerror(DH_R_DECODE_ERROR);
+		DHerr(DH_F_DH_PUB_DECODE, DH_R_DECODE_ERROR);
 		goto err;
 	}
 
 	/* We have parameters now set public key */
 	if (!(dh->pub_key = ASN1_INTEGER_to_BN(public_key, NULL))) {
-		DHerror(DH_R_BN_DECODE_ERROR);
+		DHerr(DH_F_DH_PUB_DECODE, DH_R_BN_DECODE_ERROR);
 		goto err;
 	}
 
@@ -122,7 +120,8 @@ dh_pub_decode(EVP_PKEY *pkey, X509_PUBKEY *pubkey)
 err:
 	if (public_key)
 		ASN1_INTEGER_free(public_key);
-	DH_free(dh);
+	if (dh)
+		DH_free(dh);
 	return 0;
 }
 
@@ -140,13 +139,13 @@ dh_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
 
 	str = ASN1_STRING_new();
 	if (str == NULL) {
-		DHerror(ERR_R_MALLOC_FAILURE);
+		DHerr(DH_F_DH_PUB_ENCODE, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
 	str->length = i2d_DHparams(dh, &str->data);
 	if (str->length <= 0) {
-		DHerror(ERR_R_MALLOC_FAILURE);
+		DHerr(DH_F_DH_PUB_ENCODE, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	ptype = V_ASN1_SEQUENCE;
@@ -160,7 +159,7 @@ dh_pub_encode(X509_PUBKEY *pk, const EVP_PKEY *pkey)
 	ASN1_INTEGER_free(pub_key);
 
 	if (penclen <= 0) {
-		DHerror(ERR_R_MALLOC_FAILURE);
+		DHerr(DH_F_DH_PUB_ENCODE, ERR_R_MALLOC_FAILURE);
 		goto err;
 		}
 
@@ -177,19 +176,19 @@ err:
 
 /*
  * PKCS#8 DH is defined in PKCS#11 of all places. It is similar to DH in
- * that the AlgorithmIdentifier contains the parameters, the private key
+ * that the AlgorithmIdentifier contains the paramaters, the private key
  * is explcitly included and the pubkey must be recalculated.
  */
-
+	
 static int
-dh_priv_decode(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8)
+dh_priv_decode(EVP_PKEY *pkey, PKCS8_PRIV_KEY_INFO *p8)
 {
 	const unsigned char *p, *pm;
 	int pklen, pmlen;
 	int ptype;
-	const void *pval;
-	const ASN1_STRING *pstr;
-	const X509_ALGOR *palg;
+	void *pval;
+	ASN1_STRING *pstr;
+	X509_ALGOR *palg;
 	ASN1_INTEGER *privkey = NULL;
 	DH *dh = NULL;
 
@@ -204,14 +203,14 @@ dh_priv_decode(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8)
 	if (!(privkey=d2i_ASN1_INTEGER(NULL, &p, pklen)))
 		goto decerr;
 
-	pstr = pval;
+	pstr = pval;	
 	pm = pstr->data;
 	pmlen = pstr->length;
 	if (!(dh = d2i_DHparams(NULL, &pm, pmlen)))
 		goto decerr;
 	/* We have parameters now set private key */
 	if (!(dh->priv_key = ASN1_INTEGER_to_BN(privkey, NULL))) {
-		DHerror(DH_R_BN_ERROR);
+		DHerr(DH_F_DH_PRIV_DECODE, DH_R_BN_ERROR);
 		goto dherr;
 	}
 	/* Calculate public key */
@@ -225,9 +224,8 @@ dh_priv_decode(EVP_PKEY *pkey, const PKCS8_PRIV_KEY_INFO *p8)
 	return 1;
 
 decerr:
-	DHerror(EVP_R_DECODE_ERROR);
+	DHerr(DH_F_DH_PRIV_DECODE, EVP_R_DECODE_ERROR);
 dherr:
-	ASN1_INTEGER_free(privkey);
 	DH_free(dh);
 	return 0;
 }
@@ -243,13 +241,13 @@ dh_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
 	params = ASN1_STRING_new();
 
 	if (!params) {
-		DHerror(ERR_R_MALLOC_FAILURE);
+		DHerr(DH_F_DH_PRIV_ENCODE, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
 	params->length = i2d_DHparams(pkey->pkey.dh, &params->data);
 	if (params->length <= 0) {
-		DHerror(ERR_R_MALLOC_FAILURE);
+		DHerr(DH_F_DH_PRIV_ENCODE,ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	params->type = V_ASN1_SEQUENCE;
@@ -258,14 +256,13 @@ dh_priv_encode(PKCS8_PRIV_KEY_INFO *p8, const EVP_PKEY *pkey)
 	prkey = BN_to_ASN1_INTEGER(pkey->pkey.dh->priv_key, NULL);
 
 	if (!prkey) {
-		DHerror(DH_R_BN_ERROR);
+		DHerr(DH_F_DH_PRIV_ENCODE, DH_R_BN_ERROR);
 		goto err;
 	}
 
 	dplen = i2d_ASN1_INTEGER(prkey, &dp);
 
 	ASN1_INTEGER_free(prkey);
-	prkey = NULL;
 
 	if (!PKCS8_pkey_set0(p8, OBJ_nid2obj(NID_dhKeyAgreement), 0,
 	    V_ASN1_SEQUENCE, params, dp, dplen))
@@ -297,7 +294,7 @@ dh_param_decode(EVP_PKEY *pkey, const unsigned char **pder, int derlen)
 	DH *dh;
 
 	if (!(dh = d2i_DHparams(NULL, pder, derlen))) {
-		DHerror(ERR_R_DH_LIB);
+		DHerr(DH_F_DH_PARAM_DECODE, ERR_R_DH_LIB);
 		return 0;
 	}
 	EVP_PKEY_assign_DH(pkey, dh);
@@ -353,8 +350,7 @@ do_dh_print(BIO *bp, const DH *x, int indent, ASN1_PCTX *ctx, int ptype)
 		goto err;
 	}
 
-	if (!BIO_indent(bp, indent, 128))
-		goto err;
+	BIO_indent(bp, indent, 128);
 	if (BIO_printf(bp, "%s: (%d bit)\n", ktype, BN_num_bits(x->p)) <= 0)
 		goto err;
 	indent += 4;
@@ -369,8 +365,7 @@ do_dh_print(BIO *bp, const DH *x, int indent, ASN1_PCTX *ctx, int ptype)
 	if (!ASN1_bn_print(bp, "generator:", x->g, m, indent))
 		goto err;
 	if (x->length != 0) {
-		if (!BIO_indent(bp, indent, 128))
-			goto err;
+		BIO_indent(bp, indent, 128);
 		if (BIO_printf(bp, "recommended-private-length: %d bits\n",
 		    (int)x->length) <= 0)
 			goto err;
@@ -379,7 +374,7 @@ do_dh_print(BIO *bp, const DH *x, int indent, ASN1_PCTX *ctx, int ptype)
 	ret = 1;
 	if (0) {
 err:
-		DHerror(reason);
+		DHerr(DH_F_DO_DH_PRINT,reason);
 	}
 	free(m);
 	return(ret);
@@ -395,12 +390,6 @@ static int
 dh_bits(const EVP_PKEY *pkey)
 {
 	return BN_num_bits(pkey->pkey.dh->p);
-}
-
-static int
-dh_security_bits(const EVP_PKEY *pkey)
-{
-	return DH_security_bits(pkey->pkey.dh);
 }
 
 static int
@@ -420,12 +409,14 @@ dh_copy_parameters(EVP_PKEY *to, const EVP_PKEY *from)
 
 	if ((a = BN_dup(from->pkey.dh->p)) == NULL)
 		return 0;
-	BN_free(to->pkey.dh->p);
+	if (to->pkey.dh->p != NULL)
+		BN_free(to->pkey.dh->p);
 	to->pkey.dh->p = a;
 
 	if ((a = BN_dup(from->pkey.dh->g)) == NULL)
 		return 0;
-	BN_free(to->pkey.dh->g);
+	if (to->pkey.dh->g != NULL)
+		BN_free(to->pkey.dh->g);
 	to->pkey.dh->g = a;
 
 	return 1;
@@ -474,32 +465,6 @@ DHparams_print(BIO *bp, const DH *x)
 	return do_dh_print(bp, x, 4, NULL, 0);
 }
 
-static int
-dh_pkey_public_check(const EVP_PKEY *pkey)
-{
-	DH *dh = pkey->pkey.dh;
-
-	if (dh->pub_key == NULL) {
-		DHerror(DH_R_MISSING_PUBKEY);
-		return 0;
-	}
-
-	return DH_check_pub_key_ex(dh, dh->pub_key);
-}
-
-static int
-dh_pkey_param_check(const EVP_PKEY *pkey)
-{
-	DH *dh = pkey->pkey.dh;
-
-	/*
-	 * It would have made more sense to support EVP_PKEY_check() for DH
-	 * keys and call DH_check_ex() there and keeping this as a wrapper
-	 * for DH_param_check_ex(). We follow OpenSSL's choice.
-	 */
-	return DH_check_ex(dh);
-}
-
 const EVP_PKEY_ASN1_METHOD dh_asn1_meth = {
 	.pkey_id = EVP_PKEY_DH,
 	.pkey_base_id = EVP_PKEY_DH,
@@ -518,7 +483,6 @@ const EVP_PKEY_ASN1_METHOD dh_asn1_meth = {
 
 	.pkey_size = int_dh_size,
 	.pkey_bits = dh_bits,
-	.pkey_security_bits = dh_security_bits,
 
 	.param_decode = dh_param_decode,
 	.param_encode = dh_param_encode,
@@ -528,8 +492,4 @@ const EVP_PKEY_ASN1_METHOD dh_asn1_meth = {
 	.param_print = dh_param_print,
 
 	.pkey_free = int_dh_free,
-
-	.pkey_check = NULL,
-	.pkey_public_check = dh_pkey_public_check,
-	.pkey_param_check = dh_pkey_param_check,
 };

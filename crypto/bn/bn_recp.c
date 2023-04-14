@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_recp.c,v 1.18 2023/02/13 04:25:37 jsing Exp $ */
+/* $OpenBSD: bn_recp.c,v 1.10 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -60,7 +60,7 @@
 
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 void
 BN_RECP_CTX_init(BN_RECP_CTX *recp)
@@ -134,6 +134,7 @@ BN_mod_mul_reciprocal(BIGNUM *r, const BIGNUM *x, const BIGNUM *y,
 
 err:
 	BN_CTX_end(ctx);
+	bn_check_top(r);
 	return (ret);
 }
 
@@ -160,10 +161,8 @@ BN_div_recp(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, BN_RECP_CTX *recp,
 
 	if (BN_ucmp(m, &(recp->N)) < 0) {
 		BN_zero(d);
-		if (!BN_copy(r, m)) {
-			BN_CTX_end(ctx);
+		if (!BN_copy(r, m))
 			return 0;
-		}
 		BN_CTX_end(ctx);
 		return (1);
 	}
@@ -182,11 +181,9 @@ BN_div_recp(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, BN_RECP_CTX *recp,
 
 	/* Nr := round(2^i / N) */
 	if (i != recp->shift)
-		recp->shift = BN_reciprocal(&(recp->Nr), &(recp->N), i, ctx);
-
-	/* BN_reciprocal returns i, or -1 for an error */
-	if (recp->shift == -1)
-		goto err;
+		recp->shift = BN_reciprocal(&(recp->Nr), &(recp->N), i, ctx); /* BN_reciprocal returns i, or -1 for an error */
+		if (recp->shift == -1)
+			goto err;
 
 	/* d := |round(round(m / 2^BN_num_bits(N)) * recp->Nr / 2^(i - BN_num_bits(N)))|
 	 *    = |round(round(m / 2^BN_num_bits(N)) * round(2^i / N) / 2^(i - BN_num_bits(N)))|
@@ -211,7 +208,7 @@ BN_div_recp(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, BN_RECP_CTX *recp,
 	j = 0;
 	while (BN_ucmp(r, &(recp->N)) >= 0) {
 		if (j++ > 2) {
-			BNerror(BN_R_BAD_RECIPROCAL);
+			BNerr(BN_F_BN_DIV_RECP, BN_R_BAD_RECIPROCAL);
 			goto err;
 		}
 		if (!BN_usub(r, r, &(recp->N)))
@@ -221,13 +218,14 @@ BN_div_recp(BIGNUM *dv, BIGNUM *rem, const BIGNUM *m, BN_RECP_CTX *recp,
 	}
 #endif
 
-	BN_set_negative(r, m->neg);
-	BN_set_negative(d, m->neg ^ recp->N.neg);
-
+	r->neg = BN_is_zero(r) ? 0 : m->neg;
+	d->neg = m->neg^recp->N.neg;
 	ret = 1;
 
 err:
 	BN_CTX_end(ctx);
+	bn_check_top(dv);
+	bn_check_top(rem);
 	return (ret);
 }
 
@@ -249,12 +247,13 @@ BN_reciprocal(BIGNUM *r, const BIGNUM *m, int len, BN_CTX *ctx)
 	if (!BN_set_bit(t, len))
 		goto err;
 
-	if (!BN_div_ct(r, NULL, t,m, ctx))
+	if (!BN_div(r, NULL, t,m, ctx))
 		goto err;
 
 	ret = len;
 
 err:
+	bn_check_top(r);
 	BN_CTX_end(ctx);
 	return (ret);
 }

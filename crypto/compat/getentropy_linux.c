@@ -1,4 +1,4 @@
-/*	$OpenBSD: getentropy_linux.c,v 1.48 2021/10/24 21:24:20 deraadt Exp $	*/
+/*	$OpenBSD: getentropy_linux.c,v 1.17 2014/07/08 09:30:33 beck Exp $	*/
 
 /*
  * Copyright (c) 2014 Theo de Raadt <deraadt@openbsd.org>
@@ -15,21 +15,16 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Emulation of getentropy(2) as documented at:
- * http://man.openbsd.org/getentropy.2
  */
 
-#define	_POSIX_C_SOURCE	199309L
-#define	_GNU_SOURCE	1
+#define	_POSIX_C_SOURCE 199309L
+#define	_GNU_SOURCE     1
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <sys/syscall.h>
-#ifdef SYS__sysctl
-#include <linux/sysctl.h>
-#endif
+#include <sys/sysctl.h>
 #include <sys/statvfs.h>
 #include <sys/socket.h>
 #include <sys/mount.h>
@@ -39,7 +34,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <link.h>
 #include <termios.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -49,15 +43,15 @@
 #include <time.h>
 #include <openssl/sha.h>
 
-#include <linux/types.h>
 #include <linux/random.h>
+#include <linux/sysctl.h>
 #ifdef HAVE_GETAUXVAL
 #include <sys/auxv.h>
 #endif
 #include <sys/vfs.h>
 
 #define REPEAT 5
-#define MINIMUM(a, b) (((a) < (b)) ? (a) : (b))
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 #define HX(a, b) \
 	do { \
@@ -69,19 +63,16 @@
 
 #define HR(x, l) (SHA512_Update(&ctx, (char *)(x), (l)))
 #define HD(x)	 (SHA512_Update(&ctx, (char *)&(x), sizeof (x)))
-#define HF(x)    (SHA512_Update(&ctx, (char *)&(x), sizeof (void*)))
 
 int	getentropy(void *buf, size_t len);
 
-#if defined(SYS_getrandom) && defined(GRND_NONBLOCK)
-static int getentropy_getrandom(void *buf, size_t len);
-#endif
+extern int main(int, char *argv[]);
+static int gotdata(char *buf, size_t len);
 static int getentropy_urandom(void *buf, size_t len);
-#ifdef SYS__sysctl
+#ifdef CTL_MAXNAME
 static int getentropy_sysctl(void *buf, size_t len);
 #endif
 static int getentropy_fallback(void *buf, size_t len);
-static int getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data);
 
 int
 getentropy(void *buf, size_t len)
@@ -90,22 +81,8 @@ getentropy(void *buf, size_t len)
 
 	if (len > 256) {
 		errno = EIO;
-		return (-1);
+		return -1;
 	}
-
-#if defined(SYS_getrandom) && defined(GRND_NONBLOCK)
-	/*
-	 * Try descriptor-less getrandom(), in non-blocking mode.
-	 *
-	 * The design of Linux getrandom is broken.  It has an
-	 * uninitialized phase coupled with blocking behaviour, which
-	 * is unacceptable from within a library at boot time without
-	 * possible recovery. See http://bugs.python.org/issue26839#msg267745
-	 */
-	ret = getentropy_getrandom(buf, len);
-	if (ret != -1)
-		return (ret);
-#endif
 
 	/*
 	 * Try to get entropy with /dev/urandom
@@ -117,12 +94,12 @@ getentropy(void *buf, size_t len)
 	if (ret != -1)
 		return (ret);
 
-#ifdef SYS__sysctl
+#ifdef CTL_MAXNAME
 	/*
 	 * Try to use sysctl CTL_KERN, KERN_RANDOM, RANDOM_UUID.
 	 * sysctl is a failsafe API, so it guarantees a result.  This
 	 * should work inside a chroot, or when file descriptors are
-	 * exhausted.
+	 * exhuasted.
 	 *
 	 * However this can fail if the Linux kernel removes support
 	 * for sysctl.  Starting in 2007, there have been efforts to
@@ -139,7 +116,7 @@ getentropy(void *buf, size_t len)
 	ret = getentropy_sysctl(buf, len);
 	if (ret != -1)
 		return (ret);
-#endif /* SYS__sysctl */
+#endif /* CTL_MAXNAME */
 
 	/*
 	 * Entropy collection via /dev/urandom and sysctl have failed.
@@ -158,14 +135,14 @@ getentropy(void *buf, size_t len)
 	 *     - Do the best under the circumstances....
 	 *
 	 * This code path exists to bring light to the issue that Linux
-	 * still does not provide a failsafe API for entropy collection.
+	 * does not provide a failsafe API for entropy collection.
 	 *
 	 * We hope this demonstrates that Linux should either retain their
 	 * sysctl ABI, or consider providing a new failsafe API which
 	 * works in a chroot or when file descriptors are exhausted.
 	 */
-#undef FAIL_INSTEAD_OF_TRYING_FALLBACK
-#ifdef FAIL_INSTEAD_OF_TRYING_FALLBACK
+#undef FAIL_HARD_WHEN_LINUX_DEPRECATES_SYSCTL
+#ifdef FAIL_HARD_WHEN_LINUX_DEPRECATES_SYSCTL
 	raise(SIGKILL);
 #endif
 	ret = getentropy_fallback(buf, len);
@@ -176,24 +153,21 @@ getentropy(void *buf, size_t len)
 	return (ret);
 }
 
-#if defined(SYS_getrandom) && defined(GRND_NONBLOCK)
+/*
+ * Basic sanity checking; wish we could do better.
+ */
 static int
-getentropy_getrandom(void *buf, size_t len)
+gotdata(char *buf, size_t len)
 {
-	int pre_errno = errno;
-	int ret;
-	if (len > 256)
-		return (-1);
-	do {
-		ret = syscall(SYS_getrandom, buf, len, GRND_NONBLOCK);
-	} while (ret == -1 && errno == EINTR);
+	char	any_set = 0;
+	size_t	i;
 
-	if (ret != len)
-		return (-1);
-	errno = pre_errno;
-	return (0);
+	for (i = 0; i < len; ++i)
+		any_set |= buf[i];
+	if (any_set == 0)
+		return -1;
+	return 0;
 }
-#endif
 
 static int
 getentropy_urandom(void *buf, size_t len)
@@ -205,14 +179,14 @@ getentropy_urandom(void *buf, size_t len)
 
 start:
 
-	flags = O_RDONLY;
+        flags = O_RDONLY;
 #ifdef O_NOFOLLOW
-	flags |= O_NOFOLLOW;
+        flags |= O_NOFOLLOW;
 #endif
 #ifdef O_CLOEXEC
-	flags |= O_CLOEXEC;
+        flags |= O_CLOEXEC;
 #endif
-	fd = open("/dev/urandom", flags);
+	fd = open("/dev/urandom", flags, 0);
 	if (fd == -1) {
 		if (errno == EINTR)
 			goto start;
@@ -233,7 +207,7 @@ start:
 	}
 	for (i = 0; i < len; ) {
 		size_t wanted = len - i;
-		ssize_t ret = read(fd, (char *)buf + i, wanted);
+		ssize_t ret = read(fd, buf + i, wanted);
 
 		if (ret == -1) {
 			if (errno == EAGAIN || errno == EINTR)
@@ -244,44 +218,48 @@ start:
 		i += ret;
 	}
 	close(fd);
-	errno = save_errno;
-	return (0);		/* satisfied */
+	if (gotdata(buf, len) == 0) {
+		errno = save_errno;
+		return 0;		/* satisfied */
+	}
 nodevrandom:
 	errno = EIO;
-	return (-1);
+	return -1;
 }
 
-#ifdef SYS__sysctl
+#ifdef CTL_MAXNAME
 static int
 getentropy_sysctl(void *buf, size_t len)
 {
 	static int mib[] = { CTL_KERN, KERN_RANDOM, RANDOM_UUID };
-	size_t i;
+	size_t i, chunk;
 	int save_errno = errno;
 
 	for (i = 0; i < len; ) {
-		size_t chunk = MINIMUM(len - i, 16);
+		chunk = min(len - i, 16);
 
 		/* SYS__sysctl because some systems already removed sysctl() */
 		struct __sysctl_args args = {
 			.name = mib,
 			.nlen = 3,
-			.oldval = (char *)buf + i,
+			.oldval = buf + i,
 			.oldlenp = &chunk,
 		};
 		if (syscall(SYS__sysctl, &args) != 0)
 			goto sysctlfailed;
 		i += chunk;
 	}
-	errno = save_errno;
-	return (0);			/* satisfied */
+	if (gotdata(buf, len) == 0) {
+		errno = save_errno;
+		return (0);			/* satisfied */
+	}
 sysctlfailed:
 	errno = EIO;
-	return (-1);
+	return -1;
 }
-#endif /* SYS__sysctl */
+#endif /* CTL_MAXNAME */
 
-static const int cl[] = {
+static int cl[] = {
 	CLOCK_REALTIME,
 #ifdef CLOCK_MONOTONIC
 	CLOCK_MONOTONIC,
@@ -307,19 +285,10 @@ static const int cl[] = {
 };
 
 static int
-getentropy_phdr(struct dl_phdr_info *info, size_t size, void *data)
-{
-	SHA512_CTX *ctx = data;
-
-	SHA512_Update(ctx, &info->dlpi_addr, sizeof (info->dlpi_addr));
-	return (0);
-}
-
-static int
 getentropy_fallback(void *buf, size_t len)
 {
 	uint8_t results[SHA512_DIGEST_LENGTH];
-	int save_errno = errno, e, pgs = getpagesize(), faster = 0, repeat;
+	int save_errno = errno, e, m, pgs = getpagesize(), faster = 0, repeat;
 	static int cnt;
 	struct timespec ts;
 	struct timeval tv;
@@ -329,7 +298,7 @@ getentropy_fallback(void *buf, size_t len)
 	SHA512_CTX ctx;
 	static pid_t lastpid;
 	pid_t pid;
-	size_t i, ii, m;
+	size_t i, ii;
 	char *p;
 
 	pid = getpid();
@@ -351,8 +320,6 @@ getentropy_fallback(void *buf, size_t len)
 				cnt += (int)tv.tv_usec;
 			}
 
-			dl_iterate_phdr(getentropy_phdr, &ctx);
-
 			for (ii = 0; ii < sizeof(cl)/sizeof(cl[0]); ii++)
 				HX(clock_gettime(cl[ii], &ts) == -1, ts);
 
@@ -360,7 +327,7 @@ getentropy_fallback(void *buf, size_t len)
 			HX((pid = getsid(pid)) == -1, pid);
 			HX((pid = getppid()) == -1, pid);
 			HX((pid = getpgid(0)) == -1, pid);
-			HX((e = getpriority(0, 0)) == -1, e);
+			HX((m = getpriority(0, 0)) == -1, m);
 
 			if (!faster) {
 				ts.tv_sec = 0;
@@ -372,8 +339,9 @@ getentropy_fallback(void *buf, size_t len)
 			HX(sigprocmask(SIG_BLOCK, NULL, &sigset) == -1,
 			    sigset);
 
-			HF(getentropy);	/* an addr in this library */
-			HF(printf);		/* an addr in libc */
+			HD(main);		/* an addr in program */
+			HD(getentropy);	/* an addr in this library */
+			HD(printf);		/* an addr in libc */
 			p = (char *)&p;
 			HD(p);		/* an addr on stack */
 			p = (char *)&errno;
@@ -495,7 +463,6 @@ getentropy_fallback(void *buf, size_t len)
 
 			HD(cnt);
 		}
-#ifdef HAVE_GETAUXVAL
 #ifdef AT_RANDOM
 		/* Not as random as you think but we take what we are given */
 		p = (char *) getauxval(AT_RANDOM);
@@ -512,14 +479,16 @@ getentropy_fallback(void *buf, size_t len)
 		if (p)
 			HD(p);
 #endif
-#endif
 
 		SHA512_Final(results, &ctx);
-		memcpy((char *)buf + i, results, MINIMUM(sizeof(results), len - i));
-		i += MINIMUM(sizeof(results), len - i);
+		memcpy(buf + i, results, min(sizeof(results), len - i));
+		i += min(sizeof(results), len - i);
 	}
-	explicit_bzero(&ctx, sizeof ctx);
-	explicit_bzero(results, sizeof results);
-	errno = save_errno;
-	return (0);		/* satisfied */
+	memset(results, 0, sizeof results);
+	if (gotdata(buf, len) == 0) {
+		errno = save_errno;
+		return 0;		/* satisfied */
+	}
+	errno = EIO;
+	return -1;
 }
