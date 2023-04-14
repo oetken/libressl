@@ -33,8 +33,6 @@ LibreSSL Portable Release Notes:
 	* Fix multiple vulnerabilities in libcrypto relating to ASN.1 and encoding.
 	From OpenSSL.
 
-	* Minor build fixes
-
 2.2.6 - Security Update
 
 	* Deprecated the SSL_OP_SINGLE_DH_USE flag.
