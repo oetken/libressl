@@ -1,4 +1,4 @@
-/* $OpenBSD: openssl.c,v 1.1 2014/08/26 17:47:25 jsing Exp $ */
+/* $OpenBSD: openssl.c,v 1.2 2014/10/22 13:54:03 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -130,6 +130,18 @@
 #include <openssl/engine.h>
 #endif
 
+#ifdef _WIN32
+#include <fcntl.h>
+static void set_stdio_binary(void)
+{
+	_setmode(_fileno(stdin), _O_BINARY);
+	_setmode(_fileno(stdout), _O_BINARY);
+	_setmode(_fileno(stderr), _O_BINARY);
+}
+#else
+static void set_stdio_binary(void) {};
+#endif
+
 #include "progs.h"
 #include "s_apps.h"
 
@@ -216,6 +228,7 @@ openssl_startup(void)
 #endif
 
 	setup_ui_method();
+	set_stdio_binary();
 }
 
 static void
@@ -253,14 +266,14 @@ main(int argc, char **argv)
 	arg.data = NULL;
 	arg.count = 0;
 
-	if (BIO_sock_init() != 1) {
-		fprintf(stderr, "BIO_sock_init failed\n");
-		exit(1);
-	}
-
 	bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
 	if (bio_err == NULL) {
 		fprintf(stderr, "openssl: failed to initialise bio_err\n");
+		exit(1);
+	}
+
+	if (BIO_sock_init() != 1) {
+		BIO_printf(bio_err, "BIO_sock_init failed\n");
 		exit(1);
 	}
 

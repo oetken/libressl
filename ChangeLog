@@ -31,32 +31,27 @@ LibreSSL Portable Release Notes:
 This release primarily addresses a number of security issues in coordination
 with the OpenSSL project.
 
-2.1.9 - Reliability Update
+2.2.0 - Build cleanups and new OS support, Security Updates
 
-	* Fixes from OpenSSL 1.0.1q
-	 - CVE-2015-3194 - NULL pointer dereference in client side certificate
-	                   validation.
-	 - CVE-2015-3195 - Memory leak in PKCS7 - not reachable from TLS/SSL
+	* AIX Support - thanks to Michael Felt
 
-	* The following OpenSSL CVEs did not apply to LibreSSL
-	 - CVE-2015-3193 - Carry propagating bug in the x86_64 Montgomery squaring
-	                   procedure.
-	 - CVE-2015-3196 - Double free race condition of the identify hint data.
+	* Cygwin Support - thanks to Corinna Vinschen
 
-	 See https://marc.info/?l=openbsd-announce&m=144925068504102
+	* Refactored build macros, support packaging libtls independently.
+	  There are more pieces required to support building and using OpenSSL
+	  with libtls, but this is an initial start at providing an
+	  independent package for people to start hacking on.
 
-2.1.8 - Security Update
+	* Removal of OPENSSL_issetugid and all library getenv calls.
+	  Applications can and should no longer rely on environment variables
+	  for changing library behavior. OPENSSL_CONF/SSLEAY_CONF is still
+	  supported with the openssl(1) command.
 
-	* Fixes for a memory leak and out-of-bounds access in OBJ_obj2txt
-	  reported by Qualys Security.
-	 - CVE-2015-5333 - memory leak in OBJ_obj2txt
-	 - CVE-2015-5334 - 1-byte buffer overflow in OBJ_obj2txt
+	* libtls API and documentation additions
 
-	 See http://www.openwall.com/lists/oss-security/2015/10/16/1
+	* Various bug fixes and simplifications to libssl and libcrypto
 
-2.1.7 - Security Update
-
-	* Fixes for the following issues are integrated into LibreSSL 2.1.7:
+	* Fixes for the following issues are integrated into LibreSSL 2.2.0:
 	 - CVE-2015-1788 - Malformed ECParameters causes infinite loop
 	 - CVE-2015-1789 - Exploitable out-of-bounds read in X509_cmp_time
 	 - CVE-2015-1792 - CMS verify infinite loop with unknown hash function

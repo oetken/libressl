@@ -1,8 +1,8 @@
 include $(top_srcdir)/Makefile.am.common
 
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/evp
-AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
+AM_CFLAGS += -I$(top_srcdir)/crypto/asn1
+AM_CFLAGS += -I$(top_srcdir)/crypto/evp
+AM_CFLAGS += -I$(top_srcdir)/crypto/modes
 
 lib_LTLIBRARIES = libcrypto.la
 
@@ -10,13 +10,12 @@ EXTRA_DIST = VERSION
 
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS)
-libcrypto_la_CFLAGS += -DOPENSSL_NO_HW_PADLOCK
+libcrypto_la_CPPFLAGS = -DOPENSSL_NO_HW_PADLOCK
 if OPENSSL_NO_ASM
-libcrypto_la_CFLAGS += -DOPENSSL_NO_ASM
+libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
 else
 if HOST_WIN
-libcrypto_la_CFLAGS += -DOPENSSL_NO_ASM
+libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
 endif
 endif
 
@@ -31,7 +30,6 @@ libcompatnoopt_la_SOURCES += compat/explicit_bzero.c
 endif
 
 # other compatibility functions
-libcompat_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS)
 libcompat_la_SOURCES =
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
 
@@ -67,60 +65,11 @@ if !HAVE_TIMINGSAFE_BCMP
 libcompat_la_SOURCES += compat/timingsafe_bcmp.c
 endif
 
-if !HAVE_ARC4RANDOM_BUF
-libcompat_la_SOURCES += compat/arc4random.c
-
-if !HAVE_GETENTROPY
-if HOST_FREEBSD
-libcompat_la_SOURCES += compat/getentropy_freebsd.c
-endif
-if HOST_HPUX
-libcompat_la_SOURCES += compat/getentropy_hpux.c
-endif
-if HOST_LINUX
-libcompat_la_SOURCES += compat/getentropy_linux.c
-endif
-if HOST_NETBSD
-libcompat_la_SOURCES += compat/getentropy_netbsd.c
-endif
-if HOST_DARWIN
-libcompat_la_SOURCES += compat/getentropy_osx.c
-endif
-if HOST_SOLARIS
-libcompat_la_SOURCES += compat/getentropy_solaris.c
-endif
 if HOST_WIN
-libcompat_la_SOURCES += compat/getentropy_win.c
-endif
-endif
-
+libcompat_la_SOURCES += compat/posix_win.c
 endif
 
-if !HAVE_ISSETUGID
-if HOST_LINUX
-libcompat_la_SOURCES += compat/issetugid_linux.c
-endif
-if HOST_HPUX
-libcompat_la_SOURCES += compat/issetugid_hpux.c
-endif
-if HOST_DARWIN
-libcompat_la_SOURCES += compat/issetugid_osx.c
-endif
-if HOST_WIN
-libcompat_la_SOURCES += compat/issetugid_win.c
-endif
-endif
-
-noinst_HEADERS =
-noinst_HEADERS += compat/arc4random.h
-noinst_HEADERS += compat/arc4random_freebsd.h
-noinst_HEADERS += compat/arc4random_hpux.h
-noinst_HEADERS += compat/arc4random_linux.h
-noinst_HEADERS += compat/arc4random_netbsd.h
-noinst_HEADERS += compat/arc4random_osx.h
-noinst_HEADERS += compat/arc4random_solaris.h
-noinst_HEADERS += compat/arc4random_win.h
-noinst_HEADERS += compat/chacha_private.h
+include Makefile.am.arc4random
 
 libcrypto_la_SOURCES =
 EXTRA_libcrypto_la_SOURCES =
