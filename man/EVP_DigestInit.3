@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "EVP_DigestInit 3"
-.TH EVP_DigestInit 3 "2015-06-11" "LibreSSL " "LibreSSL"
+.TH EVP_DigestInit 3 "2015-07-02" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -145,7 +145,7 @@ EVP_MD_CTX_copy_ex, EVP_MD_CTX_copy, EVP_MD_type, EVP_MD_pkey_type,
 EVP_MD_size, EVP_MD_block_size, EVP_MD_CTX_md, EVP_MD_CTX_size,
 EVP_MD_CTX_block_size, EVP_MD_CTX_type, EVP_md_null, EVP_md2, EVP_md5, EVP_sha,
 EVP_sha1, EVP_sha224, EVP_sha256, EVP_sha384, EVP_sha512, EVP_dss, EVP_dss1,
-EVP_mdc2, EVP_ripemd160, EVP_get_digestbyname, EVP_get_digestbynid,
+EVP_ripemd160, EVP_get_digestbyname, EVP_get_digestbynid,
 EVP_get_digestbyobj \- EVP digest routines
 .SH "SYNOPSIS"
 .IX Header "SYNOPSIS"
@@ -190,7 +190,6 @@ EVP_get_digestbyobj \- EVP digest routines
 \& const EVP_MD *EVP_sha1(void);
 \& const EVP_MD *EVP_dss(void);
 \& const EVP_MD *EVP_dss1(void);
-\& const EVP_MD *EVP_mdc2(void);
 \& const EVP_MD *EVP_ripemd160(void);
 \&
 \& const EVP_MD *EVP_sha224(void);
@@ -271,8 +270,8 @@ algorithms are no longer linked this function is only retained for
 compatibility reasons.
 .PP
 \&\fIEVP_md2()\fR, \fIEVP_md5()\fR, \fIEVP_sha()\fR, \fIEVP_sha1()\fR, \fIEVP_sha224()\fR, \fIEVP_sha256()\fR,
-\&\fIEVP_sha384()\fR, \fIEVP_sha512()\fR, \fIEVP_mdc2()\fR and \fIEVP_ripemd160()\fR return \fB\s-1EVP_MD\s0\fR
-structures for the \s-1MD2, MD5, SHA, SHA1, SHA224, SHA256, SHA384, SHA512, MDC2\s0
+\&\fIEVP_sha384()\fR, \fIEVP_sha512()\fR and \fIEVP_ripemd160()\fR return \fB\s-1EVP_MD\s0\fR
+structures for the \s-1MD2, MD5, SHA, SHA1, SHA224, SHA256, SHA384, SHA512\s0
 and \s-1RIPEMD160\s0 digest algorithms respectively.
 .PP
 \&\fIEVP_dss()\fR and \fIEVP_dss1()\fR return \fB\s-1EVP_MD\s0\fR structures for \s-1SHA\s0 and \s-1SHA1\s0 digest
@@ -301,7 +300,7 @@ corresponding \s-1OBJECT IDENTIFIER\s0 or NID_undef if none exists.
 \&\fIEVP_MD_CTX_block_size()\fR return the digest or block size in bytes.
 .PP
 \&\fIEVP_md_null()\fR, \fIEVP_md2()\fR, \fIEVP_md5()\fR, \fIEVP_sha()\fR, \fIEVP_sha1()\fR, \fIEVP_dss()\fR,
-\&\fIEVP_dss1()\fR, \fIEVP_mdc2()\fR and \fIEVP_ripemd160()\fR return pointers to the
+\&\fIEVP_dss1()\fR and \fIEVP_ripemd160()\fR return pointers to the
 corresponding \s-1EVP_MD\s0 structures.
 .PP
 \&\fIEVP_get_digestbyname()\fR, \fIEVP_get_digestbynid()\fR and \fIEVP_get_digestbyobj()\fR
@@ -391,7 +390,7 @@ digest name passed on the command line.
 .SH "SEE ALSO"
 .IX Header "SEE ALSO"
 \&\fIevp\fR\|(3), \fIhmac\fR\|(3), \fImd2\fR\|(3),
-\&\fImd5\fR\|(3), \fImdc2\fR\|(3), \fIripemd\fR\|(3),
+\&\fImd5\fR\|(3), \fIripemd\fR\|(3),
 \&\fIsha\fR\|(3), \fIdgst\fR\|(1)
 .SH "HISTORY"
 .IX Header "HISTORY"
@@ -403,7 +402,7 @@ available in all versions of SSLeay and OpenSSL.
 and \fIEVP_DigestFinal_ex()\fR were added in OpenSSL 0.9.7.
 .PP
 \&\fIEVP_md_null()\fR, \fIEVP_md2()\fR, \fIEVP_md5()\fR, \fIEVP_sha()\fR, \fIEVP_sha1()\fR,
-\&\fIEVP_dss()\fR, \fIEVP_dss1()\fR, \fIEVP_mdc2()\fR and \fIEVP_ripemd160()\fR were
+\&\fIEVP_dss()\fR, \fIEVP_dss1()\fR and \fIEVP_ripemd160()\fR were
 changed to return truely const \s-1EVP_MD\s0 * in OpenSSL 0.9.7.
 .PP
 The link between digests and signing algorithms was fixed in OpenSSL 1.0 and

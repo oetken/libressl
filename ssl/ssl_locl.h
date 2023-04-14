@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_locl.h,v 1.89 2015/03/27 12:29:54 jsing Exp $ */
+/* $OpenBSD: ssl_locl.h,v 1.93 2015/06/20 16:42:48 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -569,7 +569,7 @@ int ssl_cipher_id_cmp(const SSL_CIPHER *a, const SSL_CIPHER *b);
 DECLARE_OBJ_BSEARCH_GLOBAL_CMP_FN(SSL_CIPHER, SSL_CIPHER, ssl_cipher_id);
 int ssl_cipher_ptr_id_cmp(const SSL_CIPHER * const *ap,
     const SSL_CIPHER * const *bp);
-STACK_OF(SSL_CIPHER) *ssl_bytes_to_cipher_list(SSL *s, unsigned char *p,
+STACK_OF(SSL_CIPHER) *ssl_bytes_to_cipher_list(SSL *s, const unsigned char *p,
     int num);
 int ssl_cipher_list_to_bytes(SSL *s, STACK_OF(SSL_CIPHER) *sk,
     unsigned char *p);
@@ -741,7 +741,6 @@ int ssl3_send_hello_request(SSL *s);
 int ssl3_send_server_key_exchange(SSL *s);
 int ssl3_send_certificate_request(SSL *s);
 int ssl3_send_server_done(SSL *s);
-int ssl3_check_client_hello(SSL *s);
 int ssl3_get_client_certificate(SSL *s);
 int ssl3_get_client_key_exchange(SSL *s);
 int ssl3_get_cert_verify(SSL *s);
@@ -836,11 +835,11 @@ EVP_MD_CTX* ssl_replace_hash(EVP_MD_CTX **hash, const EVP_MD *md);
 void ssl_clear_hash_ctx(EVP_MD_CTX **hash);
 int ssl_add_serverhello_renegotiate_ext(SSL *s, unsigned char *p,
     int *len, int maxlen);
-int ssl_parse_serverhello_renegotiate_ext(SSL *s, unsigned char *d,
+int ssl_parse_serverhello_renegotiate_ext(SSL *s, const unsigned char *d,
     int len, int *al);
 int ssl_add_clienthello_renegotiate_ext(SSL *s, unsigned char *p,
     int *len, int maxlen);
-int ssl_parse_clienthello_renegotiate_ext(SSL *s, unsigned char *d,
+int ssl_parse_clienthello_renegotiate_ext(SSL *s, const unsigned char *d,
     int len, int *al);
 long ssl_get_algorithm2(SSL *s);
 int tls1_process_sigalgs(SSL *s, const unsigned char *data, int dsize);

@@ -322,9 +322,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Makefile.am.common $
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu include/openssl/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign include/openssl/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu include/openssl/Makefile
+	  $(AUTOMAKE) --foreign include/openssl/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \

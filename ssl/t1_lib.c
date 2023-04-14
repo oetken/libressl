@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_lib.c,v 1.74 2014/12/14 14:34:43 jsing Exp $ */
+/* $OpenBSD: t1_lib.c,v 1.77 2015/06/17 07:52:22 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -117,6 +117,7 @@
 #include <openssl/ocsp.h>
 
 #include "ssl_locl.h"
+#include "bytestring.h"
 
 static int tls_decrypt_ticket(SSL *s, const unsigned char *tick, int ticklen,
     const unsigned char *sess_id, int sesslen,
@@ -403,15 +404,20 @@ tls1_get_curvelist(SSL *s, int client_curves, const uint16_t **pcurves,
 int
 tls1_check_curve(SSL *s, const unsigned char *p, size_t len)
 {
+	CBS cbs;
 	const uint16_t *curves;
 	size_t curveslen, i;
+	uint8_t type;
 	uint16_t cid;
 
-	/* Only named curves are supported. */
-	if (len != 3 || p[0] != NAMED_CURVE_TYPE)
-		return (0);
+	CBS_init(&cbs, p, len);
 
-	cid = (p[1] << 8) | p[2];
+	/* Only named curves are supported. */
+	if (CBS_len(&cbs) != 3 ||
+	    !CBS_get_u8(&cbs, &type) ||
+	    type != NAMED_CURVE_TYPE ||
+	    !CBS_get_u16(&cbs, &cid))
+		return (0);
 
 	tls1_get_curvelist(s, 0, &curves, &curveslen);
 
@@ -1147,10 +1153,9 @@ static int
 tls1_alpn_handle_client_hello(SSL *s, const unsigned char *data,
     unsigned int data_len, int *al)
 {
+	CBS cbs, proto_name_list, alpn;
 	const unsigned char *selected;
 	unsigned char selected_len;
-	unsigned int proto_len;
-	unsigned int i;
 	int r;
 
 	if (s->ctx->alpn_select_cb == NULL)
@@ -1159,34 +1164,29 @@ tls1_alpn_handle_client_hello(SSL *s, const unsigned char *data,
 	if (data_len < 2)
 		goto parse_error;
 
+	CBS_init(&cbs, data, data_len);
+
 	/*
 	 * data should contain a uint16 length followed by a series of 8-bit,
 	 * length-prefixed strings.
 	 */
-	i = ((unsigned int)data[0]) << 8 | ((unsigned int)data[1]);
-	data_len -= 2;
-	data += 2;
-	if (data_len != i)
+	if (!CBS_get_u16_length_prefixed(&cbs, &alpn) ||
+	    CBS_len(&alpn) < 2 ||
+	    CBS_len(&cbs) != 0)
 		goto parse_error;
 
-	if (data_len < 2)
-		goto parse_error;
+	/* Validate data before sending to callback. */
+	CBS_dup(&alpn, &proto_name_list);
+	while (CBS_len(&proto_name_list) > 0) {
+		CBS proto_name;
 
-	for (i = 0; i < data_len; ) {
-		proto_len = data[i];
-		i++;
-
-		if (proto_len == 0)
+		if (!CBS_get_u8_length_prefixed(&proto_name_list, &proto_name) ||
+		    CBS_len(&proto_name) == 0)
 			goto parse_error;
-
-		if (i + proto_len < i || i + proto_len > data_len)
-			goto parse_error;
-
-		i += proto_len;
 	}
 
 	r = s->ctx->alpn_select_cb(s, &selected, &selected_len,
-	    data, data_len, s->ctx->alpn_select_cb_arg);
+	    CBS_data(&alpn), CBS_len(&alpn), s->ctx->alpn_select_cb_arg);
 	if (r == SSL_TLSEXT_ERR_OK) {
 		free(s->s3->alpn_selected);
 		if ((s->s3->alpn_selected = malloc(selected_len)) == NULL) {
@@ -1666,22 +1666,23 @@ ri_check:
 	return 1;
 }
 
-/* ssl_next_proto_validate validates a Next Protocol Negotiation block. No
+/*
+ * ssl_next_proto_validate validates a Next Protocol Negotiation block. No
  * elements of zero length are allowed and the set of elements must exactly fill
- * the length of the block. */
+ * the length of the block.
+ */
 static char
-ssl_next_proto_validate(unsigned char *d, unsigned len)
+ssl_next_proto_validate(const unsigned char *d, unsigned int len)
 {
-	unsigned int off = 0;
+	CBS npn, value;
 
-	while (off < len) {
-		if (d[off] == 0)
+	CBS_init(&npn, d, len);
+	while (CBS_len(&npn) > 0) {
+		if (!CBS_get_u8_length_prefixed(&npn, &value) ||
+		    CBS_len(&value) == 0)
 			return 0;
-		off += d[off];
-		off++;
 	}
-
-	return off == len;
+	return 1;
 }
 
 int
