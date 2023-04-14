@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_constraints.c,v 1.21 2022/03/03 11:29:05 tb Exp $ */
+/* $OpenBSD: x509_constraints.c,v 1.26 2022/03/26 16:34:21 tb Exp $ */
 /*
  * Copyright (c) 2020 Bob Beck <beck@openbsd.org>
  *
@@ -636,7 +636,11 @@ int
 x509_constraints_dirname(uint8_t *dirname, size_t dlen,
     uint8_t *constraint, size_t len)
 {
-	if (len != dlen)
+	/*
+	 * The constraint must be a prefix in DER format, so it can't be
+	 * longer than the name it is checked against.
+	 */
+	if (len > dlen)
 		return 0;
 	return (memcmp(constraint, dirname, len) == 0);
 }
@@ -653,35 +657,45 @@ x509_constraints_general_to_bytes(GENERAL_NAME *name, uint8_t **bytes,
 
 	if (name->type == GEN_DNS) {
 		ASN1_IA5STRING *aname = name->d.dNSName;
+
 		*bytes = aname->data;
-		*len = strlen(aname->data);
+		*len = aname->length;
+
 		return name->type;
 	}
 	if (name->type == GEN_EMAIL) {
 		ASN1_IA5STRING *aname = name->d.rfc822Name;
+
 		*bytes = aname->data;
-		*len = strlen(aname->data);
+		*len = aname->length;
+
 		return name->type;
 	}
 	if (name->type == GEN_URI) {
 		ASN1_IA5STRING *aname = name->d.uniformResourceIdentifier;
+
 		*bytes = aname->data;
-		*len = strlen(aname->data);
+		*len = aname->length;
+
 		return name->type;
 	}
 	if (name->type == GEN_DIRNAME) {
 		X509_NAME *dname = name->d.directoryName;
+
 		if (!dname->modified || i2d_X509_NAME(dname, NULL) >= 0) {
 			*bytes = dname->canon_enc;
 			*len = dname->canon_enclen;
+
 			return name->type;
 		}
 	}
 	if (name->type == GEN_IPADD) {
 		*bytes = name->d.ip->data;
 		*len = name->d.ip->length;
+
 		return name->type;
 	}
+
 	return 0;
 }
 
@@ -719,7 +733,7 @@ x509_constraints_extract_names(struct x509_constraints_names *names,
 				*error = X509_V_ERR_UNSUPPORTED_NAME_SYNTAX;
 				goto err;
 			}
-			if ((vname->name = strdup(bytes)) == NULL) {
+			if ((vname->name = strndup(bytes, len)) == NULL) {
 				*error = X509_V_ERR_OUT_OF_MEM;
 				goto err;
 			}
@@ -892,21 +906,34 @@ x509_constraints_extract_names(struct x509_constraints_names *names,
  */
 int
 x509_constraints_validate(GENERAL_NAME *constraint,
-    struct x509_constraints_name *name, int *error)
+    struct x509_constraints_name **out_name, int *out_error)
 {
 	uint8_t *bytes = NULL;
 	size_t len = 0;
+	struct x509_constraints_name *name;
+	int error = X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX;
 	int name_type;
+
+	if (out_name == NULL || *out_name != NULL)
+		return 0;
+
+	if (out_error != NULL)
+		*out_error = 0;
+
+	if ((name = x509_constraints_name_new()) == NULL) {
+		error = X509_V_ERR_OUT_OF_MEM;
+		goto err;
+	}
 
 	name_type = x509_constraints_general_to_bytes(constraint, &bytes, &len);
 	switch (name_type) {
 	case GEN_DIRNAME:
-		if (bytes == NULL || (name->der = malloc(len)) == NULL) {
-			*error = X509_V_ERR_OUT_OF_MEM;
-			return 0;
-		}
 		if (len == 0)
 			goto err; /* XXX The RFCs are delightfully vague */
+		if (bytes == NULL || (name->der = malloc(len)) == NULL) {
+			error = X509_V_ERR_OUT_OF_MEM;
+			goto err;
+		}
 		memcpy(name->der, bytes, len);
 		name->der_len = len;
 		name->type = GEN_DIRNAME;
@@ -914,24 +941,31 @@ x509_constraints_validate(GENERAL_NAME *constraint,
 	case GEN_DNS:
 		if (!x509_constraints_valid_domain_constraint(bytes, len))
 			goto err;
-		if ((name->name = strdup(bytes)) == NULL) {
-			*error = X509_V_ERR_OUT_OF_MEM;
-			return 0;
+		if ((name->name = strndup(bytes, len)) == NULL) {
+			error = X509_V_ERR_OUT_OF_MEM;
+			goto err;
 		}
 		name->type = GEN_DNS;
 		break;
 	case GEN_EMAIL:
-		if (memchr(bytes, '@', len) != NULL) {
+		if (len > 0 && memchr(bytes + 1, '@', len - 1) != NULL) {
 			if (!x509_constraints_parse_mailbox(bytes, len, name))
 				goto err;
-		} else {
-			if (!x509_constraints_valid_domain_constraint(bytes,
-			    len))
-				goto err;
-			if ((name->name = strdup(bytes)) == NULL) {
-				*error = X509_V_ERR_OUT_OF_MEM;
-				return 0;
-			}
+			break;
+		}
+		/*
+		 * Mail constraints of the form @domain.com are accepted by
+		 * OpenSSL and Microsoft.
+		 */
+		if (len > 0 && bytes[0] == '@') {
+			bytes++;
+			len--;
+		}
+		if (!x509_constraints_valid_domain_constraint(bytes, len))
+			goto err;
+		if ((name->name = strndup(bytes, len)) == NULL) {
+			error = X509_V_ERR_OUT_OF_MEM;
+			goto err;
 		}
 		name->type = GEN_EMAIL;
 		break;
@@ -949,15 +983,25 @@ x509_constraints_validate(GENERAL_NAME *constraint,
 	case GEN_URI:
 		if (!x509_constraints_valid_domain_constraint(bytes, len))
 			goto err;
-		name->name = strdup(bytes);
+		if ((name->name = strndup(bytes, len)) == NULL) {
+			error = X509_V_ERR_OUT_OF_MEM;
+			goto err;
+		}
 		name->type = GEN_URI;
 		break;
 	default:
 		break;
 	}
+
+	*out_name = name;
+
 	return 1;
+
  err:
-	*error = X509_V_ERR_UNSUPPORTED_CONSTRAINT_SYNTAX;
+	x509_constraints_name_free(name);
+	if (out_error != NULL)
+		*out_error = error;
+
 	return 0;
 }
 
@@ -967,7 +1011,7 @@ x509_constraints_extract_constraints(X509 *cert,
     struct x509_constraints_names *excluded,
     int *error)
 {
-	struct x509_constraints_name *vname;
+	struct x509_constraints_name *vname = NULL;
 	NAME_CONSTRAINTS *nc = cert->nc;
 	GENERAL_SUBTREE *subtree;
 	int i;
@@ -982,24 +1026,20 @@ x509_constraints_extract_constraints(X509 *cert,
 			*error = X509_V_ERR_SUBTREE_MINMAX;
 			return 0;
 		}
-		if ((vname = x509_constraints_name_new()) == NULL) {
-			*error = X509_V_ERR_OUT_OF_MEM;
+		if (!x509_constraints_validate(subtree->base, &vname, error))
 			return 0;
-		}
-		if (x509_constraints_validate(subtree->base, vname, error) ==
-		    0) {
-			x509_constraints_name_free(vname);
-			return 0;
-		}
 		if (vname->type == 0) {
 			x509_constraints_name_free(vname);
+			vname = NULL;
 			continue;
 		}
 		if (!x509_constraints_names_add(permitted, vname)) {
 			x509_constraints_name_free(vname);
+			vname = NULL;
 			*error = X509_V_ERR_OUT_OF_MEM;
 			return 0;
 		}
+		vname = NULL;
 	}
 
 	for (i = 0; i < sk_GENERAL_SUBTREE_num(nc->excludedSubtrees); i++) {
@@ -1008,24 +1048,20 @@ x509_constraints_extract_constraints(X509 *cert,
 			*error = X509_V_ERR_SUBTREE_MINMAX;
 			return 0;
 		}
-		if ((vname = x509_constraints_name_new()) == NULL) {
-			*error = X509_V_ERR_OUT_OF_MEM;
+		if (!x509_constraints_validate(subtree->base, &vname, error))
 			return 0;
-		}
-		if (x509_constraints_validate(subtree->base, vname, error) ==
-		    0) {
-			x509_constraints_name_free(vname);
-			return 0;
-		}
 		if (vname->type == 0) {
 			x509_constraints_name_free(vname);
+			vname = NULL;
 			continue;
 		}
 		if (!x509_constraints_names_add(excluded, vname)) {
 			x509_constraints_name_free(vname);
+			vname = NULL;
 			*error = X509_V_ERR_OUT_OF_MEM;
 			return 0;
 		}
+		vname = NULL;
 	}
 
 	return 1;

@@ -4,6 +4,7 @@ AM_CPPFLAGS += -DLIBRESSL_CRYPTO_INTERNAL
 
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/asn1
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/bio
+AM_CPPFLAGS += -I $(top_srcdir)/crypto/evp
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/modes
 AM_CPPFLAGS += -I $(top_srcdir)/crypto/x509
 AM_CPPFLAGS += -I $(top_srcdir)/ssl
@@ -119,6 +120,11 @@ bnaddsub_SOURCES = bnaddsub.c
 TESTS += bn_mod_exp2_mont
 check_PROGRAMS += bn_mod_exp2_mont
 bn_mod_exp2_mont_SOURCES = bn_mod_exp2_mont.c
+
+# bn_mod_sqrt
+TESTS += bn_mod_sqrt
+check_PROGRAMS += bn_mod_sqrt
+bn_mod_sqrt_SOURCES = bn_mod_sqrt.c
 
 # bn_rand_interval
 TESTS += bn_rand_interval
@@ -250,6 +256,11 @@ TESTS += evp_pkey_check
 check_PROGRAMS += evp_pkey_check
 evp_pkey_check_SOURCES = evp_pkey_check.c
 
+# evp_pkey_cleanup
+TESTS += evp_pkey_cleanup
+check_PROGRAMS += evp_pkey_cleanup
+evp_pkey_cleanup_SOURCES = evp_pkey_cleanup.c
+
 # evptest
 TESTS += evptest.sh
 check_PROGRAMS += evptest
@@ -342,6 +353,11 @@ md5test_SOURCES = md5test.c
 TESTS += mont
 check_PROGRAMS += mont
 mont_SOURCES = mont.c
+
+# objectstest
+TESTS += objectstest
+check_PROGRAMS += objectstest
+objectstest_SOURCES = objectstest.c
 
 # ocsp_test
 if ENABLE_EXTRATESTS
