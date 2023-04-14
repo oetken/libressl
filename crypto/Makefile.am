@@ -53,6 +53,10 @@ if !HAVE_ASPRINTF
 libcompat_la_SOURCES += compat/bsd-asprintf.c
 endif
 
+if !HAVE_INET_PTON
+libcompat_la_SOURCES += compat/inet_pton.c
+endif
+
 if !HAVE_REALLOCARRAY
 libcompat_la_SOURCES += compat/reallocarray.c
 endif
@@ -480,7 +484,6 @@ libcrypto_la_SOURCES += evp/m_gost2814789.c
 libcrypto_la_SOURCES += evp/m_gostr341194.c
 libcrypto_la_SOURCES += evp/m_md4.c
 libcrypto_la_SOURCES += evp/m_md5.c
-libcrypto_la_SOURCES += evp/m_mdc2.c
 libcrypto_la_SOURCES += evp/m_null.c
 libcrypto_la_SOURCES += evp/m_ripemd.c
 libcrypto_la_SOURCES += evp/m_sha.c
@@ -551,10 +554,6 @@ noinst_HEADERS += md4/md4_locl.h
 libcrypto_la_SOURCES += md5/md5_dgst.c
 libcrypto_la_SOURCES += md5/md5_one.c
 noinst_HEADERS += md5/md5_locl.h
-
-# mdc2
-libcrypto_la_SOURCES += mdc2/mdc2_one.c
-libcrypto_la_SOURCES += mdc2/mdc2dgst.c
 
 # modes
 libcrypto_la_SOURCES += modes/cbc128.c

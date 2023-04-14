@@ -13,6 +13,7 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
 VPATH = @srcdir@
 am__is_gnu_make = { \
   if test -z '$(MAKELEVEL)'; then \
@@ -90,30 +91,31 @@ host_triplet = @host@
 TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_1) \
 	asn1test$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
 	$(am__EXEEXT_2) bntest$(EXEEXT) bytestringtest$(EXEEXT) \
-	casttest$(EXEEXT) chachatest$(EXEEXT) cipherstest$(EXEEXT) \
-	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
-	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
-	ectest$(EXEEXT) enginetest$(EXEEXT) evptest.sh $(am__EXEEXT_3) \
-	exptest$(EXEEXT) gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
-	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
-	md4test$(EXEEXT) md5test$(EXEEXT) mdc2test$(EXEEXT) \
-	mont$(EXEEXT) optionstest$(EXEEXT) pbkdf2$(EXEEXT) \
-	$(am__EXEEXT_4) pkcs7test$(EXEEXT) poly1305test$(EXEEXT) \
-	pq_test.sh randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
-	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
-	sha512test$(EXEEXT) shatest$(EXEEXT) ssltest.sh testdsa.sh \
-	testenc.sh testrsa.sh timingsafe$(EXEEXT) utf8test$(EXEEXT)
+	casttest$(EXEEXT) chachatest$(EXEEXT) cipher_list$(EXEEXT) \
+	cipherstest$(EXEEXT) cts128test$(EXEEXT) destest$(EXEEXT) \
+	dhtest$(EXEEXT) dsatest$(EXEEXT) ecdhtest$(EXEEXT) \
+	ecdsatest$(EXEEXT) ectest$(EXEEXT) enginetest$(EXEEXT) \
+	evptest.sh $(am__EXEEXT_3) exptest$(EXEEXT) \
+	gcm128test$(EXEEXT) gost2814789t$(EXEEXT) hmactest$(EXEEXT) \
+	ideatest$(EXEEXT) igetest$(EXEEXT) md4test$(EXEEXT) \
+	md5test$(EXEEXT) mont$(EXEEXT) optionstest$(EXEEXT) \
+	pbkdf2$(EXEEXT) $(am__EXEEXT_4) pkcs7test$(EXEEXT) \
+	poly1305test$(EXEEXT) pq_test.sh randtest$(EXEEXT) \
+	rc2test$(EXEEXT) rc4test$(EXEEXT) rmdtest$(EXEEXT) \
+	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
+	shatest$(EXEEXT) ssltest.sh testdsa.sh testenc.sh testrsa.sh \
+	timingsafe$(EXEEXT) utf8test$(EXEEXT)
 check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	asn1test$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
 	$(am__EXEEXT_2) bntest$(EXEEXT) bytestringtest$(EXEEXT) \
-	casttest$(EXEEXT) chachatest$(EXEEXT) cipherstest$(EXEEXT) \
-	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
-	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
-	ectest$(EXEEXT) enginetest$(EXEEXT) evptest$(EXEEXT) \
-	$(am__EXEEXT_3) exptest$(EXEEXT) gcm128test$(EXEEXT) \
-	gost2814789t$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
-	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
-	mdc2test$(EXEEXT) mont$(EXEEXT) optionstest$(EXEEXT) \
+	casttest$(EXEEXT) chachatest$(EXEEXT) cipher_list$(EXEEXT) \
+	cipherstest$(EXEEXT) cts128test$(EXEEXT) destest$(EXEEXT) \
+	dhtest$(EXEEXT) dsatest$(EXEEXT) ecdhtest$(EXEEXT) \
+	ecdsatest$(EXEEXT) ectest$(EXEEXT) enginetest$(EXEEXT) \
+	evptest$(EXEEXT) $(am__EXEEXT_3) exptest$(EXEEXT) \
+	gcm128test$(EXEEXT) gost2814789t$(EXEEXT) hmactest$(EXEEXT) \
+	ideatest$(EXEEXT) igetest$(EXEEXT) md4test$(EXEEXT) \
+	md5test$(EXEEXT) mont$(EXEEXT) optionstest$(EXEEXT) \
 	pbkdf2$(EXEEXT) $(am__EXEEXT_4) pkcs7test$(EXEEXT) \
 	poly1305test$(EXEEXT) pq_test$(EXEEXT) randtest$(EXEEXT) \
 	rc2test$(EXEEXT) rc4test$(EXEEXT) rmdtest$(EXEEXT) \
@@ -153,7 +155,8 @@ am__aclocal_m4_deps = $(top_srcdir)/m4/check-hardening-options.m4 \
 	$(top_srcdir)/m4/lt~obsolete.m4 $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 	$(ACLOCAL_M4)
-DIST_COMMON = $(srcdir)/Makefile.am $(am__DIST_COMMON)
+DIST_COMMON = $(srcdir)/Makefile.am $(noinst_HEADERS) \
+	$(am__DIST_COMMON)
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
@@ -234,6 +237,12 @@ am_chachatest_OBJECTS = chachatest.$(OBJEXT)
 chachatest_OBJECTS = $(am_chachatest_OBJECTS)
 chachatest_LDADD = $(LDADD)
 chachatest_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(top_builddir)/ssl/libssl.la \
+	$(top_builddir)/crypto/libcrypto.la
+am_cipher_list_OBJECTS = cipher_list.$(OBJEXT)
+cipher_list_OBJECTS = $(am_cipher_list_OBJECTS)
+cipher_list_LDADD = $(LDADD)
+cipher_list_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_cipherstest_OBJECTS = cipherstest.$(OBJEXT)
@@ -352,12 +361,6 @@ am_md5test_OBJECTS = md5test.$(OBJEXT)
 md5test_OBJECTS = $(am_md5test_OBJECTS)
 md5test_LDADD = $(LDADD)
 md5test_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(top_builddir)/ssl/libssl.la \
-	$(top_builddir)/crypto/libcrypto.la
-am_mdc2test_OBJECTS = mdc2test.$(OBJEXT)
-mdc2test_OBJECTS = $(am_mdc2test_OBJECTS)
-mdc2test_LDADD = $(LDADD)
-mdc2test_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
 am_mont_OBJECTS = mont.$(OBJEXT)
@@ -509,15 +512,15 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(base64test_SOURCES) $(bftest_SOURCES) $(biotest_SOURCES) \
 	$(bntest_SOURCES) $(bytestringtest_SOURCES) \
 	$(casttest_SOURCES) $(chachatest_SOURCES) \
-	$(cipherstest_SOURCES) $(cts128test_SOURCES) \
-	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
-	$(ecdhtest_SOURCES) $(ecdsatest_SOURCES) $(ectest_SOURCES) \
-	$(enginetest_SOURCES) $(evptest_SOURCES) \
+	$(cipher_list_SOURCES) $(cipherstest_SOURCES) \
+	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
+	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
+	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(explicit_bzero_SOURCES) $(exptest_SOURCES) \
 	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
 	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
-	$(md4test_SOURCES) $(md5test_SOURCES) $(mdc2test_SOURCES) \
-	$(mont_SOURCES) $(optionstest_SOURCES) $(pbkdf2_SOURCES) \
+	$(md4test_SOURCES) $(md5test_SOURCES) $(mont_SOURCES) \
+	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
 	$(pidwraptest_SOURCES) $(pkcs7test_SOURCES) \
 	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
 	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
@@ -529,15 +532,16 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(base64test_SOURCES) $(bftest_SOURCES) \
 	$(am__biotest_SOURCES_DIST) $(bntest_SOURCES) \
 	$(bytestringtest_SOURCES) $(casttest_SOURCES) \
-	$(chachatest_SOURCES) $(cipherstest_SOURCES) \
-	$(cts128test_SOURCES) $(destest_SOURCES) $(dhtest_SOURCES) \
-	$(dsatest_SOURCES) $(ecdhtest_SOURCES) $(ecdsatest_SOURCES) \
-	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
+	$(chachatest_SOURCES) $(cipher_list_SOURCES) \
+	$(cipherstest_SOURCES) $(cts128test_SOURCES) \
+	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
+	$(ecdhtest_SOURCES) $(ecdsatest_SOURCES) $(ectest_SOURCES) \
+	$(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(am__explicit_bzero_SOURCES_DIST) $(exptest_SOURCES) \
 	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
 	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
-	$(md4test_SOURCES) $(md5test_SOURCES) $(mdc2test_SOURCES) \
-	$(mont_SOURCES) $(optionstest_SOURCES) $(pbkdf2_SOURCES) \
+	$(md4test_SOURCES) $(md5test_SOURCES) $(mont_SOURCES) \
+	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
 	$(am__pidwraptest_SOURCES_DIST) $(pkcs7test_SOURCES) \
 	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
 	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rmdtest_SOURCES) \
@@ -549,6 +553,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
+HEADERS = $(noinst_HEADERS)
 am__tagged_files = $(HEADERS) $(SOURCES) $(TAGS_FILES) $(LISP)
 # Read a list of newline-separated strings from the standard input,
 # and print each of them once, without duplicates.  Input order is
@@ -920,6 +925,8 @@ bntest_SOURCES = bntest.c
 bytestringtest_SOURCES = bytestringtest.c
 casttest_SOURCES = casttest.c
 chachatest_SOURCES = chachatest.c
+cipher_list_SOURCES = cipher_list.c
+noinst_HEADERS = tests.h
 cipherstest_SOURCES = cipherstest.c
 cts128test_SOURCES = cts128test.c
 destest_SOURCES = destest.c
@@ -941,7 +948,6 @@ ideatest_SOURCES = ideatest.c
 igetest_SOURCES = igetest.c
 md4test_SOURCES = md4test.c
 md5test_SOURCES = md5test.c
-mdc2test_SOURCES = mdc2test.c
 mont_SOURCES = mont.c
 optionstest_SOURCES = optionstest.c
 pbkdf2_SOURCES = pbkdf2.c
@@ -973,9 +979,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(top_srcdir)/Makefile.am.common $
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu tests/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign tests/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu tests/Makefile
+	  $(AUTOMAKE) --foreign tests/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -1047,6 +1053,10 @@ casttest$(EXEEXT): $(casttest_OBJECTS) $(casttest_DEPENDENCIES) $(EXTRA_casttest
 chachatest$(EXEEXT): $(chachatest_OBJECTS) $(chachatest_DEPENDENCIES) $(EXTRA_chachatest_DEPENDENCIES) 
 	@rm -f chachatest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(chachatest_OBJECTS) $(chachatest_LDADD) $(LIBS)
+
+cipher_list$(EXEEXT): $(cipher_list_OBJECTS) $(cipher_list_DEPENDENCIES) $(EXTRA_cipher_list_DEPENDENCIES) 
+	@rm -f cipher_list$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(cipher_list_OBJECTS) $(cipher_list_LDADD) $(LIBS)
 
 cipherstest$(EXEEXT): $(cipherstest_OBJECTS) $(cipherstest_DEPENDENCIES) $(EXTRA_cipherstest_DEPENDENCIES) 
 	@rm -f cipherstest$(EXEEXT)
@@ -1123,10 +1133,6 @@ md4test$(EXEEXT): $(md4test_OBJECTS) $(md4test_DEPENDENCIES) $(EXTRA_md4test_DEP
 md5test$(EXEEXT): $(md5test_OBJECTS) $(md5test_DEPENDENCIES) $(EXTRA_md5test_DEPENDENCIES) 
 	@rm -f md5test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(md5test_OBJECTS) $(md5test_LDADD) $(LIBS)
-
-mdc2test$(EXEEXT): $(mdc2test_OBJECTS) $(mdc2test_DEPENDENCIES) $(EXTRA_mdc2test_DEPENDENCIES) 
-	@rm -f mdc2test$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(mdc2test_OBJECTS) $(mdc2test_LDADD) $(LIBS)
 
 mont$(EXEEXT): $(mont_OBJECTS) $(mont_DEPENDENCIES) $(EXTRA_mont_DEPENDENCIES) 
 	@rm -f mont$(EXEEXT)
@@ -1217,6 +1223,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bytestringtest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/casttest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/chachatest.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cipher_list.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cipherstest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cts128test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/destest.Po@am__quote@
@@ -1236,7 +1243,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/igetest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md4test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md5test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mdc2test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/memmem.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mont.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/optionstest.Po@am__quote@
@@ -1557,6 +1563,13 @@ chachatest.log: chachatest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+cipher_list.log: cipher_list$(EXEEXT)
+	@p='cipher_list$(EXEEXT)'; \
+	b='cipher_list'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 cipherstest.log: cipherstest$(EXEEXT)
 	@p='cipherstest$(EXEEXT)'; \
 	b='cipherstest'; \
@@ -1686,13 +1699,6 @@ md4test.log: md4test$(EXEEXT)
 md5test.log: md5test$(EXEEXT)
 	@p='md5test$(EXEEXT)'; \
 	b='md5test'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-mdc2test.log: mdc2test$(EXEEXT)
-	@p='mdc2test$(EXEEXT)'; \
-	b='mdc2test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -1893,7 +1899,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS
 check: check-am
-all-am: Makefile
+all-am: Makefile $(HEADERS)
 installdirs:
 install: install-am
 install-exec: install-exec-am
