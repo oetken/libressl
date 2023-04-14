@@ -1,4 +1,4 @@
-/* $OpenBSD: d1_clnt.c,v 1.27 2014/07/10 08:51:14 tedu Exp $ */
+/* $OpenBSD: d1_clnt.c,v 1.30 2014/07/12 13:11:53 jsing Exp $ */
 /*
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.
@@ -395,9 +395,9 @@ dtls1_connect(SSL *s)
 				s->init_num = 0;
 				break;
 			}
-			/* Check if it is anon DH or PSK */
-			if (!(s->s3->tmp.new_cipher->algorithm_auth & SSL_aNULL) &&
-			    !(s->s3->tmp.new_cipher->algorithm_mkey & SSL_kPSK)) {
+			/* Check if it is anon DH. */
+			if (!(s->s3->tmp.new_cipher->algorithm_auth &
+			    SSL_aNULL)) {
 				ret = ssl3_get_server_certificate(s);
 				if (ret <= 0)
 					goto end;
@@ -879,6 +879,8 @@ dtls1_get_hello_verify(SSL *s)
 		return (1);
 	}
 
+	if (2 > n)
+		goto truncated;
 	data = (unsigned char *)s->init_msg;
 
 	if ((data[0] != (s->version >> 8)) || (data[1] != (s->version&0xff))) {
@@ -889,7 +891,11 @@ dtls1_get_hello_verify(SSL *s)
 	}
 	data += 2;
 
+	if (2 + 1 > n)
+		goto truncated;
 	cookie_len = *(data++);
+	if (2 + 1 + cookie_len > n)
+		goto truncated;
 	if (cookie_len > sizeof(s->d1->cookie)) {
 		al = SSL_AD_ILLEGAL_PARAMETER;
 		goto f_err;
@@ -901,6 +907,8 @@ dtls1_get_hello_verify(SSL *s)
 	s->d1->send_cookie = 1;
 	return 1;
 
+truncated:
+	al = SSL_AD_DECODE_ERROR;
 f_err:
 	ssl3_send_alert(s, SSL3_AL_FATAL, al);
 	return -1;
@@ -976,7 +984,7 @@ dtls1_send_client_key_exchange(SSL *s)
 			    s->session->master_key,
 			    tmp_buf, sizeof tmp_buf);
 			OPENSSL_cleanse(tmp_buf, sizeof tmp_buf);
-		} else if (alg_k & (SSL_kEDH|SSL_kDHr|SSL_kDHd)) {
+		} else if (alg_k & (SSL_kDHE|SSL_kDHr|SSL_kDHd)) {
 			DH *dh_srvr, *dh_clnt;
 
 			if (s->session->sess_cert->peer_dh_tmp != NULL)
@@ -1029,7 +1037,7 @@ dtls1_send_client_key_exchange(SSL *s)
 			DH_free(dh_clnt);
 
 			/* perhaps clean things up a bit EAY EAY EAY EAY*/
-		} else if (alg_k & (SSL_kEECDH|SSL_kECDHr|SSL_kECDHe)) {
+		} else if (alg_k & (SSL_kECDHE|SSL_kECDHr|SSL_kECDHe)) {
 			const EC_GROUP *srvr_group = NULL;
 			EC_KEY *tkey;
 			int ecdh_clnt_cert = 0;

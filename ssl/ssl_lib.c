@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_lib.c,v 1.73 2014/07/10 11:58:08 jsing Exp $ */
+/* $OpenBSD: ssl_lib.c,v 1.77 2014/07/12 19:45:53 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -355,8 +355,7 @@ err:
 	if (s != NULL) {
 		if (s->cert != NULL)
 			ssl_cert_free(s->cert);
-		if (s->ctx != NULL)
-			SSL_CTX_free(s->ctx); /* decrement reference count */
+		SSL_CTX_free(s->ctx); /* decrement reference count */
 		free(s);
 	}
 	SSLerr(SSL_F_SSL_NEW,
@@ -528,8 +527,7 @@ SSL_free(SSL *s)
 	/* Free up if allocated */
 
 	free(s->tlsext_hostname);
-	if (s->initial_ctx)
-		SSL_CTX_free(s->initial_ctx);
+	SSL_CTX_free(s->initial_ctx);
 	free(s->tlsext_ecpointformatlist);
 	free(s->tlsext_ellipticcurvelist);
 	if (s->tlsext_ocsp_exts)
@@ -545,8 +543,7 @@ SSL_free(SSL *s)
 	if (s->method != NULL)
 		s->method->ssl_free(s);
 
-	if (s->ctx)
-		SSL_CTX_free(s->ctx);
+	SSL_CTX_free(s->ctx);
 
 
 #ifndef OPENSSL_NO_NEXTPROTONEG
@@ -1831,8 +1828,7 @@ err:
 	SSLerr(SSL_F_SSL_CTX_NEW,
 	    ERR_R_MALLOC_FAILURE);
 err2:
-	if (ret != NULL)
-		SSL_CTX_free(ret);
+	SSL_CTX_free(ret);
 	return (NULL);
 }
 
@@ -1977,7 +1973,7 @@ ssl_set_cert_masks(CERT *c, const SSL_CIPHER *cipher)
 		mask_k|=SSL_kRSA;
 
 	if (dh_tmp)
-		mask_k|=SSL_kEDH;
+		mask_k|=SSL_kDHE;
 
 	if (dh_rsa)
 		mask_k|=SSL_kDHr;
@@ -2026,7 +2022,7 @@ ssl_set_cert_masks(CERT *c, const SSL_CIPHER *cipher)
 	}
 
 	if (have_ecdh_tmp) {
-		mask_k|=SSL_kEECDH;
+		mask_k|=SSL_kECDHE;
 	}
 
 
@@ -2112,10 +2108,10 @@ ssl_get_server_send_pkey(const SSL *s)
 
 	if (alg_k & (SSL_kECDHr|SSL_kECDHe)) {
 		/*
-		 * We don't need to look at SSL_kEECDH
+		 * We don't need to look at SSL_kECDHE
 		 * since no certificate is needed for
 		 * anon ECDH and for authenticated
-		 * EECDH, the check for the auth
+		 * ECDHE, the check for the auth
 		 * algorithm will set i correctly
 		 * NOTE: For ECDH-RSA, we need an ECC
 		 * not an RSA cert but for EECDH-RSA
@@ -2137,9 +2133,6 @@ ssl_get_server_send_pkey(const SSL *s)
 			i = SSL_PKEY_RSA_SIGN;
 		else
 			i = SSL_PKEY_RSA_ENC;
-	} else if (alg_a & SSL_aKRB5) {
-		/* VRS something else here? */
-		return (NULL);
 	} else if (alg_a & SSL_aGOST94) {
 		i = SSL_PKEY_GOST94;
 	} else if (alg_a & SSL_aGOST01) {
@@ -2417,18 +2410,30 @@ ssl_bad_method(int ver)
 }
 
 const char *
+ssl_version_string(int ver)
+{
+	switch (ver) {
+	case DTLS1_BAD_VER:
+		return (SSL_TXT_DTLS1_BAD);
+	case DTLS1_VERSION:
+		return (SSL_TXT_DTLS1);
+	case SSL3_VERSION:
+		return (SSL_TXT_SSLV3);
+	case TLS1_VERSION:
+		return (SSL_TXT_TLSV1);
+	case TLS1_1_VERSION:
+		return (SSL_TXT_TLSV1_1);
+	case TLS1_2_VERSION:
+		return (SSL_TXT_TLSV1_2);
+	default:
+		return ("unknown");
+	}
+}
+
+const char *
 SSL_get_version(const SSL *s)
 {
-	if (s->version == TLS1_2_VERSION)
-		return ("TLSv1.2");
-	else if (s->version == TLS1_1_VERSION)
-		return ("TLSv1.1");
-	else if (s->version == TLS1_VERSION)
-		return ("TLSv1");
-	else if (s->version == SSL3_VERSION)
-		return ("SSLv3");
-	else
-		return ("unknown");
+	return ssl_version_string(s->version);
 }
 
 SSL *
@@ -2728,8 +2733,7 @@ SSL_set_SSL_CTX(SSL *ssl, SSL_CTX* ctx)
 		ssl_cert_free(ssl->cert);
 	ssl->cert = ssl_cert_dup(ctx->cert);
 	CRYPTO_add(&ctx->references, 1, CRYPTO_LOCK_SSL_CTX);
-	if (ssl->ctx != NULL)
-		SSL_CTX_free(ssl->ctx); /* decrement reference count */
+	SSL_CTX_free(ssl->ctx); /* decrement reference count */
 	ssl->ctx = ctx;
 	return (ssl->ctx);
 }

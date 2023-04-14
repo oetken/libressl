@@ -1,4 +1,4 @@
-/* $OpenBSD: s_client.c,v 1.65 2014/07/10 09:30:53 jsing Exp $ */
+/* $OpenBSD: s_client.c,v 1.67 2014/07/12 17:54:31 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -402,9 +402,6 @@ s_client_main(int argc, char **argv)
 	c_msg = 0;
 	c_showcerts = 0;
 
-	if (!load_config(bio_err, NULL))
-		goto end;
-
 	if (((cbuf = malloc(BUFSIZZ)) == NULL) ||
 	    ((sbuf = malloc(BUFSIZZ)) == NULL) ||
 	    ((mbuf = malloc(BUFSIZZ + 1)) == NULL)) {	/* NUL byte */
@@ -658,9 +655,6 @@ bad:
 			sc_usage();
 		goto end;
 	}
-
-	OpenSSL_add_ssl_algorithms();
-	SSL_load_error_strings();
 
 #if !defined(OPENSSL_NO_TLSEXT) && !defined(OPENSSL_NO_NEXTPROTONEG)
 	next_proto.status = -1;

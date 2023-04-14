@@ -1,4 +1,4 @@
-/* $OpenBSD$ */
+/* $OpenBSD: engine.c,v 1.25 2014/07/12 17:54:31 jsing Exp $ */
 /* Written by Richard Levitte <richard@levitte.org> for the OpenSSL
  * project 2000.
  */
@@ -332,11 +332,6 @@ engine_main(int argc, char **argv)
 	int badops = 1;
 	BIO *bio_out = NULL;
 	const char *indent = "     ";
-
-	SSL_load_error_strings();
-
-	if (!load_config(bio_err, NULL))
-		goto end;
 
 	bio_out = BIO_new_fp(stdout, BIO_NOCLOSE);
 
