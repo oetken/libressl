@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_txt.c,v 1.23 2014/07/11 09:24:44 beck Exp $ */
+/* $OpenBSD: ssl_txt.c,v 1.25 2014/11/16 14:12:47 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -83,7 +83,9 @@
  */
 
 #include <stdio.h>
+
 #include <openssl/buffer.h>
+
 #include "ssl_locl.h"
 
 int
@@ -112,7 +114,7 @@ SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
 		goto err;
 	if (BIO_puts(bp, "SSL-Session:\n") <= 0)
 		goto err;
-	
+
 	s = ssl_version_string(x->ssl_version);
 	if (BIO_printf(bp, "    Protocol  : %s\n", s) <= 0)
 		goto err;

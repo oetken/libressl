@@ -1,4 +1,4 @@
-/* $OpenBSD: engine.c,v 1.27 2014/07/14 00:35:10 deraadt Exp $ */
+/* $OpenBSD: engine.c,v 1.2 2014/12/07 15:08:32 jsing Exp $ */
 /* Written by Richard Levitte <richard@levitte.org> for the OpenSSL
  * project 2000.
  */
@@ -96,8 +96,6 @@ identity(char *ptr)
 static int
 append_buf(char **buf, const char *s, int *size, int step)
 {
-	int l = strlen(s);
-
 	if (*buf == NULL) {
 		*size = step;
 		*buf = malloc(*size);
@@ -105,8 +103,6 @@ append_buf(char **buf, const char *s, int *size, int step)
 			return 0;
 		**buf = '\0';
 	}
-	if (**buf != '\0')
-		l += 2;		/* ", " */
 
 	if (strlen(*buf) + strlen(s) >= (unsigned int) *size) {
 		*size += step;
@@ -195,9 +191,6 @@ util_verbose(ENGINE * e, int verbose, BIO * bio_out, const char *indent)
 	if (!ENGINE_ctrl(e, ENGINE_CTRL_HAS_CTRL_FUNCTION, 0, NULL, NULL) ||
 	    ((num = ENGINE_ctrl(e, ENGINE_CTRL_GET_FIRST_CMD_TYPE,
 			0, NULL, NULL)) <= 0)) {
-#if 0
-		BIO_printf(bio_out, "%s<no control commands>\n", indent);
-#endif
 		return 1;
 	}
 	cmds = sk_OPENSSL_STRING_new_null();

@@ -1,4 +1,4 @@
-/* $OpenBSD: openssl.c,v 1.43 2014/07/18 18:01:26 deraadt Exp $ */
+/* $OpenBSD: openssl.c,v 1.1 2014/08/26 17:47:25 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -123,7 +123,6 @@
 #include <openssl/err.h>
 #include <openssl/lhash.h>
 #include <openssl/pem.h>
-#include <openssl/rand.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
 
@@ -233,7 +232,6 @@ openssl_shutdown(void)
 
 	CRYPTO_cleanup_all_ex_data();
 	ERR_remove_thread_state(NULL);
-	RAND_cleanup();
 	ERR_free_strings();
 }
 
@@ -254,6 +252,11 @@ main(int argc, char **argv)
 
 	arg.data = NULL;
 	arg.count = 0;
+
+	if (BIO_sock_init() != 1) {
+		fprintf(stderr, "BIO_sock_init failed\n");
+		exit(1);
+	}
 
 	bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
 	if (bio_err == NULL) {

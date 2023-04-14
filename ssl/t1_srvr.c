@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_srvr.c,v 1.13 2014/06/12 15:49:31 deraadt Exp $ */
+/* $OpenBSD: t1_srvr.c,v 1.17 2014/12/14 15:30:50 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,11 +57,12 @@
  */
 
 #include <stdio.h>
+
 #include "ssl_locl.h"
+
 #include <openssl/buffer.h>
-#include <openssl/rand.h>
-#include <openssl/objects.h>
 #include <openssl/evp.h>
+#include <openssl/objects.h>
 #include <openssl/x509.h>
 
 static const SSL_METHOD *tls1_get_server_method(int ver);
@@ -85,6 +86,8 @@ const SSL_METHOD TLSv1_server_method_data = {
 	.ssl_dispatch_alert = ssl3_dispatch_alert,
 	.ssl_ctrl = ssl3_ctrl,
 	.ssl_ctx_ctrl = ssl3_ctx_ctrl,
+	.get_cipher_by_char = ssl3_get_cipher_by_char,
+	.put_cipher_by_char = ssl3_put_cipher_by_char,
 	.ssl_pending = ssl3_pending,
 	.num_ciphers = ssl3_num_ciphers,
 	.get_cipher = ssl3_get_cipher,
@@ -115,6 +118,8 @@ const SSL_METHOD TLSv1_1_server_method_data = {
 	.ssl_dispatch_alert = ssl3_dispatch_alert,
 	.ssl_ctrl = ssl3_ctrl,
 	.ssl_ctx_ctrl = ssl3_ctx_ctrl,
+	.get_cipher_by_char = ssl3_get_cipher_by_char,
+	.put_cipher_by_char = ssl3_put_cipher_by_char,
 	.ssl_pending = ssl3_pending,
 	.num_ciphers = ssl3_num_ciphers,
 	.get_cipher = ssl3_get_cipher,
@@ -145,6 +150,8 @@ const SSL_METHOD TLSv1_2_server_method_data = {
 	.ssl_dispatch_alert = ssl3_dispatch_alert,
 	.ssl_ctrl = ssl3_ctrl,
 	.ssl_ctx_ctrl = ssl3_ctx_ctrl,
+	.get_cipher_by_char = ssl3_get_cipher_by_char,
+	.put_cipher_by_char = ssl3_put_cipher_by_char,
 	.ssl_pending = ssl3_pending,
 	.num_ciphers = ssl3_num_ciphers,
 	.get_cipher = ssl3_get_cipher,
@@ -157,21 +164,21 @@ const SSL_METHOD TLSv1_2_server_method_data = {
 };
 
 const SSL_METHOD *
-TLSv1_server_method(void) 
+TLSv1_server_method(void)
 {
-	return &TLSv1_server_method_data; 
+	return &TLSv1_server_method_data;
 }
 
 const SSL_METHOD *
-TLSv1_1_server_method(void) 
+TLSv1_1_server_method(void)
 {
-	return &TLSv1_1_server_method_data; 
+	return &TLSv1_1_server_method_data;
 }
 
 const SSL_METHOD *
-TLSv1_2_server_method(void) 
+TLSv1_2_server_method(void)
 {
-	return &TLSv1_2_server_method_data; 
+	return &TLSv1_2_server_method_data;
 }
 
 static const SSL_METHOD *

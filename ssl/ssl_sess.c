@@ -1,25 +1,25 @@
-/* $OpenBSD: ssl_sess.c,v 1.40 2014/08/11 01:06:22 jsing Exp $ */
+/* $OpenBSD: ssl_sess.c,v 1.43 2014/11/08 15:21:02 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
  * This package is an SSL implementation written
  * by Eric Young (eay@cryptsoft.com).
  * The implementation was written so as to conform with Netscapes SSL.
- * 
+ *
  * This library is free for commercial and non-commercial use as long as
  * the following conditions are aheared to.  The following conditions
  * apply to all code found in this distribution, be it the RC4, RSA,
  * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
  * included with this distribution is covered by the same copyright terms
  * except that the holder is Tim Hudson (tjh@cryptsoft.com).
- * 
+ *
  * Copyright remains Eric Young's, and as such any Copyright notices in
  * the code are not to be removed.
  * If this package is used in a product, Eric Young should be given attribution
  * as the author of the parts of the library used.
  * This can be in the form of a textual message at program startup or
  * in documentation (online or textual) provided with the package.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -34,10 +34,10 @@
  *     Eric Young (eay@cryptsoft.com)"
  *    The word 'cryptographic' can be left out if the rouines from the library
  *    being used are not cryptographic related :-).
- * 4. If you include any Windows specific code (or a derivative thereof) from 
+ * 4. If you include any Windows specific code (or a derivative thereof) from
  *    the apps directory (application code) you must include an acknowledgement:
  *    "This product includes software written by Tim Hudson (tjh@cryptsoft.com)"
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,7 +49,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
@@ -63,7 +63,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer. 
+ *    notice, this list of conditions and the following disclaimer.
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -136,7 +136,6 @@
  */
 
 #include <openssl/lhash.h>
-#include <openssl/rand.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
@@ -239,15 +238,14 @@ SSL_SESSION_get_compress_id(const SSL_SESSION *s)
 }
 
 /*
- * Even with SSLv2, we have 16 bytes (128 bits) of session ID space.
- * SSLv3/TLSv1 has 32 bytes (256 bits). As such, filling the ID with random
- * gunk repeatedly until we have no conflict is going to complete in one
- * iteration pretty much "most" of the time (btw: understatement). So, if it
- * takes us 10 iterations and we still can't avoid a conflict - well that's a
- * reasonable point to call it quits. Either the RAND code is broken or someone
- * is trying to open roughly very close to 2^128 (or 2^256) SSL sessions to our
- * server. How you might store that many sessions is perhaps a more interesting
- * question...
+ * SSLv3/TLSv1 has 32 bytes (256 bits) of session ID space. As such, filling
+ * the ID with random gunk repeatedly until we have no conflict is going to
+ * complete in one iteration pretty much "most" of the time (btw:
+ * understatement). So, if it takes us 10 iterations and we still can't avoid
+ * a conflict - well that's a reasonable point to call it quits. Either the
+ * arc4random code is broken or someone is trying to open roughly very close to
+ * 2^128 (or 2^256) SSL sessions to our server. How you might store that many
+ * sessions is perhaps a more interesting question...
  */
 
 #define MAX_SESS_ID_ATTEMPTS 10
@@ -258,8 +256,7 @@ def_generate_session_id(const SSL *ssl, unsigned char *id, unsigned int *id_len)
 	unsigned int retry = 0;
 
 	do {
-		if (RAND_pseudo_bytes(id, *id_len) <= 0)
-			return 0;
+		arc4random_buf(id, *id_len);
 	} while (SSL_has_matching_session_id(ssl, id, *id_len) &&
 	    (++retry < MAX_SESS_ID_ATTEMPTS));
 
