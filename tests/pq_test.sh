@@ -1,7 +1,3 @@
 #!/bin/sh
 set -e
-TEST=./pq_test
-if [ -e ./pq_test.exe ]; then
-	TEST=./pq_test.exe
-fi
-$TEST | diff -b $srcdir/pq_expected.txt -
+./pq_test | cmp $srcdir/pq_expected.txt /dev/stdin

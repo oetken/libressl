@@ -1,4 +1,4 @@
-/* $OpenBSD: a_mbstr.c,v 1.26 2022/12/26 07:18:51 jmc Exp $ */
+/* $OpenBSD: a_mbstr.c,v 1.18 2014/07/10 13:58:22 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -63,7 +63,7 @@
 #include <openssl/asn1.h>
 #include <openssl/err.h>
 
-#include "asn1_local.h"
+#include "asn1_locl.h"
 
 static int traverse_string(const unsigned char *p, int len, int inform,
     int (*rfunc)(unsigned long value, void *in), void *arg);
@@ -104,7 +104,7 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	int nchar;
 	int (*cpyfunc)(unsigned long, void *) = NULL;
 
-	if (len < 0)
+	if (len == -1)
 		len = strlen((const char *)in);
 	if (!mask)
 		mask = DIRSTRING_TYPE;
@@ -113,7 +113,8 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	switch (inform) {
 	case MBSTRING_BMP:
 		if (len & 1) {
-			ASN1error(ASN1_R_INVALID_BMPSTRING_LENGTH);
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ASN1_R_INVALID_BMPSTRING_LENGTH);
 			return -1;
 		}
 		nchar = len >> 1;
@@ -121,7 +122,8 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 
 	case MBSTRING_UNIV:
 		if (len & 3) {
-			ASN1error(ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ASN1_R_INVALID_UNIVERSALSTRING_LENGTH);
 			return -1;
 		}
 		nchar = len >> 2;
@@ -132,7 +134,8 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 		/* This counts the characters and does utf8 syntax checking */
 		ret = traverse_string(in, len, MBSTRING_UTF8, in_utf8, &nchar);
 		if (ret < 0) {
-			ASN1error(ASN1_R_INVALID_UTF8STRING);
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ASN1_R_INVALID_UTF8STRING);
 			return -1;
 		}
 		break;
@@ -142,25 +145,25 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 		break;
 
 	default:
-		ASN1error(ASN1_R_UNKNOWN_FORMAT);
+		ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY, ASN1_R_UNKNOWN_FORMAT);
 		return -1;
 	}
 
 	if ((minsize > 0) && (nchar < minsize)) {
-		ASN1error(ASN1_R_STRING_TOO_SHORT);
+		ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY, ASN1_R_STRING_TOO_SHORT);
 		ERR_asprintf_error_data("minsize=%ld", minsize);
 		return -1;
 	}
 
 	if ((maxsize > 0) && (nchar > maxsize)) {
-		ASN1error(ASN1_R_STRING_TOO_LONG);
+		ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY, ASN1_R_STRING_TOO_LONG);
 		ERR_asprintf_error_data("maxsize=%ld", maxsize);
 		return -1;
 	}
 
 	/* Now work out minimal type (if any) */
 	if (traverse_string(in, len, inform, type_str, &mask) < 0) {
-		ASN1error(ASN1_R_ILLEGAL_CHARACTERS);
+		ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY, ASN1_R_ILLEGAL_CHARACTERS);
 		return -1;
 	}
 
@@ -198,7 +201,8 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 		free_out = 1;
 		dest = ASN1_STRING_type_new(str_type);
 		if (!dest) {
-			ASN1error(ERR_R_MALLOC_FAILURE);
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ERR_R_MALLOC_FAILURE);
 			return -1;
 		}
 		*out = dest;
@@ -206,8 +210,9 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	/* If both the same type just copy across */
 	if (inform == outform) {
 		if (!ASN1_STRING_set(dest, in, len)) {
-			ASN1error(ERR_R_MALLOC_FAILURE);
-			goto err;
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ERR_R_MALLOC_FAILURE);
+			return -1;
 		}
 		return str_type;
 	}
@@ -232,28 +237,24 @@ ASN1_mbstring_ncopy(ASN1_STRING **out, const unsigned char *in, int len,
 	case MBSTRING_UTF8:
 		outlen = 0;
 		if (traverse_string(in, len, inform, out_utf8, &outlen) < 0) {
-			ASN1error(ASN1_R_ILLEGAL_CHARACTERS);
-			goto err;
+			ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY,
+			    ASN1_R_ILLEGAL_CHARACTERS);
+			return -1;
 		}
 		cpyfunc = cpy_utf8;
 		break;
 	}
 	if (!(p = malloc(outlen + 1))) {
-		ASN1error(ERR_R_MALLOC_FAILURE);
-		goto err;
+		if (free_out)
+			ASN1_STRING_free(dest);
+		ASN1err(ASN1_F_ASN1_MBSTRING_NCOPY, ERR_R_MALLOC_FAILURE);
+		return -1;
 	}
 	dest->length = outlen;
 	dest->data = p;
 	p[outlen] = 0;
 	traverse_string(in, len, inform, cpyfunc, &p);
 	return str_type;
-
- err:
-	if (free_out) {
-		ASN1_STRING_free(dest);
-		*out = NULL;
-	}
-	return -1;
 }
 
 /* This function traverses a string and passes the value of each character
@@ -268,35 +269,30 @@ traverse_string(const unsigned char *p, int len, int inform,
 	int ret;
 
 	while (len) {
-		switch (inform) {
-		case MBSTRING_ASC:
+		if (inform == MBSTRING_ASC) {
 			value = *p++;
 			len--;
-			break;
-		case MBSTRING_BMP:
+		} else if (inform == MBSTRING_BMP) {
 			value = *p++ << 8;
 			value |= *p++;
-			/* BMP is explicitly defined to not support surrogates */
+			/* BMP is explictly defined to not support surrogates */
 			if (UNICODE_IS_SURROGATE(value))
 				return -1;
 			len -= 2;
-			break;
-		case MBSTRING_UNIV:
-			value = (unsigned long)*p++ << 24;
-			value |= *p++ << 16;
+		} else if (inform == MBSTRING_UNIV) {
+			value = ((unsigned long)*p++) << 24;
+			value |= ((unsigned long)*p++) << 16;
 			value |= *p++ << 8;
 			value |= *p++;
 			if (value > UNICODE_MAX || UNICODE_IS_SURROGATE(value))
 				return -1;
 			len -= 4;
-			break;
-		default:
+		} else {
 			ret = UTF8_getc(p, len, &value);
 			if (ret < 0)
 				return -1;
 			len -= ret;
 			p += ret;
-			break;
 		}
 		if (rfunc) {
 			ret = rfunc(value, arg);
@@ -370,7 +366,7 @@ cpy_asc(unsigned long value, void *arg)
 
 	p = arg;
 	q = *p;
-	*q = value;
+	*q = (unsigned char) value;
 	(*p)++;
 	return 1;
 }
@@ -384,8 +380,8 @@ cpy_bmp(unsigned long value, void *arg)
 
 	p = arg;
 	q = *p;
-	*q++ = (value >> 8) & 0xff;
-	*q = value & 0xff;
+	*q++ = (unsigned char) ((value >> 8) & 0xff);
+	*q = (unsigned char) (value & 0xff);
 	*p += 2;
 	return 1;
 }
@@ -399,10 +395,10 @@ cpy_univ(unsigned long value, void *arg)
 
 	p = arg;
 	q = *p;
-	*q++ = (value >> 24) & 0xff;
-	*q++ = (value >> 16) & 0xff;
-	*q++ = (value >> 8) & 0xff;
-	*q = value & 0xff;
+	*q++ = (unsigned char) ((value >> 24) & 0xff);
+	*q++ = (unsigned char) ((value >> 16) & 0xff);
+	*q++ = (unsigned char) ((value >> 8) & 0xff);
+	*q = (unsigned char) (value & 0xff);
 	*p += 4;
 	return 1;
 }

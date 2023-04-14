@@ -1,4 +1,4 @@
-/* $OpenBSD: m_md4.c,v 1.19 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: m_md4.c,v 1.12 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -71,7 +71,7 @@
 #include <openssl/rsa.h>
 #endif
 
-#include "evp_local.h"
+#include "evp_locl.h"
 
 static int
 init(EVP_MD_CTX *ctx)
@@ -101,6 +101,13 @@ static const EVP_MD md4_md = {
 	.final = final,
 	.copy = NULL,
 	.cleanup = NULL,
+#ifndef OPENSSL_NO_RSA
+	.sign = (evp_sign_method *)RSA_sign,
+	.verify = (evp_verify_method *)RSA_verify,
+	.required_pkey_type = {
+		EVP_PKEY_RSA, EVP_PKEY_RSA2, 0, 0,
+	},
+#endif
 	.block_size = MD4_CBLOCK,
 	.ctx_size = sizeof(EVP_MD *) + sizeof(MD4_CTX),
 };

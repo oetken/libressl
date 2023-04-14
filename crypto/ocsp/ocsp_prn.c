@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_prn.c,v 1.9 2022/01/07 09:45:52 tb Exp $ */
+/* $OpenBSD$ */
 /* Written by Tom Titchener <Tom_Titchener@groove.net> for the OpenSSL
  * project. */
 
@@ -65,8 +65,6 @@
 #include <openssl/err.h>
 #include <openssl/ocsp.h>
 #include <openssl/pem.h>
-
-#include "ocsp_local.h"
 
 static int
 ocsp_certid_print(BIO *bp, OCSP_CERTID* a, int indent)
@@ -176,15 +174,11 @@ OCSP_REQUEST_print(BIO *bp, OCSP_REQUEST* o, unsigned long flags)
 	    inf->requestExtensions, flags, 4))
 		goto err;
 	if (sig) {
-		if (X509_signature_print(bp, sig->signatureAlgorithm,
-		    sig->signature) == 0)
-			goto err;
+		X509_signature_print(bp, sig->signatureAlgorithm,
+		    sig->signature);
 		for (i = 0; i < sk_X509_num(sig->certs); i++) {
-			if (X509_print(bp, sk_X509_value(sig->certs, i)) == 0)
-				goto err;
-			if (PEM_write_bio_X509(bp,
-			    sk_X509_value(sig->certs, i)) == 0)
-				goto err;
+			X509_print(bp, sk_X509_value(sig->certs, i));
+			PEM_write_bio_X509(bp, sk_X509_value(sig->certs, i));
 		}
 	}
 	return 1;

@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_oth.c,v 1.8 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: pem_oth.c,v 1.5 2014/06/12 15:49:30 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,6 +63,7 @@
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 
 /* Handle 'other' PEMs: not private keys */
@@ -81,7 +82,7 @@ PEM_ASN1_read_bio(d2i_of_void *d2i, const char *name, BIO *bp, void **x,
 	p = data;
 	ret = d2i(x, &p, len);
 	if (ret == NULL)
-		PEMerror(ERR_R_ASN1_LIB);
+		PEMerr(PEM_F_PEM_ASN1_READ_BIO, ERR_R_ASN1_LIB);
 	free(data);
 	return (ret);
 }

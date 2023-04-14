@@ -1,4 +1,4 @@
-/*	$OpenBSD: explicit_bzero.c,v 1.9 2022/02/10 08:39:32 tb Exp $	*/
+/*	$OpenBSD: explicit_bzero.c,v 1.5 2014/07/11 00:38:17 matthew Exp $	*/
 /*
  * Copyright (c) 2014 Google Inc.
  *
@@ -18,24 +18,12 @@
 #include <assert.h>
 #include <errno.h>
 #include <signal.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #define ASSERT_EQ(a, b) assert((a) == (b))
 #define ASSERT_NE(a, b) assert((a) != (b))
 #define ASSERT_GE(a, b) assert((a) >= (b))
-
-#if defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define __SANITIZE_ADDRESS__
-#endif
-#endif
-#ifdef __SANITIZE_ADDRESS__
-#define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
-#else
-#define ATTRIBUTE_NO_SANITIZE_ADDRESS
-#endif
 
 /* 128 bits of random data. */
 static const char secret[16] = {
@@ -48,31 +36,17 @@ enum {
 	SECRETBYTES = SECRETCOUNT * sizeof(secret)
 };
 
-/*
- * As of glibc 2.34, when _GNU_SOURCE is defined, SIGSTKSZ is no longer
- * constant on Linux. SIGSTKSZ is redefined to sysconf (_SC_SIGSTKSZ).
- */
-static char *altstack;
-#define ALTSTACK_SIZE (SIGSTKSZ + SECRETBYTES)
+static char altstack[SIGSTKSZ + SECRETBYTES];
 
 static void
 setup_stack(void)
 {
-	altstack = calloc(1, ALTSTACK_SIZE);
-	ASSERT_NE(NULL, altstack);
-
 	const stack_t sigstk = {
 		.ss_sp = altstack,
-		.ss_size = ALTSTACK_SIZE
+		.ss_size = sizeof(altstack),
 	};
 
 	ASSERT_EQ(0, sigaltstack(&sigstk, NULL));
-}
-
-static void
-cleanup_stack(void)
-{
-	free(altstack);
 }
 
 static void
@@ -149,37 +123,37 @@ count_secrets(const char *buf)
 	return (res);
 }
 
-ATTRIBUTE_NO_SANITIZE_ADDRESS static char *
-test_without_bzero(void)
+static char *
+test_without_bzero()
 {
 	char buf[SECRETBYTES];
 	assert_on_stack();
 	populate_secret(buf, sizeof(buf));
-	char *res = memmem(altstack, ALTSTACK_SIZE, buf, sizeof(buf));
+	char *res = memmem(altstack, sizeof(altstack), buf, sizeof(buf));
 	ASSERT_NE(NULL, res);
 	return (res);
 }
 
-ATTRIBUTE_NO_SANITIZE_ADDRESS static char *
-test_with_bzero(void)
+static char *
+test_with_bzero()
 {
 	char buf[SECRETBYTES];
 	assert_on_stack();
 	populate_secret(buf, sizeof(buf));
-	char *res = memmem(altstack, ALTSTACK_SIZE, buf, sizeof(buf));
+	char *res = memmem(altstack, sizeof(altstack), buf, sizeof(buf));
 	ASSERT_NE(NULL, res);
 	explicit_bzero(buf, sizeof(buf));
 	return (res);
 }
 
-static void
+static void 
 do_test_without_bzero(int signo)
 {
 	char *buf = test_without_bzero();
 	ASSERT_GE(count_secrets(buf), 1);
 }
 
-static void
+static void 
 do_test_with_bzero(int signo)
 {
 	char *buf = test_with_bzero();
@@ -187,7 +161,7 @@ do_test_with_bzero(int signo)
 }
 
 int
-main(void)
+main()
 {
 	setup_stack();
 
@@ -209,17 +183,15 @@ main(void)
 	 * on the stack.  This sanity checks that call_on_stack() and
 	 * populate_secret() work as intended.
 	 */
-	memset(altstack, 0, ALTSTACK_SIZE);
+	memset(altstack, 0, sizeof(altstack));
 	call_on_stack(do_test_without_bzero);
 
 	/*
 	 * Now test with a call to explicit_bzero() and check that we
 	 * *don't* find any instances of the secret data.
 	 */
-	memset(altstack, 0, ALTSTACK_SIZE);
+	memset(altstack, 0, sizeof(altstack));
 	call_on_stack(do_test_with_bzero);
-
-	cleanup_stack();
 
 	return (0);
 }

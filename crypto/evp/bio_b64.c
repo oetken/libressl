@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_b64.c,v 1.26 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: bio_b64.c,v 1.18 2014/07/11 08:44:48 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,9 +63,6 @@
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
-#include "bio_local.h"
-#include "evp_local.h"
-
 static int b64_write(BIO *h, const char *buf, int num);
 static int b64_read(BIO *h, char *buf, int size);
 static int b64_puts(BIO *h, const char *str);
@@ -73,7 +70,7 @@ static int b64_puts(BIO *h, const char *str);
 static long b64_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int b64_new(BIO *h);
 static int b64_free(BIO *data);
-static long b64_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
+static long b64_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
 #define B64_BLOCK_SIZE	1024
 #define B64_BLOCK_SIZE2	768
 #define B64_NONE	0
@@ -94,7 +91,7 @@ typedef struct b64_struct {
 	char tmp[B64_BLOCK_SIZE];
 } BIO_B64_CTX;
 
-static const BIO_METHOD methods_b64 = {
+static BIO_METHOD methods_b64 = {
 	.type = BIO_TYPE_BASE64,
 	.name = "base64 encoding",
 	.bwrite = b64_write,
@@ -106,7 +103,7 @@ static const BIO_METHOD methods_b64 = {
 	.callback_ctrl = b64_callback_ctrl
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_f_base64(void)
 {
 	return (&methods_b64);
@@ -296,7 +293,11 @@ b64_read(BIO *b, char *out, int outl)
 		if (BIO_get_flags(b) & BIO_FLAGS_BASE64_NO_NL) {
 			int z, jj;
 
+#if 0
+			jj = (i >> 2) << 2;
+#else
 			jj = i & ~3; /* process per 4 */
+#endif
 			z = EVP_DecodeBlock((unsigned char *)ctx->buf,
 			    (unsigned char *)ctx->tmp, jj);
 			if (jj > 2) {
@@ -433,10 +434,9 @@ b64_write(BIO *b, const char *in, int inl)
 				ret += n;
 			}
 		} else {
-			if (!EVP_EncodeUpdate(&(ctx->base64),
+			EVP_EncodeUpdate(&(ctx->base64),
 			    (unsigned char *)ctx->buf, &ctx->buf_len,
-			    (unsigned char *)in, n))
-				return ((ret == 0) ? -1 : ret);
+			    (unsigned char *)in, n);
 			OPENSSL_assert(ctx->buf_len <= (int)sizeof(ctx->buf));
 			OPENSSL_assert(ctx->buf_len >= ctx->buf_off);
 			ret += n;
@@ -550,7 +550,7 @@ again:
 }
 
 static long
-b64_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+b64_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	long ret = 1;
 

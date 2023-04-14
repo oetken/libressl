@@ -1,4 +1,4 @@
-/* $OpenBSD: i_ofb64.c,v 1.4 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <openssl/idea.h>
-#include "idea_local.h"
+#include "idea_lcl.h"
 
 /* The input and output encrypted as though 64bit ofb mode is being
  * used.  The extra state information to record how much of the
@@ -67,11 +67,11 @@ void idea_ofb64_encrypt(const unsigned char *in, unsigned char *out,
 			long length, IDEA_KEY_SCHEDULE *schedule,
 			unsigned char *ivec, int *num)
 	{
-	unsigned long v0,v1,t;
-	int n= *num;
-	long l=length;
+	register unsigned long v0,v1,t;
+	register int n= *num;
+	register long l=length;
 	unsigned char d[8];
-	char *dp;
+	register char *dp;
 	unsigned long ti[2];
 	unsigned char *iv;
 	int save=0;

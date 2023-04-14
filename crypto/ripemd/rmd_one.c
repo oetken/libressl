@@ -1,4 +1,4 @@
-/* $OpenBSD: rmd_one.c,v 1.9 2015/09/10 15:56:25 jsing Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -72,7 +72,7 @@ unsigned char *RIPEMD160(const unsigned char *d, size_t n,
 		return NULL;
 	RIPEMD160_Update(&c,d,n);
 	RIPEMD160_Final(md,&c);
-	explicit_bzero(&c,sizeof(c));
+	OPENSSL_cleanse(&c,sizeof(c)); /* security consideration */
 	return(md);
 	}
 

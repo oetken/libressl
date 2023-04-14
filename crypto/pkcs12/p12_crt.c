@@ -1,4 +1,4 @@
-/* $OpenBSD: p12_crt.c,v 1.23 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: p12_crt.c,v 1.14 2014/07/08 09:24:53 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -61,8 +61,6 @@
 #include <openssl/err.h>
 #include <openssl/pkcs12.h>
 
-#include "pkcs12_local.h"
-
 static int pkcs12_add_bag(STACK_OF(PKCS12_SAFEBAG) **pbags,
     PKCS12_SAFEBAG *bag);
 
@@ -82,7 +80,7 @@ copy_bag_attr(PKCS12_SAFEBAG *bag, EVP_PKEY *pkey, int nid)
 }
 
 PKCS12 *
-PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *cert,
+PKCS12_create(char *pass, char *name, EVP_PKEY *pkey, X509 *cert,
     STACK_OF(X509) *ca, int nid_key, int nid_cert, int iter, int mac_iter,
     int keytype)
 {
@@ -106,15 +104,15 @@ PKCS12_create(const char *pass, const char *name, EVP_PKEY *pkey, X509 *cert,
 		mac_iter = 1;
 
 	if (!pkey && !cert && !ca) {
-		PKCS12error(PKCS12_R_INVALID_NULL_ARGUMENT);
+		PKCS12err(PKCS12_F_PKCS12_CREATE,
+		    PKCS12_R_INVALID_NULL_ARGUMENT);
 		return NULL;
 	}
 
 	if (pkey && cert) {
 		if (!X509_check_private_key(cert, pkey))
 			return NULL;
-		if (!X509_digest(cert, EVP_sha1(), keyid, &keyidlen))
-			return NULL;
+		X509_digest(cert, EVP_sha1(), keyid, &keyidlen);
 	}
 
 	if (cert) {
@@ -184,7 +182,6 @@ err:
 		sk_PKCS12_SAFEBAG_pop_free(bags, PKCS12_SAFEBAG_free);
 	return NULL;
 }
-LCRYPTO_ALIAS(PKCS12_create);
 
 PKCS12_SAFEBAG *
 PKCS12_add_cert(STACK_OF(PKCS12_SAFEBAG) **pbags, X509 *cert)
@@ -222,11 +219,10 @@ err:
 
 	return NULL;
 }
-LCRYPTO_ALIAS(PKCS12_add_cert);
 
 PKCS12_SAFEBAG *
 PKCS12_add_key(STACK_OF(PKCS12_SAFEBAG) **pbags, EVP_PKEY *key, int key_usage,
-    int iter, int nid_key, const char *pass)
+    int iter, int nid_key, char *pass)
 {
 	PKCS12_SAFEBAG *bag = NULL;
 	PKCS8_PRIV_KEY_INFO *p8 = NULL;
@@ -237,15 +233,11 @@ PKCS12_add_key(STACK_OF(PKCS12_SAFEBAG) **pbags, EVP_PKEY *key, int key_usage,
 	if (key_usage && !PKCS8_add_keyusage(p8, key_usage))
 		goto err;
 	if (nid_key != -1) {
-		bag = PKCS12_SAFEBAG_create_pkcs8_encrypt(nid_key, pass, -1,
-		    NULL, 0, iter, p8);
+		bag = PKCS12_MAKE_SHKEYBAG(nid_key, pass, -1, NULL, 0,
+		    iter, p8);
 		PKCS8_PRIV_KEY_INFO_free(p8);
-		p8 = NULL;
-	} else {
-		bag = PKCS12_SAFEBAG_create0_p8inf(p8);
-		if (bag != NULL)
-			p8 = NULL;
-	}
+	} else
+		bag = PKCS12_MAKE_KEYBAG(p8);
 
 	if (!bag)
 		goto err;
@@ -258,16 +250,13 @@ PKCS12_add_key(STACK_OF(PKCS12_SAFEBAG) **pbags, EVP_PKEY *key, int key_usage,
 err:
 	if (bag)
 		PKCS12_SAFEBAG_free(bag);
-	if (p8)
-		PKCS8_PRIV_KEY_INFO_free(p8);
 
 	return NULL;
 }
-LCRYPTO_ALIAS(PKCS12_add_key);
 
 int
 PKCS12_add_safe(STACK_OF(PKCS7) **psafes, STACK_OF(PKCS12_SAFEBAG) *bags,
-    int nid_safe, int iter, const char *pass)
+    int nid_safe, int iter, char *pass)
 {
 	PKCS7 *p7 = NULL;
 	int free_safes = 0;
@@ -307,7 +296,6 @@ err:
 
 	return 0;
 }
-LCRYPTO_ALIAS(PKCS12_add_safe);
 
 static int
 pkcs12_add_bag(STACK_OF(PKCS12_SAFEBAG) **pbags, PKCS12_SAFEBAG *bag)
@@ -354,4 +342,3 @@ PKCS12_add_safes(STACK_OF(PKCS7) *safes, int nid_p7)
 
 	return p12;
 }
-LCRYPTO_ALIAS(PKCS12_add_safes);

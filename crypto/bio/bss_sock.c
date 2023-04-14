@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_sock.c,v 1.25 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bss_sock.c,v 1.22 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -65,8 +65,6 @@
 
 #include <openssl/bio.h>
 
-#include "bio_local.h"
-
 static int sock_write(BIO *h, const char *buf, int num);
 static int sock_read(BIO *h, char *buf, int size);
 static int sock_puts(BIO *h, const char *str);
@@ -75,7 +73,7 @@ static int sock_new(BIO *h);
 static int sock_free(BIO *data);
 int BIO_sock_should_retry(int s);
 
-static const BIO_METHOD methods_sockp = {
+static BIO_METHOD methods_sockp = {
 	.type = BIO_TYPE_SOCKET,
 	.name = "socket",
 	.bwrite = sock_write,
@@ -86,7 +84,7 @@ static const BIO_METHOD methods_sockp = {
 	.destroy = sock_free
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_socket(void)
 {
 	return (&methods_sockp);

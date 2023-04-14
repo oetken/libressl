@@ -1,4 +1,4 @@
-/*	$OpenBSD: timingsafe_memcmp.c,v 1.2 2015/08/31 02:53:57 guenther Exp $	*/
+/*	$OpenBSD$	*/
 /*
  * Copyright (c) 2014 Google Inc.
  *

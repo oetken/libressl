@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_lib.c,v 1.25 2022/01/22 00:31:23 inoguchi Exp $ */
+/* $OpenBSD: ocsp_lib.c,v 1.13 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Tom Titchener <Tom_Titchener@groove.net> for the OpenSSL
  * project. */
 
@@ -71,18 +71,17 @@
 #include <openssl/objects.h>
 #include <openssl/ocsp.h>
 #include <openssl/pem.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include "ocsp_local.h"
 
 /* Convert a certificate and its issuer to an OCSP_CERTID */
 
 OCSP_CERTID *
-OCSP_cert_to_id(const EVP_MD *dgst, const X509 *subject, const X509 *issuer)
+OCSP_cert_to_id(const EVP_MD *dgst, X509 *subject, X509 *issuer)
 {
 	X509_NAME *iname;
-	const ASN1_INTEGER *serial;
+	ASN1_INTEGER *serial;
 	ASN1_BIT_STRING *ikey;
 
 #ifndef OPENSSL_NO_SHA1
@@ -91,20 +90,18 @@ OCSP_cert_to_id(const EVP_MD *dgst, const X509 *subject, const X509 *issuer)
 #endif
 	if (subject) {
 		iname = X509_get_issuer_name(subject);
-		serial = X509_get0_serialNumber(subject);
+		serial = X509_get_serialNumber(subject);
 	} else {
 		iname = X509_get_subject_name(issuer);
 		serial = NULL;
 	}
-	if ((ikey = X509_get0_pubkey_bitstr(issuer)) == NULL)
-		return NULL;
-
+	ikey = X509_get0_pubkey_bitstr(issuer);
 	return OCSP_cert_id_new(dgst, iname, ikey, serial);
 }
 
 OCSP_CERTID *
-OCSP_cert_id_new(const EVP_MD *dgst, const X509_NAME *issuerName,
-    const ASN1_BIT_STRING *issuerKey, const ASN1_INTEGER *serialNumber)
+OCSP_cert_id_new(const EVP_MD *dgst, X509_NAME *issuerName,
+    ASN1_BIT_STRING* issuerKey, ASN1_INTEGER *serialNumber)
 {
 	int nid;
 	unsigned int i;
@@ -119,7 +116,7 @@ OCSP_cert_id_new(const EVP_MD *dgst, const X509_NAME *issuerName,
 	if (alg->algorithm != NULL)
 		ASN1_OBJECT_free(alg->algorithm);
 	if ((nid = EVP_MD_type(dgst)) == NID_undef) {
-		OCSPerror(OCSP_R_UNKNOWN_NID);
+		OCSPerr(OCSP_F_OCSP_CERT_ID_NEW, OCSP_R_UNKNOWN_NID);
 		goto err;
 	}
 	if (!(alg->algorithm = OBJ_nid2obj(nid)))
@@ -148,7 +145,7 @@ OCSP_cert_id_new(const EVP_MD *dgst, const X509_NAME *issuerName,
 	return cid;
 
 digerr:
-	OCSPerror(OCSP_R_DIGEST_ERR);
+	OCSPerr(OCSP_F_OCSP_CERT_ID_NEW, OCSP_R_DIGEST_ERR);
 err:
 	if (cid)
 		OCSP_CERTID_free(cid);
@@ -184,60 +181,98 @@ OCSP_id_cmp(OCSP_CERTID *a, OCSP_CERTID *b)
  * it is SSL.
  */
 int
-OCSP_parse_url(const char *url, char **phost, char **pport, char **ppath,
-    int *pssl)
+OCSP_parse_url(char *url, char **phost, char **pport, char **ppath, int *pssl)
 {
-	char *host, *path, *port, *tmp;
+	char *p, *buf;
+	char *host, *port;
 
-	*phost = *pport = *ppath = NULL;
-	*pssl = 0;
+	*phost = NULL;
+	*pport = NULL;
+	*ppath = NULL;
 
-	if (strncmp(url, "https://", 8) == 0) {
+	/* dup the buffer since we are going to mess with it */
+	buf = BUF_strdup(url);
+	if (!buf)
+		goto mem_err;
+
+	/* Check for initial colon */
+	p = strchr(buf, ':');
+	if (!p)
+		goto parse_err;
+
+	*(p++) = '\0';
+
+	if (!strcmp(buf, "http")) {
+		*pssl = 0;
+		port = "80";
+	} else if (!strcmp(buf, "https")) {
 		*pssl = 1;
-		host = strdup(url + 8);
-	} else if (strncmp(url, "http://", 7) == 0)
-		host = strdup(url + 7);
-	else {
-		OCSPerror(OCSP_R_ERROR_PARSING_URL);
-		return 0;
-	}
-	if (host == NULL) {
-		OCSPerror(ERR_R_MALLOC_FAILURE);
-		return 0;
-	}
-
-	if ((tmp = strchr(host, '/')) != NULL) {
-		path = strdup(tmp);
-		*tmp = '\0';
+		port = "443";
 	} else
-		path = strdup("/");
+		goto parse_err;
 
-	if ((tmp = strchr(host, ':')) != NULL ) {
-		port = strdup(tmp + 1);
-		*tmp = '\0';
+	/* Check for double slash */
+	if ((p[0] != '/') || (p[1] != '/'))
+		goto parse_err;
+
+	p += 2;
+
+	host = p;
+
+	/* Check for trailing part of path */
+	p = strchr(p, '/');
+	if (!p)
+		*ppath = BUF_strdup("/");
+	else {
+		*ppath = BUF_strdup(p);
+		/* Set start of path to 0 so hostname is valid */
+		*p = '\0';
+	}
+
+	if (!*ppath)
+		goto mem_err;
+
+	/* Look for optional ':' for port number */
+	if ((p = strchr(host, ':'))) {
+		*p = 0;
+		port = p + 1;
 	} else {
+		/* Not found: set default port */
 		if (*pssl)
-			port = strdup("443");
+			port = "443";
 		else
-			port = strdup("80");
+			port = "80";
 	}
 
-	if (path == NULL || port == NULL) {
-		free(host);
-		free(path);
-		free(port);
-		OCSPerror(ERR_R_MALLOC_FAILURE);
-		return 0;
-	}
+	*pport = BUF_strdup(port);
+	if (!*pport)
+		goto mem_err;
 
-	*phost = host;
-	*ppath = path;
-	*pport = port;
+	*phost = BUF_strdup(host);
+
+	if (!*phost)
+		goto mem_err;
+
+	free(buf);
+
 	return 1;
+
+mem_err:
+	OCSPerr(OCSP_F_OCSP_PARSE_URL, ERR_R_MALLOC_FAILURE);
+	goto err;
+
+parse_err:
+	OCSPerr(OCSP_F_OCSP_PARSE_URL, OCSP_R_ERROR_PARSING_URL);
+
+err:
+	free(buf);
+	free(*ppath);
+	free(*pport);
+	free(*phost);
+	*phost = NULL;
+	*pport = NULL;
+	*ppath = NULL;
+	return 0;
 }
 
-OCSP_CERTID *
-OCSP_CERTID_dup(OCSP_CERTID *x)
-{
-	return ASN1_item_dup(&OCSP_CERTID_it, x);
-}
+IMPLEMENT_ASN1_DUP_FUNCTION(OCSP_CERTID)

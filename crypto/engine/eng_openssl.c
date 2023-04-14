@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_openssl.c,v 1.16 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: eng_openssl.c,v 1.8 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Geoff Thorpe (geoff@geoffthorpe.net) for the OpenSSL
  * project 2000.
  */
@@ -69,7 +69,6 @@
 #include <openssl/crypto.h>
 #include <openssl/dso.h>
 #include <openssl/engine.h>
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 #include <openssl/rand.h>
@@ -83,8 +82,6 @@
 #ifndef OPENSSL_NO_RSA
 #include <openssl/rsa.h>
 #endif
-
-#include "evp_local.h"
 
 /* This testing gunk is implemented (and explained) lower down. It also assumes
  * the application explicitly calls "ENGINE_load_openssl()" because this is no
@@ -107,7 +104,7 @@
 #undef TEST_ENG_OPENSSL_RC4_P_INIT
 #undef TEST_ENG_OPENSSL_RC4_P_CIPHER
 #endif
-#if defined(OPENSSL_NO_SHA) || defined(OPENSSL_NO_SHA1)
+#if defined(OPENSSL_NO_SHA) || defined(OPENSSL_NO_SHA0) || defined(OPENSSL_NO_SHA1)
 #undef TEST_ENG_OPENSSL_SHA
 #undef TEST_ENG_OPENSSL_SHA_OTHERS
 #undef TEST_ENG_OPENSSL_SHA_P_INIT
@@ -179,7 +176,7 @@ engine_openssl(void)
 {
 	ENGINE *ret = ENGINE_new();
 
-	if (ret == NULL)
+	if (!ret)
 		return NULL;
 	if (!bind_helper(ret)) {
 		ENGINE_free(ret);
@@ -193,9 +190,9 @@ ENGINE_load_openssl(void)
 {
 	ENGINE *toadd = engine_openssl();
 
-	if (toadd == NULL)
+	if (!toadd)
 		return;
-	(void) ENGINE_add(toadd);
+	ENGINE_add(toadd);
 	/* If the "add" worked, it gets a structural reference. So either way,
 	 * we release our just-created reference. */
 	ENGINE_free(toadd);
@@ -351,17 +348,18 @@ test_sha1_final(EVP_MD_CTX *ctx, unsigned char *md)
 }
 
 static const EVP_MD test_sha_md = {
-	.type = NID_sha1,
-	.pkey_type = NID_sha1WithRSAEncryption,
-	.md_size = SHA_DIGEST_LENGTH,
-	.flags = 0,
-	.init = test_sha1_init,
-	.update = test_sha1_update,
-	.final = test_sha1_final,
-	.copy = NULL,
-	.cleanup = NULL,
-	.block_size = SHA_CBLOCK,
-	.ctx_size = sizeof(EVP_MD *) + sizeof(SHA_CTX),
+	NID_sha1,
+	NID_sha1WithRSAEncryption,
+	SHA_DIGEST_LENGTH,
+	0,
+	test_sha1_init,
+	test_sha1_update,
+	test_sha1_final,
+	NULL,
+	NULL,
+	EVP_PKEY_RSA_method,
+	SHA_CBLOCK,
+	sizeof(EVP_MD *) + sizeof(SHA_CTX),
 };
 
 static int

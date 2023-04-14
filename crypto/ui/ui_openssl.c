@@ -1,4 +1,4 @@
-/* $OpenBSD: ui_openssl.c,v 1.28 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: ui_openssl.c,v 1.21 2014/06/12 15:49:31 deraadt Exp $ */
 /* Written by Richard Levitte (richard@levitte.org) and others
  * for the OpenSSL project 2001.
  */
@@ -125,7 +125,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "ui_local.h"
+#include "ui_locl.h"
 
 #ifndef NX509_SIG
 #define NX509_SIG 32
@@ -134,7 +134,7 @@
 /* Define globals.  They are protected by a lock */
 static struct sigaction savsig[NX509_SIG];
 
-static struct termios tty_orig;
+static struct termios tty_orig, tty_new;
 static FILE *tty_in, *tty_out;
 static int is_a_tty;
 
@@ -167,7 +167,6 @@ UI_OpenSSL(void)
 {
 	return &ui_openssl;
 }
-LCRYPTO_ALIAS(UI_OpenSSL);
 
 /* The following function makes sure that info and error strings are printed
    before any prompt. */
@@ -268,7 +267,7 @@ read_string_inner(UI *ui, UI_STRING *uis, int echo, int strip_nl)
 		goto error;
 	if (ferror(tty_in))
 		goto error;
-	if ((p = strchr(result, '\n')) != NULL) {
+	if ((p = (char *) strchr(result, '\n')) != NULL) {
 		if (strip_nl)
 			*p = '\0';
 	} else if (!read_till_nl(tty_in))
@@ -287,7 +286,7 @@ error:
 	if (ps >= 1)
 		popsig();
 
-	explicit_bzero(result, BUFSIZ);
+	OPENSSL_cleanse(result, BUFSIZ);
 	return ok;
 }
 
@@ -326,8 +325,7 @@ open_console(UI *ui)
 static int
 noecho_console(UI *ui)
 {
-	struct termios tty_new = tty_orig;
-
+	memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
 	tty_new.c_lflag &= ~ECHO;
 	if (is_a_tty && (tcsetattr(fileno(tty_in), TCSANOW, &tty_new) == -1))
 		return 0;
@@ -337,7 +335,9 @@ noecho_console(UI *ui)
 static int
 echo_console(UI *ui)
 {
-	if (is_a_tty && (tcsetattr(fileno(tty_in), TCSANOW, &tty_orig) == -1))
+	memcpy(&(tty_new), &(tty_orig), sizeof(tty_orig));
+	tty_new.c_lflag |= ECHO;
+	if (is_a_tty && (tcsetattr(fileno(tty_in), TCSANOW, &tty_new) == -1))
 		return 0;
 	return 1;
 }

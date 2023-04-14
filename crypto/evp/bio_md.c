@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_md.c,v 1.19 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: bio_md.c,v 1.13 2014/06/12 15:49:29 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,9 +62,6 @@
 #include <openssl/buffer.h>
 #include <openssl/evp.h>
 
-#include "bio_local.h"
-#include "evp_local.h"
-
 /* BIO_put and BIO_get both add to the digest,
  * BIO_gets returns the digest */
 
@@ -75,9 +72,9 @@ static int md_gets(BIO *h, char *str, int size);
 static long md_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int md_new(BIO *h);
 static int md_free(BIO *data);
-static long md_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
+static long md_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
 
-static const BIO_METHOD methods_md = {
+static BIO_METHOD methods_md = {
 	.type = BIO_TYPE_MD,
 	.name = "message digest",
 	.bwrite = md_write,
@@ -89,7 +86,7 @@ static const BIO_METHOD methods_md = {
 	.callback_ctrl = md_callback_ctrl
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_f_md(void)
 {
 	return (&methods_md);
@@ -241,7 +238,7 @@ md_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 static long
-md_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+md_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	long ret = 1;
 

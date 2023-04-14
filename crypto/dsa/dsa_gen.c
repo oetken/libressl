@@ -1,25 +1,25 @@
-/* $OpenBSD: dsa_gen.c,v 1.27 2023/01/11 04:39:42 jsing Exp $ */
+/* $OpenBSD: dsa_gen.c,v 1.14 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
  * This package is an SSL implementation written
  * by Eric Young (eay@cryptsoft.com).
  * The implementation was written so as to conform with Netscapes SSL.
- *
+ * 
  * This library is free for commercial and non-commercial use as long as
  * the following conditions are aheared to.  The following conditions
  * apply to all code found in this distribution, be it the RC4, RSA,
  * lhash, DES, etc., code; not just the SSL code.  The SSL documentation
  * included with this distribution is covered by the same copyright terms
  * except that the holder is Tim Hudson (tjh@cryptsoft.com).
- *
+ * 
  * Copyright remains Eric Young's, and as such any Copyright notices in
  * the code are not to be removed.
  * If this package is used in a product, Eric Young should be given attribution
  * as the author of the parts of the library used.
  * This can be in the form of a textual message at program startup or
  * in documentation (online or textual) provided with the package.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -34,10 +34,10 @@
  *     Eric Young (eay@cryptsoft.com)"
  *    The word 'cryptographic' can be left out if the rouines from the library
  *    being used are not cryptographic related :-).
- * 4. If you include any Windows specific code (or a derivative thereof) from
+ * 4. If you include any Windows specific code (or a derivative thereof) from 
  *    the apps directory (application code) you must include an acknowledgement:
  *    "This product includes software written by Tim Hudson (tjh@cryptsoft.com)"
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY ERIC YOUNG ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -49,7 +49,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- *
+ * 
  * The licence and distribution terms for any publically available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution licence
@@ -61,15 +61,14 @@
 #ifndef OPENSSL_NO_SHA
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/bn.h>
 #include <openssl/evp.h>
+#include <openssl/rand.h>
 #include <openssl/sha.h>
 
-#include "bn_local.h"
-#include "dsa_local.h"
+#include "dsa_locl.h"
 
 int
 DSA_generate_parameters_ex(DSA *ret, int bits, const unsigned char *seed_in,
@@ -127,45 +126,36 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 
 	bits = (bits + 63) / 64 * 64;
 
-	if (seed_len < (size_t)qsize) {
+	/*
+	 * NB: seed_len == 0 is special case: copy generated seed to
+ 	 * seed_in if it is not NULL.
+ 	 */
+	if (seed_len && seed_len < (size_t)qsize)
 		seed_in = NULL;		/* seed buffer too small -- ignore */
-		seed_len = 0;
-	}
 	/*
 	 * App. 2.2 of FIPS PUB 186 allows larger SEED,
 	 * but our internal buffers are restricted to 160 bits
 	 */
-	if (seed_len > (size_t)qsize)
+	if (seed_len > (size_t)qsize) 
 		seed_len = qsize;
 	if (seed_in != NULL)
 		memcpy(seed, seed_in, seed_len);
-	else if (seed_len != 0)
+
+	if ((ctx=BN_CTX_new()) == NULL)
 		goto err;
 
-	if ((mont = BN_MONT_CTX_new()) == NULL)
-		goto err;
-
-	if ((ctx = BN_CTX_new()) == NULL)
+	if ((mont=BN_MONT_CTX_new()) == NULL)
 		goto err;
 
 	BN_CTX_start(ctx);
-
-	if ((r0 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((g = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((W = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((q = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((X = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((c = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((p = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((test = BN_CTX_get(ctx)) == NULL)
-		goto err;
+	r0 = BN_CTX_get(ctx);
+	g = BN_CTX_get(ctx);
+	W = BN_CTX_get(ctx);
+	q = BN_CTX_get(ctx);
+	X = BN_CTX_get(ctx);
+	c = BN_CTX_get(ctx);
+	p = BN_CTX_get(ctx);
+	test = BN_CTX_get(ctx);
 
 	if (!BN_lshift(test, BN_value_one(), bits - 1))
 		goto err;
@@ -178,8 +168,8 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 			if (!BN_GENCB_call(cb, 0, m++))
 				goto err;
 
-			if (seed_len == 0) {
-				arc4random_buf(seed, qsize);
+			if (!seed_len) {
+				RAND_pseudo_bytes(seed, qsize);
 				seed_is_random = 1;
 			} else {
 				seed_is_random = 0;
@@ -272,7 +262,7 @@ dsa_builtin_paramgen(DSA *ret, size_t bits, size_t qbits, const EVP_MD *evpmd,
 			/* step 9 */
 			if (!BN_lshift1(r0, q))
 				goto err;
-			if (!BN_mod_ct(c, X, r0, ctx))
+			if (!BN_mod(c, X, r0, ctx))
 				goto err;
 			if (!BN_sub(r0, c, BN_value_one()))
 				goto err;
@@ -307,7 +297,7 @@ end:
 	/* Set r0=(p-1)/q */
 	if (!BN_sub(test, p, BN_value_one()))
 		goto err;
-	if (!BN_div_ct(r0, NULL, test, q, ctx))
+	if (!BN_div(r0, NULL, test, q, ctx))
 		goto err;
 
 	if (!BN_set_word(test, h))
@@ -317,7 +307,7 @@ end:
 
 	for (;;) {
 		/* g=test^r0%p */
-		if (!BN_mod_exp_mont_ct(g, test, r0, p, ctx, mont))
+		if (!BN_mod_exp_mont(g, test, r0, p, ctx, mont))
 			goto err;
 		if (!BN_is_one(g))
 			break;
@@ -332,9 +322,12 @@ end:
 	ok = 1;
 err:
 	if (ok) {
-		BN_free(ret->p);
-		BN_free(ret->q);
-		BN_free(ret->g);
+		if (ret->p)
+			BN_free(ret->p);
+		if (ret->q)
+			BN_free(ret->q);
+		if (ret->g)
+			BN_free(ret->g);
 		ret->p = BN_dup(p);
 		ret->q = BN_dup(q);
 		ret->g = BN_dup(g);
@@ -346,13 +339,15 @@ err:
 			*counter_ret = counter;
 		if (h_ret != NULL)
 			*h_ret = h;
-		if (seed_out != NULL)
+		if (seed_out)
 			memcpy(seed_out, seed, qsize);
 	}
-	BN_CTX_end(ctx);
-	BN_CTX_free(ctx);
-	BN_MONT_CTX_free(mont);
-
+	if (ctx) {
+		BN_CTX_end(ctx);
+		BN_CTX_free(ctx);
+	}
+	if (mont != NULL)
+		BN_MONT_CTX_free(mont);
 	return ok;
 }
 #endif

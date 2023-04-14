@@ -1,6 +1,6 @@
-/* $OpenBSD: chacha.h,v 1.8 2019/01/22 00:59:21 dlg Exp $ */
+/* $OpenBSD: chacha.h,v 1.4 2014/06/12 15:49:28 deraadt Exp $ */
 /*
- * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
+ * Copyright (c) Joel Sing <jsing@openbsd.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -25,7 +25,6 @@
 #endif
 
 #include <stddef.h>
-#include <stdint.h>
 
 #ifdef  __cplusplus
 extern "C" {
@@ -45,11 +44,7 @@ void ChaCha(ChaCha_ctx *ctx, unsigned char *out, const unsigned char *in,
     size_t len);
 
 void CRYPTO_chacha_20(unsigned char *out, const unsigned char *in, size_t len,
-    const unsigned char key[32], const unsigned char iv[8], uint64_t counter);
-void CRYPTO_xchacha_20(unsigned char *out, const unsigned char *in, size_t len,
-    const unsigned char key[32], const unsigned char iv[24]);
-void CRYPTO_hchacha_20(unsigned char out[32],
-    const unsigned char key[32], const unsigned char iv[16]);
+    const unsigned char key[32], const unsigned char iv[8], size_t counter);
 
 #ifdef  __cplusplus
 }

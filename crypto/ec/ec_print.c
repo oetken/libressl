@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_print.c,v 1.11 2023/03/08 05:45:31 jsing Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
  *
@@ -54,11 +54,11 @@
  */
 
 #include <openssl/crypto.h>
-#include "ec_local.h"
+#include "ec_lcl.h"
 
 BIGNUM *
-EC_POINT_point2bn(const EC_GROUP *group, const EC_POINT *point,
-    point_conversion_form_t form, BIGNUM *ret, BN_CTX *ctx)
+EC_POINT_point2bn(const EC_GROUP * group, const EC_POINT * point,
+    point_conversion_form_t form, BIGNUM * ret, BN_CTX * ctx)
 {
 	size_t buf_len = 0;
 	unsigned char *buf;
@@ -83,8 +83,8 @@ EC_POINT_point2bn(const EC_GROUP *group, const EC_POINT *point,
 }
 
 EC_POINT *
-EC_POINT_bn2point(const EC_GROUP *group,
-    const BIGNUM *bn, EC_POINT *point, BN_CTX *ctx)
+EC_POINT_bn2point(const EC_GROUP * group,
+    const BIGNUM * bn, EC_POINT * point, BN_CTX * ctx)
 {
 	size_t buf_len = 0;
 	unsigned char *buf;
@@ -110,7 +110,7 @@ EC_POINT_bn2point(const EC_GROUP *group,
 
 	if (!EC_POINT_oct2point(group, ret, buf, buf_len, ctx)) {
 		if (point == NULL)
-			EC_POINT_free(ret);
+			EC_POINT_clear_free(ret);
 		free(buf);
 		return NULL;
 	}
@@ -122,8 +122,8 @@ static const char *HEX_DIGITS = "0123456789ABCDEF";
 
 /* the return value must be freed (using free()) */
 char *
-EC_POINT_point2hex(const EC_GROUP *group, const EC_POINT *point,
-    point_conversion_form_t form, BN_CTX *ctx)
+EC_POINT_point2hex(const EC_GROUP * group, const EC_POINT * point,
+    point_conversion_form_t form, BN_CTX * ctx)
 {
 	char *ret, *p;
 	size_t buf_len = 0, i;
@@ -131,7 +131,7 @@ EC_POINT_point2hex(const EC_GROUP *group, const EC_POINT *point,
 
 	buf_len = EC_POINT_point2oct(group, point, form,
 	    NULL, 0, ctx);
-	if (buf_len == 0 || buf_len + 1 == 0)
+	if (buf_len == 0)
 		return NULL;
 
 	if ((buf = malloc(buf_len)) == NULL)
@@ -141,7 +141,7 @@ EC_POINT_point2hex(const EC_GROUP *group, const EC_POINT *point,
 		free(buf);
 		return NULL;
 	}
-	ret = reallocarray(NULL, buf_len + 1, 2);
+	ret = malloc(buf_len * 2 + 2);
 	if (ret == NULL) {
 		free(buf);
 		return NULL;
@@ -161,8 +161,8 @@ EC_POINT_point2hex(const EC_GROUP *group, const EC_POINT *point,
 }
 
 EC_POINT *
-EC_POINT_hex2point(const EC_GROUP *group, const char *buf,
-    EC_POINT *point, BN_CTX *ctx)
+EC_POINT_hex2point(const EC_GROUP * group, const char *buf,
+    EC_POINT * point, BN_CTX * ctx)
 {
 	EC_POINT *ret = NULL;
 	BIGNUM *tmp_bn = NULL;
@@ -172,7 +172,7 @@ EC_POINT_hex2point(const EC_GROUP *group, const char *buf,
 
 	ret = EC_POINT_bn2point(group, tmp_bn, point, ctx);
 
-	BN_free(tmp_bn);
+	BN_clear_free(tmp_bn);
 
 	return ret;
 }

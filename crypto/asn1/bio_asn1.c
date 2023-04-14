@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_asn1.c,v 1.19 2023/03/10 11:55:38 tb Exp $ */
+/* $OpenBSD: bio_asn1.c,v 1.9 2014/06/12 15:49:27 deraadt Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -67,8 +67,6 @@
 #include <openssl/bio.h>
 #include <openssl/asn1.h>
 
-#include "bio_local.h"
-
 /* Must be large enough for biggest tag+length */
 #define DEFAULT_ASN1_BUF_SIZE 20
 
@@ -118,15 +116,16 @@ static int asn1_bio_gets(BIO *h, char *str, int size);
 static long asn1_bio_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int asn1_bio_new(BIO *h);
 static int asn1_bio_free(BIO *data);
-static long asn1_bio_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
+static long asn1_bio_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
 
+static int asn1_bio_init(BIO_ASN1_BUF_CTX *ctx, int size);
 static int asn1_bio_flush_ex(BIO *b, BIO_ASN1_BUF_CTX *ctx,
     asn1_ps_func *cleanup, asn1_bio_state_t next);
 static int asn1_bio_setup_ex(BIO *b, BIO_ASN1_BUF_CTX *ctx,
     asn1_ps_func *setup, asn1_bio_state_t ex_state,
     asn1_bio_state_t other_state);
 
-static const BIO_METHOD methods_asn1 = {
+static BIO_METHOD methods_asn1 = {
 	.type = BIO_TYPE_ASN1,
 	.name = "asn1",
 	.bwrite = asn1_bio_write,
@@ -139,7 +138,7 @@ static const BIO_METHOD methods_asn1 = {
 	.callback_ctrl = asn1_bio_callback_ctrl
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_f_asn1(void)
 {
 	return (&methods_asn1);
@@ -149,23 +148,35 @@ static int
 asn1_bio_new(BIO *b)
 {
 	BIO_ASN1_BUF_CTX *ctx;
-
-	if ((ctx = calloc(1, sizeof(*ctx))) == NULL)
+	ctx = malloc(sizeof(BIO_ASN1_BUF_CTX));
+	if (!ctx)
 		return 0;
-
-	if ((ctx->buf = malloc(DEFAULT_ASN1_BUF_SIZE)) == NULL) {
+	if (!asn1_bio_init(ctx, DEFAULT_ASN1_BUF_SIZE)) {
 		free(ctx);
 		return 0;
 	}
-	ctx->bufsize = DEFAULT_ASN1_BUF_SIZE;
-	ctx->asn1_class = V_ASN1_UNIVERSAL;
-	ctx->asn1_tag = V_ASN1_OCTET_STRING;
-	ctx->state = ASN1_STATE_START;
-
 	b->init = 1;
 	b->ptr = (char *)ctx;
 	b->flags = 0;
+	return 1;
+}
 
+static int
+asn1_bio_init(BIO_ASN1_BUF_CTX *ctx, int size)
+{
+	ctx->buf = malloc(size);
+	if (!ctx->buf)
+		return 0;
+	ctx->bufsize = size;
+	ctx->bufpos = 0;
+	ctx->buflen = 0;
+	ctx->copylen = 0;
+	ctx->asn1_class = V_ASN1_UNIVERSAL;
+	ctx->asn1_tag = V_ASN1_OCTET_STRING;
+	ctx->ex_buf = 0;
+	ctx->ex_pos = 0;
+	ctx->ex_len = 0;
+	ctx->state = ASN1_STATE_START;
 	return 1;
 }
 
@@ -177,12 +188,6 @@ asn1_bio_free(BIO *b)
 	ctx = (BIO_ASN1_BUF_CTX *) b->ptr;
 	if (ctx == NULL)
 		return 0;
-
-	if (ctx->prefix_free != NULL)
-		ctx->prefix_free(b, &ctx->ex_buf, &ctx->ex_len, &ctx->ex_arg);
-	if (ctx->suffix_free != NULL)
-		ctx->suffix_free(b, &ctx->ex_buf, &ctx->ex_len, &ctx->ex_arg);
-
 	free(ctx->buf);
 	free(ctx);
 	b->init = 0;
@@ -195,7 +200,7 @@ static int
 asn1_bio_write(BIO *b, const char *in , int inl)
 {
 	BIO_ASN1_BUF_CTX *ctx;
-	int wrmax, wrlen, ret, buflen;
+	int wrmax, wrlen, ret;
 	unsigned char *p;
 
 	if (!in || (inl < 0) || (b->next_bio == NULL))
@@ -226,10 +231,9 @@ asn1_bio_write(BIO *b, const char *in , int inl)
 			break;
 
 		case ASN1_STATE_HEADER:
-			buflen = ASN1_object_size(0, inl, ctx->asn1_tag) - inl;
-			if (buflen <= 0 || buflen > ctx->bufsize)
-				return -1;
-			ctx->buflen = buflen;
+			ctx->buflen =
+			    ASN1_object_size(0, inl, ctx->asn1_tag) - inl;
+			OPENSSL_assert(ctx->buflen <= ctx->bufsize);
 			p = ctx->buf;
 			ASN1_put_object(&p, 0, inl,
 			    ctx->asn1_tag, ctx->asn1_class);
@@ -260,7 +264,7 @@ asn1_bio_write(BIO *b, const char *in , int inl)
 				wrmax = inl;
 			ret = BIO_write(b->next_bio, in, wrmax);
 			if (ret <= 0)
-				goto done;
+				break;
 			wrlen += ret;
 			ctx->copylen -= ret;
 			in += ret;
@@ -279,7 +283,7 @@ asn1_bio_write(BIO *b, const char *in , int inl)
 
 	}
 
- done:
+done:
 	BIO_clear_retry_flags(b);
 	BIO_copy_next_retry(b);
 
@@ -352,7 +356,7 @@ asn1_bio_gets(BIO *b, char *str, int size)
 }
 
 static long
-asn1_bio_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+asn1_bio_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	if (b->next_bio == NULL)
 		return (0);

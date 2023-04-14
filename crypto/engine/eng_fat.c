@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_fat.c,v 1.17 2019/01/19 01:07:00 tb Exp $ */
+/* $OpenBSD: eng_fat.c,v 1.13 2014/07/10 13:58:22 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 1999-2001 The OpenSSL Project.  All rights reserved.
  *
@@ -62,7 +62,6 @@
 
 #include <openssl/opensslconf.h>
 
-#include <openssl/err.h>
 #include "eng_int.h"
 #include <openssl/conf.h>
 
@@ -91,10 +90,6 @@ ENGINE_set_default(ENGINE *e, unsigned int flags)
 #endif
 #ifndef OPENSSL_NO_ECDSA
 	if ((flags & ENGINE_METHOD_ECDSA) && !ENGINE_set_default_ECDSA(e))
-		return 0;
-#endif
-#ifndef OPENSSL_NO_EC
-	if ((flags & ENGINE_METHOD_EC) && !ENGINE_set_default_EC(e))
 		return 0;
 #endif
 	if ((flags & ENGINE_METHOD_RAND) && !ENGINE_set_default_RAND(e))
@@ -127,8 +122,6 @@ int_def_cb(const char *alg, int len, void *arg)
 		*pflags |= ENGINE_METHOD_ECDSA;
 	else if (!strncmp(alg, "DH", len))
 		*pflags |= ENGINE_METHOD_DH;
-	else if (strncmp(alg, "EC", len) == 0)
-		*pflags |= ENGINE_METHOD_EC;
 	else if (!strncmp(alg, "RAND", len))
 		*pflags |= ENGINE_METHOD_RAND;
 	else if (!strncmp(alg, "CIPHERS", len))
@@ -153,7 +146,8 @@ ENGINE_set_default_string(ENGINE *e, const char *def_list)
 	unsigned int flags = 0;
 
 	if (!CONF_parse_list(def_list, ',', 1, int_def_cb, &flags)) {
-		ENGINEerror(ENGINE_R_INVALID_STRING);
+		ENGINEerr(ENGINE_F_ENGINE_SET_DEFAULT_STRING,
+		    ENGINE_R_INVALID_STRING);
 		ERR_asprintf_error_data("str=%s",def_list);
 		return 0;
 	}
@@ -179,9 +173,6 @@ ENGINE_register_complete(ENGINE *e)
 #endif
 #ifndef OPENSSL_NO_ECDSA
 	ENGINE_register_ECDSA(e);
-#endif
-#ifndef OPENSSL_NO_EC
-	ENGINE_register_EC(e);
 #endif
 	ENGINE_register_RAND(e);
 	ENGINE_register_pkey_meths(e);

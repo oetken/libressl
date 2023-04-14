@@ -1,4 +1,4 @@
-/* $OpenBSD: obj_lib.c,v 1.17 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: obj_lib.c,v 1.11 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -64,12 +64,11 @@
 #include <openssl/lhash.h>
 #include <openssl/objects.h>
 
-#include "asn1_local.h"
-
 ASN1_OBJECT *
 OBJ_dup(const ASN1_OBJECT *o)
 {
 	ASN1_OBJECT *r;
+	int i;
 	char *ln = NULL, *sn = NULL;
 	unsigned char *data = NULL;
 
@@ -81,7 +80,7 @@ OBJ_dup(const ASN1_OBJECT *o)
 
 	r = ASN1_OBJECT_new();
 	if (r == NULL) {
-		OBJerror(ERR_R_ASN1_LIB);
+		OBJerr(OBJ_F_OBJ_DUP, ERR_R_ASN1_LIB);
 		return (NULL);
 	}
 	data = malloc(o->length);
@@ -95,24 +94,28 @@ OBJ_dup(const ASN1_OBJECT *o)
 	r->nid = o->nid;
 	r->ln = r->sn = NULL;
 	if (o->ln != NULL) {
-		ln = strdup(o->ln);
+		i = strlen(o->ln) + 1;
+		ln = malloc(i);
 		if (ln == NULL)
 			goto err;
+		memcpy(ln, o->ln, i);
 		r->ln = ln;
 	}
 
 	if (o->sn != NULL) {
-		sn = strdup(o->sn);
+		i = strlen(o->sn) + 1;
+		sn = malloc(i);
 		if (sn == NULL)
 			goto err;
+		memcpy(sn, o->sn, i);
 		r->sn = sn;
 	}
 	r->flags = o->flags | (ASN1_OBJECT_FLAG_DYNAMIC |
 	    ASN1_OBJECT_FLAG_DYNAMIC_STRINGS | ASN1_OBJECT_FLAG_DYNAMIC_DATA);
 	return (r);
 
- err:
-	OBJerror(ERR_R_MALLOC_FAILURE);
+err:
+	OBJerr(OBJ_F_OBJ_DUP, ERR_R_MALLOC_FAILURE);
 	free(ln);
 	free(sn);
 	free(data);

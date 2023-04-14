@@ -1,4 +1,4 @@
-/* $OpenBSD: p12_p8e.c,v 1.12 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: p12_p8e.c,v 1.4 2014/07/08 09:24:53 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2001.
  */
@@ -61,8 +61,6 @@
 #include <openssl/err.h>
 #include <openssl/pkcs12.h>
 
-#include "x509_local.h"
-
 X509_SIG *
 PKCS8_encrypt(int pbe_nid, const EVP_CIPHER *cipher, const char *pass,
     int passlen, unsigned char *salt, int saltlen, int iter,
@@ -72,7 +70,7 @@ PKCS8_encrypt(int pbe_nid, const EVP_CIPHER *cipher, const char *pass,
 	X509_ALGOR *pbe;
 
 	if (!(p8 = X509_SIG_new())) {
-		PKCS12error(ERR_R_MALLOC_FAILURE);
+		PKCS12err(PKCS12_F_PKCS8_ENCRYPT, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
@@ -81,16 +79,16 @@ PKCS8_encrypt(int pbe_nid, const EVP_CIPHER *cipher, const char *pass,
 	else
 		pbe = PKCS5_pbe_set(pbe_nid, iter, salt, saltlen);
 	if (!pbe) {
-		PKCS12error(ERR_R_ASN1_LIB);
+		PKCS12err(PKCS12_F_PKCS8_ENCRYPT, ERR_R_ASN1_LIB);
 		goto err;
 	}
 	X509_ALGOR_free(p8->algor);
 	p8->algor = pbe;
-	ASN1_OCTET_STRING_free(p8->digest);
+	M_ASN1_OCTET_STRING_free(p8->digest);
 	p8->digest = PKCS12_item_i2d_encrypt(pbe,
-	    &PKCS8_PRIV_KEY_INFO_it, pass, passlen, p8inf, 1);
+	    ASN1_ITEM_rptr(PKCS8_PRIV_KEY_INFO), pass, passlen, p8inf, 1);
 	if (!p8->digest) {
-		PKCS12error(PKCS12_R_ENCRYPT_ERROR);
+		PKCS12err(PKCS12_F_PKCS8_ENCRYPT, PKCS12_R_ENCRYPT_ERROR);
 		goto err;
 	}
 
@@ -100,4 +98,3 @@ err:
 	X509_SIG_free(p8);
 	return NULL;
 }
-LCRYPTO_ALIAS(PKCS8_encrypt);

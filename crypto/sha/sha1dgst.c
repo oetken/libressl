@@ -1,4 +1,4 @@
-/* $OpenBSD: sha1dgst.c,v 1.15 2022/11/26 16:08:54 tb Exp $ */
+/* $OpenBSD: sha1dgst.c,v 1.12 2014/07/09 11:10:51 bcook Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,11 +62,14 @@
 
 #if !defined(OPENSSL_NO_SHA1) && !defined(OPENSSL_NO_SHA)
 
+#undef  SHA_0
+#define SHA_1
+
 #include <openssl/opensslv.h>
 
 /* The implementation is in ../md32_common.h */
 
-#include "sha_local.h"
+#include "sha_locl.h"
 
 #endif
 

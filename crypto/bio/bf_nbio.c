@@ -1,4 +1,4 @@
-/* $OpenBSD: bf_nbio.c,v 1.22 2022/01/14 08:40:57 tb Exp $ */
+/* $OpenBSD: bf_nbio.c,v 1.16 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -58,11 +58,9 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include <openssl/bio.h>
-
-#include "bio_local.h"
+#include <openssl/rand.h>
 
 /* BIO_put and BIO_get both add to the digest,
  * BIO_gets returns the digest */
@@ -74,7 +72,7 @@ static int nbiof_gets(BIO *h, char *str, int size);
 static long nbiof_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int nbiof_new(BIO *h);
 static int nbiof_free(BIO *data);
-static long nbiof_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
+static long nbiof_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
 
 typedef struct nbio_test_st {
 	/* only set if we sent a 'should retry' error */
@@ -82,7 +80,7 @@ typedef struct nbio_test_st {
 	int lwn;
 } NBIO_TEST;
 
-static const BIO_METHOD methods_nbiof = {
+static BIO_METHOD methods_nbiof = {
 	.type = BIO_TYPE_NBIO_TEST,
 	.name = "non-blocking IO test filter",
 	.bwrite = nbiof_write,
@@ -95,7 +93,7 @@ static const BIO_METHOD methods_nbiof = {
 	.callback_ctrl = nbiof_callback_ctrl
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_f_nbio_test(void)
 {
 	return (&methods_nbiof);
@@ -132,8 +130,10 @@ static int
 nbiof_read(BIO *b, char *out, int outl)
 {
 	int ret = 0;
+#if 1
 	int num;
 	unsigned char n;
+#endif
 
 	if (out == NULL)
 		return (0);
@@ -141,8 +141,8 @@ nbiof_read(BIO *b, char *out, int outl)
 		return (0);
 
 	BIO_clear_retry_flags(b);
-
-	arc4random_buf(&n, 1);
+#if 1
+	RAND_pseudo_bytes(&n, 1);
 	num = (n & 0x07);
 
 	if (outl > num)
@@ -151,7 +151,9 @@ nbiof_read(BIO *b, char *out, int outl)
 	if (num == 0) {
 		ret = -1;
 		BIO_set_retry_read(b);
-	} else {
+	} else
+#endif
+	{
 		ret = BIO_read(b->next_bio, out, outl);
 		if (ret < 0)
 			BIO_copy_next_retry(b);
@@ -175,11 +177,12 @@ nbiof_write(BIO *b, const char *in, int inl)
 
 	BIO_clear_retry_flags(b);
 
+#if 1
 	if (nt->lwn > 0) {
 		num = nt->lwn;
 		nt->lwn = 0;
 	} else {
-		arc4random_buf(&n, 1);
+		RAND_pseudo_bytes(&n, 1);
 		num = (n&7);
 	}
 
@@ -189,7 +192,9 @@ nbiof_write(BIO *b, const char *in, int inl)
 	if (num == 0) {
 		ret = -1;
 		BIO_set_retry_write(b);
-	} else {
+	} else
+#endif
+	{
 		ret = BIO_write(b->next_bio, in, inl);
 		if (ret < 0) {
 			BIO_copy_next_retry(b);
@@ -223,7 +228,7 @@ nbiof_ctrl(BIO *b, int cmd, long num, void *ptr)
 }
 
 static long
-nbiof_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+nbiof_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	long ret = 1;
 

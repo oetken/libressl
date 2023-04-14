@@ -1,4 +1,4 @@
-/* $OpenBSD: md5_dgst.c,v 1.15 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: md5_dgst.c,v 1.12 2014/06/12 15:49:29 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,7 @@
  */
 
 #include <stdio.h>
-#include "md5_local.h"
+#include "md5_locl.h"
 #include <openssl/opensslv.h>
 #include <openssl/crypto.h>
 
@@ -86,7 +86,7 @@ int MD5_Init(MD5_CTX *c)
 void md5_block_data_order (MD5_CTX *c, const void *data_, size_t num)
 	{
 	const unsigned char *data=data_;
-	unsigned MD32_REG_T A,B,C,D,l;
+	register unsigned MD32_REG_T A,B,C,D,l;
 #ifndef MD32_XARRAY
 	/* See comment in crypto/sha/sha_locl.h for details. */
 	unsigned MD32_REG_T	XX0, XX1, XX2, XX3, XX4, XX5, XX6, XX7,

@@ -1,4 +1,4 @@
-/* $OpenBSD: evp_key.c,v 1.28 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: evp_key.c,v 1.17 2014/07/10 19:30:06 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -59,13 +59,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/ui.h>
 #include <openssl/x509.h>
-
-#include "evp_local.h"
 
 /* should be init to zeros. */
 static char prompt_string[80];
@@ -103,26 +100,17 @@ EVP_read_pw_string_min(char *buf, int min, int len, const char *prompt,
 	char buff[BUFSIZ];
 	UI *ui;
 
-	if (len > BUFSIZ)
-		len = BUFSIZ;
-	/* Ensure that 0 <= min <= len - 1. In particular, 1 <= len. */
-	if (min < 0 || len - 1 < min)
-		return -1;
 	if ((prompt == NULL) && (prompt_string[0] != '\0'))
 		prompt = prompt_string;
 	ui = UI_new();
-	if (ui == NULL)
-		return -1;
-	if (UI_add_input_string(ui, prompt, 0, buf, min, len - 1) < 0)
-		return -1;
-	if (verify) {
-		if (UI_add_verify_string(ui, prompt, 0, buff, min, len - 1, buf)
-		    < 0)
-			return -1;
-	}
+	UI_add_input_string(ui, prompt, 0, buf, min,
+	    (len >= BUFSIZ) ? BUFSIZ - 1 : len);
+	if (verify)
+		UI_add_verify_string(ui, prompt, 0, buff, min,
+		    (len >= BUFSIZ) ? BUFSIZ - 1 : len, buf);
 	ret = UI_process(ui);
 	UI_free(ui);
-	explicit_bzero(buff, BUFSIZ);
+	OPENSSL_cleanse(buff, BUFSIZ);
 	return ret;
 }
 
@@ -136,18 +124,10 @@ EVP_BytesToKey(const EVP_CIPHER *type, const EVP_MD *md,
 	int niv, nkey, addmd = 0;
 	unsigned int mds = 0, i;
 	int rv = 0;
-
 	nkey = type->key_len;
 	niv = type->iv_len;
-
-	if ((size_t)nkey > EVP_MAX_KEY_LENGTH) {
-		EVPerror(EVP_R_BAD_KEY_LENGTH);
-		return 0;
-	}
-	if ((size_t)niv > EVP_MAX_IV_LENGTH) {
-		EVPerror(EVP_R_IV_TOO_LARGE);
-		return 0;
-	}
+	OPENSSL_assert(nkey <= EVP_MAX_KEY_LENGTH);
+	OPENSSL_assert(niv <= EVP_MAX_IV_LENGTH);
 
 	if (data == NULL)
 		return (nkey);
@@ -155,7 +135,7 @@ EVP_BytesToKey(const EVP_CIPHER *type, const EVP_MD *md,
 	EVP_MD_CTX_init(&c);
 	for (;;) {
 		if (!EVP_DigestInit_ex(&c, md, NULL))
-			goto err;
+			return 0;
 		if (addmd++)
 			if (!EVP_DigestUpdate(&c, &(md_buf[0]), mds))
 				goto err;
@@ -207,6 +187,6 @@ EVP_BytesToKey(const EVP_CIPHER *type, const EVP_MD *md,
 
 err:
 	EVP_MD_CTX_cleanup(&c);
-	explicit_bzero(md_buf, sizeof md_buf);
+	OPENSSL_cleanse(&(md_buf[0]), EVP_MAX_MD_SIZE);
 	return rv;
 }

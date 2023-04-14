@@ -1,4 +1,4 @@
-/* $OpenBSD: cfb_enc.c,v 1.15 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: cfb_enc.c,v 1.10 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,8 +56,9 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_local.h"
-#include <endian.h>
+#include "des_locl.h"
+#include <assert.h>
+#include <machine/endian.h>
 
 /* The input and output are loaded in multiples of 8 bits.
  * What this means is that if you hame numbits=12 and length=2
@@ -71,9 +72,9 @@ void DES_cfb_encrypt(const unsigned char *in, unsigned char *out, int numbits,
 		     long length, DES_key_schedule *schedule, DES_cblock *ivec,
 		     int enc)
 	{
-	DES_LONG d0,d1,v0,v1;
-	unsigned long l=length;
-	int num=numbits/8,n=(numbits+7)/8,i,rem=numbits%8;
+	register DES_LONG d0,d1,v0,v1;
+	register unsigned long l=length;
+	register int num=numbits/8,n=(numbits+7)/8,i,rem=numbits%8;
 	DES_LONG ti[2];
 	unsigned char *iv;
 #if BYTE_ORDER != LITTLE_ENDIAN
@@ -81,6 +82,11 @@ void DES_cfb_encrypt(const unsigned char *in, unsigned char *out, int numbits,
 #else
 	unsigned int  sh[4];
 	unsigned char *ovec=(unsigned char *)sh;
+
+	/* I kind of count that compiler optimizes away this assertioni,*/
+	assert (sizeof(sh[0])==4);	/* as this holds true for all,	*/
+					/* but 16-bit platforms...	*/
+					
 #endif
 
 	if (numbits<=0 || numbits > 64) return;

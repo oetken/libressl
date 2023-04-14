@@ -1,4 +1,4 @@
-/* $OpenBSD: bf_buff.c,v 1.27 2022/01/14 08:40:57 tb Exp $ */
+/* $OpenBSD: bf_buff.c,v 1.20 2014/07/10 13:58:22 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,8 +63,6 @@
 #include <openssl/bio.h>
 #include <openssl/err.h>
 
-#include "bio_local.h"
-
 static int buffer_write(BIO *h, const char *buf, int num);
 static int buffer_read(BIO *h, char *buf, int size);
 static int buffer_puts(BIO *h, const char *str);
@@ -72,10 +70,10 @@ static int buffer_gets(BIO *h, char *str, int size);
 static long buffer_ctrl(BIO *h, int cmd, long arg1, void *arg2);
 static int buffer_new(BIO *h);
 static int buffer_free(BIO *data);
-static long buffer_callback_ctrl(BIO *h, int cmd, BIO_info_cb *fp);
+static long buffer_callback_ctrl(BIO *h, int cmd, bio_info_cb *fp);
 #define DEFAULT_BUFFER_SIZE	4096
 
-static const BIO_METHOD methods_buffer = {
+static BIO_METHOD methods_buffer = {
 	.type = BIO_TYPE_BUFFER,
 	.name = "buffer",
 	.bwrite = buffer_write,
@@ -88,7 +86,7 @@ static const BIO_METHOD methods_buffer = {
 	.callback_ctrl = buffer_callback_ctrl
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_f_buffer(void)
 {
 	return (&methods_buffer);
@@ -341,7 +339,7 @@ buffer_ctrl(BIO *b, int cmd, long num, void *ptr)
 		break;
 	case BIO_C_SET_BUFF_READ_DATA:
 		if (num > ctx->ibuf_size) {
-			p1 = malloc(num);
+			p1 = malloc((int)num);
 			if (p1 == NULL)
 				goto malloc_error;
 			free(ctx->ibuf);
@@ -371,12 +369,12 @@ buffer_ctrl(BIO *b, int cmd, long num, void *ptr)
 		p1 = ctx->ibuf;
 		p2 = ctx->obuf;
 		if ((ibs > DEFAULT_BUFFER_SIZE) && (ibs != ctx->ibuf_size)) {
-			p1 = malloc(num);
+			p1 = malloc((int)num);
 			if (p1 == NULL)
 				goto malloc_error;
 		}
 		if ((obs > DEFAULT_BUFFER_SIZE) && (obs != ctx->obuf_size)) {
-			p2 = malloc(num);
+			p2 = malloc((int)num);
 			if (p2 == NULL) {
 				if (p1 != ctx->ibuf)
 					free(p1);
@@ -428,6 +426,7 @@ buffer_ctrl(BIO *b, int cmd, long num, void *ptr)
 			} else {
 				ctx->obuf_len = 0;
 				ctx->obuf_off = 0;
+				ret = 1;
 				break;
 			}
 		}
@@ -447,12 +446,12 @@ buffer_ctrl(BIO *b, int cmd, long num, void *ptr)
 	}
 	return (ret);
 malloc_error:
-	BIOerror(ERR_R_MALLOC_FAILURE);
+	BIOerr(BIO_F_BUFFER_CTRL, ERR_R_MALLOC_FAILURE);
 	return (0);
 }
 
 static long
-buffer_callback_ctrl(BIO *b, int cmd, BIO_info_cb *fp)
+buffer_callback_ctrl(BIO *b, int cmd, bio_info_cb *fp)
 {
 	long ret = 1;
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: ocsp_ext.c,v 1.22 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: ocsp_ext.c,v 1.10 2014/07/10 13:58:23 jsing Exp $ */
 /* Written by Tom Titchener <Tom_Titchener@groove.net> for the OpenSSL
  * project. */
 
@@ -62,16 +62,13 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/objects.h>
 #include <openssl/ocsp.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include "ocsp_local.h"
-#include "x509_local.h"
 
 /* Standard wrapper functions for extensions */
 
@@ -91,8 +88,7 @@ OCSP_REQUEST_get_ext_by_NID(OCSP_REQUEST *x, int nid, int lastpos)
 }
 
 int
-OCSP_REQUEST_get_ext_by_OBJ(OCSP_REQUEST *x, const ASN1_OBJECT *obj,
-    int lastpos)
+OCSP_REQUEST_get_ext_by_OBJ(OCSP_REQUEST *x, ASN1_OBJECT *obj, int lastpos)
 {
 	return X509v3_get_ext_by_OBJ(x->tbsRequest->requestExtensions, obj,
 	    lastpos);
@@ -153,7 +149,7 @@ OCSP_ONEREQ_get_ext_by_NID(OCSP_ONEREQ *x, int nid, int lastpos)
 }
 
 int
-OCSP_ONEREQ_get_ext_by_OBJ(OCSP_ONEREQ *x, const ASN1_OBJECT *obj, int lastpos)
+OCSP_ONEREQ_get_ext_by_OBJ(OCSP_ONEREQ *x, ASN1_OBJECT *obj, int lastpos)
 {
 	return X509v3_get_ext_by_OBJ(x->singleRequestExtensions, obj, lastpos);
 }
@@ -213,8 +209,7 @@ OCSP_BASICRESP_get_ext_by_NID(OCSP_BASICRESP *x, int nid, int lastpos)
 }
 
 int
-OCSP_BASICRESP_get_ext_by_OBJ(OCSP_BASICRESP *x, const ASN1_OBJECT *obj,
-    int lastpos)
+OCSP_BASICRESP_get_ext_by_OBJ(OCSP_BASICRESP *x, ASN1_OBJECT *obj, int lastpos)
 {
 	return X509v3_get_ext_by_OBJ(x->tbsResponseData->responseExtensions,
 	    obj, lastpos);
@@ -276,7 +271,7 @@ OCSP_SINGLERESP_get_ext_by_NID(OCSP_SINGLERESP *x, int nid, int lastpos)
 }
 
 int
-OCSP_SINGLERESP_get_ext_by_OBJ(OCSP_SINGLERESP *x, const ASN1_OBJECT *obj,
+OCSP_SINGLERESP_get_ext_by_OBJ(OCSP_SINGLERESP *x, ASN1_OBJECT *obj,
     int lastpos)
 {
 	return X509v3_get_ext_by_OBJ(x->singleExtensions, obj, lastpos);
@@ -319,9 +314,53 @@ OCSP_SINGLERESP_add_ext(OCSP_SINGLERESP *x, X509_EXTENSION *ex, int loc)
 	return X509v3_add_ext(&(x->singleExtensions), ex, loc) != NULL;
 }
 
+/* also CRL Entry Extensions */
+#if 0
+ASN1_STRING *
+ASN1_STRING_encode(ASN1_STRING *s, i2d_of_void *i2d, void *data,
+    STACK_OF(ASN1_OBJECT) *sk)
+{
+	int i;
+	unsigned char *p, *b = NULL;
+
+	if (data) {
+		if ((i = i2d(data, NULL)) <= 0)
+			goto err;
+		if (!(b = p = malloc((unsigned int)i)))
+			goto err;
+		if (i2d(data, &p) <= 0)
+			goto err;
+	} else if (sk) {
+		if ((i = i2d_ASN1_SET_OF_ASN1_OBJECT(sk, NULL,
+		    (I2D_OF(ASN1_OBJECT))i2d, V_ASN1_SEQUENCE, V_ASN1_UNIVERSAL,
+		    IS_SEQUENCE)) <= 0)
+			goto err;
+		if (!(b = p = malloc((unsigned int)i)))
+			goto err;
+		if (i2d_ASN1_SET_OF_ASN1_OBJECT(sk, &p,
+		    (I2D_OF(ASN1_OBJECT))i2d, V_ASN1_SEQUENCE,
+		    V_ASN1_UNIVERSAL, IS_SEQUENCE) <= 0)
+			goto err;
+	} else {
+		OCSPerr(OCSP_F_ASN1_STRING_ENCODE, OCSP_R_BAD_DATA);
+		goto err;
+	}
+	if (!s && !(s = ASN1_STRING_new()))
+		goto err;
+	if (!(ASN1_STRING_set(s, b, i)))
+		goto err;
+	free(b);
+	return s;
+
+err:
+	free(b);
+	return NULL;
+}
+#endif
+
 /* Nonce handling functions */
 
-/* Add a nonce to an extension stack. A nonce can be specified or if NULL
+/* Add a nonce to an extension stack. A nonce can be specificed or if NULL
  * a random nonce will be generated.
  * Note: OpenSSL 0.9.7d and later create an OCTET STRING containing the
  * nonce, previous versions used the raw nonce.
@@ -350,7 +389,7 @@ ocsp_add1_nonce(STACK_OF(X509_EXTENSION) **exts, unsigned char *val, int len)
 	if (val)
 		memcpy(tmpval, val, len);
 	else
-		arc4random_buf(tmpval, len);
+		RAND_pseudo_bytes(tmpval, len);
 	if (!X509V3_add1_i2d(exts, NID_id_pkix_OCSP_Nonce, &os, 0,
 	    X509V3_ADD_REPLACE))
 		goto err;
@@ -440,7 +479,7 @@ OCSP_copy_nonce(OCSP_BASICRESP *resp, OCSP_REQUEST *req)
 }
 
 X509_EXTENSION *
-OCSP_crlID_new(const char *url, long *n, char *tim)
+OCSP_crlID_new(char *url, long *n, char *tim)
 {
 	X509_EXTENSION *x = NULL;
 	OCSP_CRLID *cid = NULL;
@@ -487,10 +526,7 @@ OCSP_accept_responses_new(char **oids)
 	while (oids && *oids) {
 		if ((nid = OBJ_txt2nid(*oids)) != NID_undef &&
 		    (o = OBJ_nid2obj(nid)))
-			if (sk_ASN1_OBJECT_push(sk, o) == 0) {
-				sk_ASN1_OBJECT_pop_free(sk, ASN1_OBJECT_free);
-				return NULL;
-			}
+			sk_ASN1_OBJECT_push(sk, o);
 		oids++;
 	}
 	x = X509V3_EXT_i2d(NID_id_pkix_OCSP_acceptableResponses, 0, sk);
@@ -522,7 +558,7 @@ err:
  * method forces NID_ad_ocsp and uniformResourceLocator [6] IA5String.
  */
 X509_EXTENSION *
-OCSP_url_svcloc_new(X509_NAME* issuer, const char **urls)
+OCSP_url_svcloc_new(X509_NAME* issuer, char **urls)
 {
 	X509_EXTENSION *x = NULL;
 	ASN1_IA5STRING *ia5 = NULL;

@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_print.c,v 1.38 2023/02/13 04:25:37 jsing Exp $ */
+/* $OpenBSD: bn_print.c,v 1.21 2014/07/10 22:45:56 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -57,7 +57,6 @@
  */
 
 #include <ctype.h>
-#include <limits.h>
 #include <stdio.h>
 
 #include <openssl/opensslconf.h>
@@ -66,7 +65,7 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 static const char Hex[]="0123456789ABCDEF";
 
@@ -78,23 +77,23 @@ BN_bn2hex(const BIGNUM *a)
 	char *buf;
 	char *p;
 
-	buf = malloc(BN_is_negative(a) + a->top * BN_BYTES * 2 + 2);
+	buf = malloc(a->top * BN_BYTES * 2 + 2);
 	if (buf == NULL) {
-		BNerror(ERR_R_MALLOC_FAILURE);
+		BNerr(BN_F_BN_BN2HEX, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	p = buf;
-	if (BN_is_negative(a))
-		*p++ = '-';
+	if (a->neg)
+		*(p++) = '-';
 	if (BN_is_zero(a))
-		*p++ = '0';
+		*(p++) = '0';
 	for (i = a->top - 1; i >=0; i--) {
 		for (j = BN_BITS2 - 8; j >= 0; j -= 8) {
 			/* strip leading zeros */
 			v = ((int)(a->d[i] >> (long)j)) & 0xff;
 			if (z || (v != 0)) {
-				*p++ = Hex[v >> 4];
-				*p++ = Hex[v & 0x0f];
+				*(p++) = Hex[v >> 4];
+				*(p++) = Hex[v & 0x0f];
 				z = 1;
 			}
 		}
@@ -109,25 +108,11 @@ err:
 char *
 BN_bn2dec(const BIGNUM *a)
 {
-	int i = 0, num, bn_data_num, ok = 0;
+	int i = 0, num, ok = 0;
 	char *buf = NULL;
 	char *p;
 	BIGNUM *t = NULL;
 	BN_ULONG *bn_data = NULL, *lp;
-
-	if (BN_is_zero(a)) {
-		buf = malloc(BN_is_negative(a) + 2);
-		if (buf == NULL) {
-			BNerror(ERR_R_MALLOC_FAILURE);
-			goto err;
-		}
-		p = buf;
-		if (BN_is_negative(a))
-			*p++ = '-';
-		*p++ = '0';
-		*p++ = '\0';
-		return (buf);
-	}
 
 	/* get an upper bound for the length of the decimal integer
 	 * num <= (BN_num_bits(a) + 1) * log(2)
@@ -136,11 +121,10 @@ BN_bn2dec(const BIGNUM *a)
 	 */
 	i = BN_num_bits(a) * 3;
 	num = (i / 10 + i / 1000 + 1) + 1;
-	bn_data_num = num / BN_DEC_NUM + 1;
-	bn_data = reallocarray(NULL, bn_data_num, sizeof(BN_ULONG));
+	bn_data = reallocarray(NULL, num / BN_DEC_NUM + 1, sizeof(BN_ULONG));
 	buf = malloc(num + 3);
 	if ((buf == NULL) || (bn_data == NULL)) {
-		BNerror(ERR_R_MALLOC_FAILURE);
+		BNerr(BN_F_BN_BN2DEC, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 	if ((t = BN_dup(a)) == NULL)
@@ -149,35 +133,38 @@ BN_bn2dec(const BIGNUM *a)
 #define BUF_REMAIN (num+3 - (size_t)(p - buf))
 	p = buf;
 	lp = bn_data;
-	if (BN_is_negative(t))
-		*p++ = '-';
+	if (BN_is_zero(t)) {
+		*(p++) = '0';
+		*(p++) = '\0';
+	} else {
+		if (BN_is_negative(t))
+			*p++ = '-';
 
-	while (!BN_is_zero(t)) {
-		if (lp - bn_data >= bn_data_num)
-			goto err;
-		*lp = BN_div_word(t, BN_DEC_CONV);
-		if (*lp == (BN_ULONG)-1)
-			goto err;
-		lp++;
-	}
-	lp--;
-	/* We now have a series of blocks, BN_DEC_NUM chars
-	 * in length, where the last one needs truncation.
-	 * The blocks need to be reversed in order. */
-	snprintf(p, BUF_REMAIN, BN_DEC_FMT1, *lp);
-	while (*p)
-		p++;
-	while (lp != bn_data) {
+		i = 0;
+		while (!BN_is_zero(t)) {
+			*lp = BN_div_word(t, BN_DEC_CONV);
+			lp++;
+		}
 		lp--;
-		snprintf(p, BUF_REMAIN, BN_DEC_FMT2, *lp);
+		/* We now have a series of blocks, BN_DEC_NUM chars
+		 * in length, where the last one needs truncation.
+		 * The blocks need to be reversed in order. */
+		snprintf(p, BUF_REMAIN, BN_DEC_FMT1, *lp);
 		while (*p)
 			p++;
+		while (lp != bn_data) {
+			lp--;
+			snprintf(p, BUF_REMAIN, BN_DEC_FMT2, *lp);
+			while (*p)
+				p++;
+		}
 	}
 	ok = 1;
 
 err:
 	free(bn_data);
-	BN_free(t);
+	if (t != NULL)
+		BN_free(t);
 	if (!ok && buf) {
 		free(buf);
 		buf = NULL;
@@ -202,10 +189,8 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 		a++;
 	}
 
-	for (i = 0; i <= (INT_MAX / 4) && isxdigit((unsigned char)a[i]); i++)
+	for (i = 0; isxdigit((unsigned char)a[i]); i++)
 		;
-	if (i > INT_MAX / 4)
-		return (0);
 
 	num = i + neg;
 	if (bn == NULL)
@@ -216,19 +201,19 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 		if ((ret = BN_new()) == NULL)
 			return (0);
 	} else {
-		ret = *bn;
+		ret= *bn;
 		BN_zero(ret);
 	}
 
-	/* i is the number of hex digits */
-	if (!bn_expand(ret, i * 4))
+	/* i is the number of hex digests; */
+	if (bn_expand(ret, i * 4) == NULL)
 		goto err;
 
 	j = i; /* least significant 'hex' */
 	m = 0;
 	h = 0;
 	while (j > 0) {
-		m = ((BN_BYTES * 2) <= j) ? (BN_BYTES * 2) : j;
+		m = ((BN_BYTES*2) <= j) ? (BN_BYTES * 2) : j;
 		l = 0;
 		for (;;) {
 			c = a[j - m];
@@ -251,10 +236,10 @@ BN_hex2bn(BIGNUM **bn, const char *a)
 	}
 	ret->top = h;
 	bn_correct_top(ret);
-
-	BN_set_negative(ret, neg);
+	ret->neg = neg;
 
 	*bn = ret;
+	bn_check_top(ret);
 	return (num);
 
 err:
@@ -278,10 +263,8 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 		a++;
 	}
 
-	for (i = 0; i <= (INT_MAX / 4) && isdigit((unsigned char)a[i]); i++)
+	for (i = 0; isdigit((unsigned char)a[i]); i++)
 		;
-	if (i > INT_MAX / 4)
-		return (0);
 
 	num = i + neg;
 	if (bn == NULL)
@@ -297,8 +280,8 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 		BN_zero(ret);
 	}
 
-	/* i is the number of digits, a bit of an over expand */
-	if (!bn_expand(ret, i * 4))
+	/* i is the number of digests, a bit of an over expand; */
+	if (bn_expand(ret, i * 4) == NULL)
 		goto err;
 
 	j = BN_DEC_NUM - (i % BN_DEC_NUM);
@@ -310,20 +293,17 @@ BN_dec2bn(BIGNUM **bn, const char *a)
 		l += *a - '0';
 		a++;
 		if (++j == BN_DEC_NUM) {
-			if (!BN_mul_word(ret, BN_DEC_CONV))
-				goto err;
-			if (!BN_add_word(ret, l))
-				goto err;
+			BN_mul_word(ret, BN_DEC_CONV);
+			BN_add_word(ret, l);
 			l = 0;
 			j = 0;
 		}
 	}
+	ret->neg = neg;
 
 	bn_correct_top(ret);
-
-	BN_set_negative(ret, neg);
-
 	*bn = ret;
+	bn_check_top(ret);
 	return (num);
 
 err:
@@ -347,7 +327,7 @@ BN_asc2bn(BIGNUM **bn, const char *a)
 			return 0;
 	}
 	if (*a == '-')
-		BN_set_negative(*bn, 1);
+		(*bn)->neg = 1;
 	return 1;
 }
 

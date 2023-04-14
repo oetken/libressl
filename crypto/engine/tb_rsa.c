@@ -1,4 +1,4 @@
-/* $OpenBSD: tb_rsa.c,v 1.6 2014/06/12 15:49:29 deraadt Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2000 The OpenSSL Project.  All rights reserved.
  *

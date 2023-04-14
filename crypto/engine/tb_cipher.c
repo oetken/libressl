@@ -1,4 +1,4 @@
-/* $OpenBSD: tb_cipher.c,v 1.8 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2000 The OpenSSL Project.  All rights reserved.
  *
@@ -52,8 +52,6 @@
  * Hudson (tjh@cryptsoft.com).
  *
  */
-
-#include <openssl/err.h>
 
 #include "eng_int.h"
 
@@ -130,7 +128,8 @@ ENGINE_get_cipher(ENGINE *e, int nid)
 	ENGINE_CIPHERS_PTR fn = ENGINE_get_ciphers(e);
 
 	if (!fn || !fn(e, &ret, NULL, nid)) {
-		ENGINEerror(ENGINE_R_UNIMPLEMENTED_CIPHER);
+		ENGINEerr(ENGINE_F_ENGINE_GET_CIPHER,
+		    ENGINE_R_UNIMPLEMENTED_CIPHER);
 		return NULL;
 	}
 	return ret;

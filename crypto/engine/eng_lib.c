@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_lib.c,v 1.14 2018/04/14 07:18:37 tb Exp $ */
+/* $OpenBSD: eng_lib.c,v 1.8 2014/06/22 12:05:09 jsing Exp $ */
 /* Written by Geoff Thorpe (geoff@geoffthorpe.net) for the OpenSSL
  * project 2000.
  */
@@ -58,10 +58,8 @@
 
 #include <string.h>
 
-#include <openssl/err.h>
-#include <openssl/rand.h>
-
 #include "eng_int.h"
+#include <openssl/rand.h>
 
 /* The "new"/"free" stuff first */
 
@@ -70,12 +68,9 @@ ENGINE_new(void)
 {
 	ENGINE *ret;
 
-	if (!OPENSSL_init_crypto(0, NULL))
-		return NULL;
-
 	ret = malloc(sizeof(ENGINE));
 	if (ret == NULL) {
-		ENGINEerror(ERR_R_MALLOC_FAILURE);
+		ENGINEerr(ENGINE_F_ENGINE_NEW, ERR_R_MALLOC_FAILURE);
 		return NULL;
 	}
 	memset(ret, 0, sizeof(ENGINE));
@@ -115,8 +110,11 @@ engine_free_util(ENGINE *e, int locked)
 {
 	int i;
 
-	if (e == NULL)
-		return 1;
+	if (e == NULL) {
+		ENGINEerr(ENGINE_F_ENGINE_FREE_UTIL,
+		    ERR_R_PASSED_NULL_PARAMETER);
+		return 0;
+	}
 	if (locked)
 		i = CRYPTO_add(&e->struct_ref, -1, CRYPTO_LOCK_ENGINE);
 	else
@@ -245,7 +243,8 @@ int
 ENGINE_set_id(ENGINE *e, const char *id)
 {
 	if (id == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_SET_ID,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	e->id = id;
@@ -256,7 +255,8 @@ int
 ENGINE_set_name(ENGINE *e, const char *name)
 {
 	if (name == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_SET_NAME,
+		    ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	e->name = name;

@@ -1,4 +1,4 @@
-/* $OpenBSD: cts128.c,v 1.6 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 2008 The OpenSSL Project. All rights reserved.
  *
@@ -7,7 +7,7 @@
  */
 
 #include <openssl/crypto.h>
-#include "modes_local.h"
+#include "modes_lcl.h"
 #include <string.h>
 
 #ifndef MODES_DEBUG
@@ -15,6 +15,7 @@
 #  define NDEBUG
 # endif
 #endif
+#include <assert.h>
 
 /*
  * Trouble with Ciphertext Stealing, CTS, mode is that there is no
@@ -33,6 +34,8 @@ size_t CRYPTO_cts128_encrypt_block(const unsigned char *in, unsigned char *out,
 			size_t len, const void *key,
 			unsigned char ivec[16], block128_f block)
 {	size_t residue, n;
+
+	assert (in && out && key && ivec);
 
 	if (len <= 16) return 0;
 
@@ -58,6 +61,8 @@ size_t CRYPTO_nistcts128_encrypt_block(const unsigned char *in, unsigned char *o
 			size_t len, const void *key,
 			unsigned char ivec[16], block128_f block)
 {	size_t residue, n;
+
+	assert (in && out && key && ivec);
 
 	if (len < 16) return 0;
 
@@ -86,6 +91,8 @@ size_t CRYPTO_cts128_encrypt(const unsigned char *in, unsigned char *out,
 {	size_t residue;
 	union { size_t align; unsigned char c[16]; } tmp;
 
+	assert (in && out && key && ivec);
+
 	if (len <= 16) return 0;
 
 	if ((residue=len%16) == 0) residue = 16;
@@ -97,10 +104,16 @@ size_t CRYPTO_cts128_encrypt(const unsigned char *in, unsigned char *out,
 	in  += len;
 	out += len;
 
+#if defined(CBC_HANDLES_TRUNCATED_IO)
+	memcpy(tmp.c,out-16,16);
+	(*cbc)(in,out-16,residue,key,ivec,1);
+	memcpy(out,tmp.c,residue);
+#else
 	memset(tmp.c,0,sizeof(tmp));
 	memcpy(tmp.c,in,residue);
 	memcpy(out,out-16,residue);
 	(*cbc)(tmp.c,out-16,16,key,ivec,1);
+#endif
 	return len+residue;
 }
 
@@ -109,6 +122,8 @@ size_t CRYPTO_nistcts128_encrypt(const unsigned char *in, unsigned char *out,
 			unsigned char ivec[16], cbc128_f cbc)
 {	size_t residue;
 	union { size_t align; unsigned char c[16]; } tmp;
+
+	assert (in && out && key && ivec);
 
 	if (len < 16) return 0;
 
@@ -123,9 +138,13 @@ size_t CRYPTO_nistcts128_encrypt(const unsigned char *in, unsigned char *out,
 	in  += len;
 	out += len;
 
+#if defined(CBC_HANDLES_TRUNCATED_IO)
+	(*cbc)(in,out-16+residue,residue,key,ivec,1);
+#else
 	memset(tmp.c,0,sizeof(tmp));
 	memcpy(tmp.c,in,residue);
 	(*cbc)(tmp.c,out-16+residue,16,key,ivec,1);
+#endif
 	return len+residue;
 }
 
@@ -134,6 +153,8 @@ size_t CRYPTO_cts128_decrypt_block(const unsigned char *in, unsigned char *out,
 			unsigned char ivec[16], block128_f block)
 {	size_t residue, n;
 	union { size_t align; unsigned char c[32]; } tmp;
+
+	assert (in && out && key && ivec);
 
 	if (len<=16) return 0;
 
@@ -169,6 +190,8 @@ size_t CRYPTO_nistcts128_decrypt_block(const unsigned char *in, unsigned char *o
 			unsigned char ivec[16], block128_f block)
 {	size_t residue, n;
 	union { size_t align; unsigned char c[32]; } tmp;
+
+	assert (in && out && key && ivec);
 
 	if (len<16) return 0;
 
@@ -211,6 +234,8 @@ size_t CRYPTO_cts128_decrypt(const unsigned char *in, unsigned char *out,
 {	size_t residue;
 	union { size_t align; unsigned char c[32]; } tmp;
 
+	assert (in && out && key && ivec);
+
 	if (len<=16) return 0;
 
 	if ((residue=len%16) == 0) residue = 16;
@@ -228,8 +253,12 @@ size_t CRYPTO_cts128_decrypt(const unsigned char *in, unsigned char *out,
 	(*cbc)(in,tmp.c,16,key,tmp.c+16,0);
 
 	memcpy(tmp.c,in+16,residue);
+#if defined(CBC_HANDLES_TRUNCATED_IO)
+	(*cbc)(tmp.c,out,16+residue,key,ivec,0);
+#else
 	(*cbc)(tmp.c,tmp.c,32,key,ivec,0);
 	memcpy(out,tmp.c,16+residue);
+#endif
 	return 16+len+residue;
 }
 
@@ -238,6 +267,8 @@ size_t CRYPTO_nistcts128_decrypt(const unsigned char *in, unsigned char *out,
 			unsigned char ivec[16], cbc128_f cbc)
 {	size_t residue;
 	union { size_t align; unsigned char c[32]; } tmp;
+
+	assert (in && out && key && ivec);
 
 	if (len<16) return 0;
 
@@ -261,7 +292,11 @@ size_t CRYPTO_nistcts128_decrypt(const unsigned char *in, unsigned char *out,
 	(*cbc)(in+residue,tmp.c,16,key,tmp.c+16,0);
 
 	memcpy(tmp.c,in,residue);
+#if defined(CBC_HANDLES_TRUNCATED_IO)
+	(*cbc)(tmp.c,out,16+residue,key,ivec,0);
+#else
 	(*cbc)(tmp.c,tmp.c,32,key,ivec,0);
 	memcpy(out,tmp.c,16+residue);
+#endif
 	return 16+len+residue;
 }

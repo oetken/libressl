@@ -1,4 +1,4 @@
-/* $OpenBSD: ts_conf.c,v 1.11 2018/04/14 07:18:37 tb Exp $ */
+/* $OpenBSD: ts_conf.c,v 1.6 2014/07/10 22:45:58 jsing Exp $ */
 /* Written by Zoltan Glozik (zglozik@stones.com) for the OpenSSL
  * project 2002.
  */
@@ -61,7 +61,6 @@
 #include <openssl/opensslconf.h>
 
 #include <openssl/crypto.h>
-#include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/ts.h>
 
@@ -111,8 +110,7 @@ end:
 	return x;
 }
 
-STACK_OF(X509) *
-TS_CONF_load_certs(const char *file)
+STACK_OF(X509) *TS_CONF_load_certs(const char *file)
 {
 	BIO *certs = NULL;
 	STACK_OF(X509) *othercerts = NULL;
@@ -128,11 +126,7 @@ TS_CONF_load_certs(const char *file)
 	for (i = 0; i < sk_X509_INFO_num(allcerts); i++) {
 		X509_INFO *xi = sk_X509_INFO_value(allcerts, i);
 		if (xi->x509) {
-			if (sk_X509_push(othercerts, xi->x509) == 0) {
-				sk_X509_pop_free(othercerts, X509_free);
-				othercerts = NULL;
-				goto end;
-			}
+			sk_X509_push(othercerts, xi->x509);
 			xi->x509 = NULL;
 		}
 	}
@@ -245,10 +239,12 @@ TS_CONF_set_default_engine(const char *name)
 
 err:
 	if (!ret) {
-		TSerror(TS_R_COULD_NOT_SET_ENGINE);
+		TSerr(TS_F_TS_CONF_SET_DEFAULT_ENGINE,
+		    TS_R_COULD_NOT_SET_ENGINE);
 		ERR_asprintf_error_data("engine:%s", name);
 	}
-	ENGINE_free(e);
+	if (e)
+		ENGINE_free(e);
 	return ret;
 }
 

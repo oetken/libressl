@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_pkey.c,v 1.26 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: pem_pkey.c,v 1.16 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -62,19 +62,18 @@
 #include <openssl/opensslconf.h>
 
 #include <openssl/buffer.h>
-#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/objects.h>
 #include <openssl/pem.h>
 #include <openssl/pkcs12.h>
+#include <openssl/rand.h>
 #include <openssl/x509.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
 #endif
 
-#include "asn1_local.h"
-#include "evp_local.h"
+#include "asn1_locl.h"
 
 int pem_check_suffix(const char *pem_str, const char *suffix);
 
@@ -100,7 +99,8 @@ PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 			goto p8err;
 		ret = EVP_PKCS82PKEY(p8inf);
 		if (x) {
-			EVP_PKEY_free(*x);
+			if (*x)
+				EVP_PKEY_free((EVP_PKEY *)*x);
 			*x = ret;
 		}
 		PKCS8_PRIV_KEY_INFO_free(p8inf);
@@ -117,7 +117,8 @@ PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 		else
 			klen = PEM_def_callback(psbuf, PEM_BUFSIZE, 0, u);
 		if (klen <= 0) {
-			PEMerror(PEM_R_BAD_PASSWORD_READ);
+			PEMerr(PEM_F_PEM_READ_BIO_PRIVATEKEY,
+			    PEM_R_BAD_PASSWORD_READ);
 			X509_SIG_free(p8);
 			goto err;
 		}
@@ -127,7 +128,8 @@ PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 			goto p8err;
 		ret = EVP_PKCS82PKEY(p8inf);
 		if (x) {
-			EVP_PKEY_free(*x);
+			if (*x)
+				EVP_PKEY_free((EVP_PKEY *)*x);
 			*x = ret;
 		}
 		PKCS8_PRIV_KEY_INFO_free(p8inf);
@@ -141,10 +143,11 @@ PEM_read_bio_PrivateKey(BIO *bp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 
 p8err:
 	if (ret == NULL)
-		PEMerror(ERR_R_ASN1_LIB);
+		PEMerr(PEM_F_PEM_READ_BIO_PRIVATEKEY, ERR_R_ASN1_LIB);
 err:
 	free(nm);
-	freezero(data, len);
+	OPENSSL_cleanse(data, len);
+	free(data);
 	return (ret);
 }
 
@@ -152,20 +155,11 @@ int
 PEM_write_bio_PrivateKey(BIO *bp, EVP_PKEY *x, const EVP_CIPHER *enc,
     unsigned char *kstr, int klen, pem_password_cb *cb, void *u)
 {
-	if (x->ameth == NULL || x->ameth->priv_encode != NULL)
+	char pem_str[80];
+
+	if (!x->ameth || x->ameth->priv_encode)
 		return PEM_write_bio_PKCS8PrivateKey(bp, x, enc,
 		    (char *)kstr, klen, cb, u);
-
-	return PEM_write_bio_PrivateKey_traditional(bp, x, enc, kstr, klen, cb,
-	    u);
-}
-
-int
-PEM_write_bio_PrivateKey_traditional(BIO *bp, EVP_PKEY *x,
-    const EVP_CIPHER *enc, unsigned char *kstr, int klen, pem_password_cb *cb,
-    void *u)
-{
-	char pem_str[80];
 
 	(void) snprintf(pem_str, sizeof(pem_str), "%s PRIVATE KEY",
 	    x->ameth->pem_str);
@@ -200,14 +194,15 @@ PEM_read_bio_Parameters(BIO *bp, EVP_PKEY **x)
 			goto err;
 		}
 		if (x) {
-			EVP_PKEY_free(*x);
+			if (*x)
+				EVP_PKEY_free((EVP_PKEY *)*x);
 			*x = ret;
 		}
 	}
 
 err:
 	if (ret == NULL)
-		PEMerror(ERR_R_ASN1_LIB);
+		PEMerr(PEM_F_PEM_READ_BIO_PARAMETERS, ERR_R_ASN1_LIB);
 	free(nm);
 	free(data);
 	return (ret);
@@ -234,7 +229,7 @@ PEM_read_PrivateKey(FILE *fp, EVP_PKEY **x, pem_password_cb *cb, void *u)
 	EVP_PKEY *ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		PEMerror(ERR_R_BUF_LIB);
+		PEMerr(PEM_F_PEM_READ_PRIVATEKEY, ERR_R_BUF_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -251,7 +246,7 @@ PEM_write_PrivateKey(FILE *fp, EVP_PKEY *x, const EVP_CIPHER *enc,
 	int ret;
 
 	if ((b = BIO_new_fp(fp, BIO_NOCLOSE)) == NULL) {
-		PEMerror(ERR_R_BUF_LIB);
+		PEMerr(PEM_F_PEM_WRITE_PRIVATEKEY, ERR_R_BUF_LIB);
 		return 0;
 	}
 	ret = PEM_write_bio_PrivateKey(b, x, enc, kstr, klen, cb, u);

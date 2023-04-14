@@ -1,4 +1,4 @@
-/* $OpenBSD: o_names.c,v 1.23 2022/11/08 23:19:09 mbuhl Exp $ */
+/* $OpenBSD$ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,6 +24,7 @@ typedef struct name_funcs_st {
 } NAME_FUNCS;
 
 DECLARE_STACK_OF(NAME_FUNCS)
+IMPLEMENT_STACK_OF(NAME_FUNCS)
 
 static STACK_OF(NAME_FUNCS) *name_funcs_stack;
 
@@ -67,17 +68,13 @@ OBJ_NAME_new_index(unsigned long (*hash_func)(const char *),
 	for (i = sk_NAME_FUNCS_num(name_funcs_stack); i < names_type_num; i++) {
 		name_funcs = malloc(sizeof(NAME_FUNCS));
 		if (!name_funcs) {
-			OBJerror(ERR_R_MALLOC_FAILURE);
+			OBJerr(OBJ_F_OBJ_NAME_NEW_INDEX, ERR_R_MALLOC_FAILURE);
 			return (0);
 		}
 		name_funcs->hash_func = lh_strhash;
 		name_funcs->cmp_func = strcmp;
 		name_funcs->free_func = NULL;
-		if (sk_NAME_FUNCS_push(name_funcs_stack, name_funcs) == 0) {
-			free(name_funcs);
-			OBJerror(ERR_R_MALLOC_FAILURE);
-			return (0);
-		}
+		sk_NAME_FUNCS_push(name_funcs_stack, name_funcs);
 	}
 	name_funcs = sk_NAME_FUNCS_value(name_funcs_stack, ret);
 	if (hash_func != NULL)
@@ -197,7 +194,6 @@ OBJ_NAME_add(const char *name, int type, const char *data)
 		free(ret);
 	} else {
 		if (lh_OBJ_NAME_error(names_lh)) {
-			free(onp);
 			/* ERROR */
 			return (0);
 		}
@@ -300,16 +296,14 @@ OBJ_NAME_do_all_sorted(int type, void (*fn)(const OBJ_NAME *, void *arg),
 	d.names = reallocarray(NULL, lh_OBJ_NAME_num_items(names_lh),
 	    sizeof *d.names);
 	d.n = 0;
-	if (d.names != NULL) {
-		OBJ_NAME_do_all(type, do_all_sorted_fn, &d);
+	OBJ_NAME_do_all(type, do_all_sorted_fn, &d);
 
-		qsort((void *)d.names, d.n, sizeof *d.names, do_all_sorted_cmp);
+	qsort((void *)d.names, d.n, sizeof *d.names, do_all_sorted_cmp);
 
-		for (n = 0; n < d.n; ++n)
-			fn(d.names[n], arg);
+	for (n = 0; n < d.n; ++n)
+		fn(d.names[n], arg);
 
-		free(d.names);
-	}
+	free((void *)d.names);
 }
 
 static int free_type;

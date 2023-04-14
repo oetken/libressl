@@ -1,4 +1,4 @@
-/* $OpenBSD: fcrypt.c,v 1.13 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 
 #include <stdio.h>
 
@@ -10,12 +10,12 @@
 /* Modification by Jens Kupferschmidt (Cu)
  * I have included directive PARA for shared memory computers.
  * I have included a directive LONGCRYPT to using this routine to cipher
- * passwords with more than 8 bytes like HP-UX 10.x it used. The MAXPLEN
+ * passwords with more then 8 bytes like HP-UX 10.x it used. The MAXPLEN
  * definition is the maximum of length of password and can changed. I have
  * defined 24.
  */
 
-#include "des_local.h"
+#include "des_locl.h"
 
 /* Added more values to handle illegal salt values the way normal
  * crypt() implementations do.  The patch was sent by 

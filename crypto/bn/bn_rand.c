@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_rand.c,v 1.27 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: bn_rand.c,v 1.14 2014/06/12 15:49:28 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -110,13 +110,12 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <time.h>
 
 #include <openssl/err.h>
+#include <openssl/rand.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 static int
 bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
@@ -124,19 +123,9 @@ bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
 	unsigned char *buf = NULL;
 	int ret = 0, bit, bytes, mask;
 
-	if (rnd == NULL) {
-		BNerror(ERR_R_PASSED_NULL_PARAMETER);
-		return (0);
-	}
-
-	if (bits < 0 || (bits == 1 && top > 0)) {
-		BNerror(BN_R_BITS_TOO_SMALL);
-		return (0);
-	}
-
 	if (bits == 0) {
 		BN_zero(rnd);
-		return (1);
+		return 1;
 	}
 
 	bytes = (bits + 7) / 8;
@@ -145,12 +134,19 @@ bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
 
 	buf = malloc(bytes);
 	if (buf == NULL) {
-		BNerror(ERR_R_MALLOC_FAILURE);
+		BNerr(BN_F_BNRAND, ERR_R_MALLOC_FAILURE);
 		goto err;
 	}
 
 	/* make a random number and set the top and bottom bits */
-	arc4random_buf(buf, bytes);
+
+	if (pseudorand) {
+		if (RAND_pseudo_bytes(buf, bytes) == -1)
+			goto err;
+	} else {
+		if (RAND_bytes(buf, bytes) <= 0)
+			goto err;
+	}
 
 #if 1
 	if (pseudorand == 2) {
@@ -160,7 +156,7 @@ bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
 		unsigned char c;
 
 		for (i = 0; i < bytes; i++) {
-			arc4random_buf(&c, 1);
+			RAND_pseudo_bytes(&c, 1);
 			if (c >= 128 && i > 0)
 				buf[i] = buf[i - 1];
 			else if (c < 42)
@@ -171,42 +167,48 @@ bnrand(int pseudorand, BIGNUM *rnd, int bits, int top, int bottom)
 	}
 #endif
 
-	if (top > 0) {
-		if (bit == 0) {
-			buf[0] = 1;
-			buf[1] |= 0x80;
+	if (top != -1) {
+		if (top) {
+			if (bit == 0) {
+				buf[0] = 1;
+				buf[1] |= 0x80;
+			} else {
+				buf[0] |= (3 << (bit - 1));
+			}
 		} else {
-			buf[0] |= (3 << (bit - 1));
+			buf[0] |= (1 << bit);
 		}
 	}
-	if (top == 0)
-		buf[0] |= (1 << bit);
 	buf[0] &= ~mask;
 	if (bottom) /* set bottom bit if requested */
 		buf[bytes - 1] |= 1;
-	if (BN_bin2bn(buf, bytes, rnd) == NULL)
+	if (!BN_bin2bn(buf, bytes, rnd))
 		goto err;
 	ret = 1;
 
 err:
-	freezero(buf, bytes);
+	if (buf != NULL) {
+		OPENSSL_cleanse(buf, bytes);
+		free(buf);
+	}
+	bn_check_top(rnd);
 	return (ret);
 }
 
-int
+int    
 BN_rand(BIGNUM *rnd, int bits, int top, int bottom)
 {
 	return bnrand(0, rnd, bits, top, bottom);
 }
 
-int
+int    
 BN_pseudo_rand(BIGNUM *rnd, int bits, int top, int bottom)
 {
 	return bnrand(1, rnd, bits, top, bottom);
 }
 
 #if 1
-int
+int    
 BN_bntest_rand(BIGNUM *rnd, int bits, int top, int bottom)
 {
 	return bnrand(2, rnd, bits, top, bottom);
@@ -223,7 +225,7 @@ bn_rand_range(int pseudo, BIGNUM *r, const BIGNUM *range)
 	int count = 100;
 
 	if (range->neg || BN_is_zero(range)) {
-		BNerror(BN_R_INVALID_RANGE);
+		BNerr(BN_F_BN_RAND_RANGE, BN_R_INVALID_RANGE);
 		return 0;
 	}
 
@@ -253,7 +255,8 @@ bn_rand_range(int pseudo, BIGNUM *r, const BIGNUM *range)
 			}
 
 			if (!--count) {
-				BNerror(BN_R_TOO_MANY_ITERATIONS);
+				BNerr(BN_F_BN_RAND_RANGE,
+				    BN_R_TOO_MANY_ITERATIONS);
 				return 0;
 			}
 
@@ -265,12 +268,14 @@ bn_rand_range(int pseudo, BIGNUM *r, const BIGNUM *range)
 				return 0;
 
 			if (!--count) {
-				BNerror(BN_R_TOO_MANY_ITERATIONS);
+				BNerr(BN_F_BN_RAND_RANGE,
+				    BN_R_TOO_MANY_ITERATIONS);
 				return 0;
 			}
 		} while (BN_cmp(r, range) >= 0);
 	}
 
+	bn_check_top(r);
 	return 1;
 }
 
@@ -278,33 +283,6 @@ int
 BN_rand_range(BIGNUM *r, const BIGNUM *range)
 {
 	return bn_rand_range(0, r, range);
-}
-
-int
-bn_rand_interval(BIGNUM *rnd, const BIGNUM *lower_inc, const BIGNUM *upper_exc)
-{
-	BIGNUM *len = NULL;
-	int ret = 0;
-
-	if (BN_cmp(lower_inc, upper_exc) >= 0)
-		goto err;
-
-	if ((len = BN_new()) == NULL)
-		goto err;
-
-	if (!BN_sub(len, upper_exc, lower_inc))
-		goto err;
-
-	if (!bn_rand_range(0, rnd, len))
-		goto err;
-
-	if (!BN_add(rnd, rnd, lower_inc))
-		goto err;
-
-	ret = 1;
- err:
-	BN_free(len);
-	return ret;
 }
 
 int

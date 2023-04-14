@@ -1,9 +1,7 @@
-/* $OpenBSD: charmap.h,v 1.5 2016/12/21 15:49:29 jsing Exp $ */
+/* $OpenBSD$ */
 /* Auto generated with chartype.pl script.
  * Mask of various character properties
  */
-
-__BEGIN_HIDDEN_DECLS
 
 static const unsigned char char_type[] = {
 	2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
@@ -15,5 +13,3 @@ static const unsigned char char_type[] = {
 	0, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16,
 	16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 16, 0, 0, 0, 0, 2
 };
-
-__END_HIDDEN_DECLS

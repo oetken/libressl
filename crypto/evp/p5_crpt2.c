@@ -1,4 +1,4 @@
-/* $OpenBSD: p5_crpt2.c,v 1.25 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: p5_crpt2.c,v 1.16 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -69,8 +69,14 @@
 #include <openssl/hmac.h>
 #include <openssl/x509.h>
 
-#include "evp_local.h"
-#include "hmac_local.h"
+#include "evp_locl.h"
+
+/* set this to print out info about the keygen algorithm */
+/* #define DEBUG_PKCS5V2 */
+
+#ifdef DEBUG_PKCS5V2
+static void h__dump (const unsigned char *p, int len);
+#endif
 
 /* This is an implementation of PKCS#5 v2.0 password based encryption key
  * derivation function PBKDF2.
@@ -147,6 +153,15 @@ PKCS5_PBKDF2_HMAC(const char *pass, int passlen, const unsigned char *salt,
 		p += cplen;
 	}
 	HMAC_CTX_cleanup(&hctx_tpl);
+#ifdef DEBUG_PKCS5V2
+	fprintf(stderr, "Password:\n");
+	h__dump (pass, passlen);
+	fprintf(stderr, "Salt:\n");
+	h__dump (salt, saltlen);
+	fprintf(stderr, "Iteration count %d\n", iter);
+	fprintf(stderr, "Key:\n");
+	h__dump (out, keylen);
+#endif
 	return 1;
 }
 
@@ -176,21 +191,22 @@ PKCS5_v2_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 
 	if (param == NULL || param->type != V_ASN1_SEQUENCE ||
 	    param->value.sequence == NULL) {
-		EVPerror(EVP_R_DECODE_ERROR);
+		EVPerr(EVP_F_PKCS5_V2_PBE_KEYIVGEN, EVP_R_DECODE_ERROR);
 		goto err;
 	}
 
 	pbuf = param->value.sequence->data;
 	plen = param->value.sequence->length;
 	if (!(pbe2 = d2i_PBE2PARAM(NULL, &pbuf, plen))) {
-		EVPerror(EVP_R_DECODE_ERROR);
+		EVPerr(EVP_F_PKCS5_V2_PBE_KEYIVGEN, EVP_R_DECODE_ERROR);
 		goto err;
 	}
 
 	/* See if we recognise the key derivation function */
 
 	if (OBJ_obj2nid(pbe2->keyfunc->algorithm) != NID_id_pbkdf2) {
-		EVPerror(EVP_R_UNSUPPORTED_KEY_DERIVATION_FUNCTION);
+		EVPerr(EVP_F_PKCS5_V2_PBE_KEYIVGEN,
+		    EVP_R_UNSUPPORTED_KEY_DERIVATION_FUNCTION);
 		goto err;
 	}
 
@@ -200,7 +216,8 @@ PKCS5_v2_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 	cipher = EVP_get_cipherbyobj(pbe2->encryption->algorithm);
 
 	if (!cipher) {
-		EVPerror(EVP_R_UNSUPPORTED_CIPHER);
+		EVPerr(EVP_F_PKCS5_V2_PBE_KEYIVGEN,
+		    EVP_R_UNSUPPORTED_CIPHER);
 		goto err;
 	}
 
@@ -208,7 +225,8 @@ PKCS5_v2_PBE_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 	if (!EVP_CipherInit_ex(ctx, cipher, NULL, NULL, NULL, en_de))
 		goto err;
 	if (EVP_CIPHER_asn1_to_param(ctx, pbe2->encryption->parameter) < 0) {
-		EVPerror(EVP_R_CIPHER_PARAMETER_ERROR);
+		EVPerr(EVP_F_PKCS5_V2_PBE_KEYIVGEN,
+		    EVP_R_CIPHER_PARAMETER_ERROR);
 		goto err;
 	}
 	rv = PKCS5_v2_PBKDF2_keyivgen(ctx, pass, passlen,
@@ -233,35 +251,35 @@ PKCS5_v2_PBKDF2_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 	const EVP_MD *prfmd;
 
 	if (EVP_CIPHER_CTX_cipher(ctx) == NULL) {
-		EVPerror(EVP_R_NO_CIPHER_SET);
-		return 0;
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_NO_CIPHER_SET);
+		goto err;
 	}
 	keylen = EVP_CIPHER_CTX_key_length(ctx);
-	if (keylen > sizeof key) {
-		EVPerror(EVP_R_BAD_KEY_LENGTH);
-		return 0;
-	}
+	OPENSSL_assert(keylen <= sizeof key);
 
 	/* Decode parameter */
 
 	if (!param || (param->type != V_ASN1_SEQUENCE)) {
-		EVPerror(EVP_R_DECODE_ERROR);
-		return 0;
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_DECODE_ERROR);
+		goto err;
 	}
 
 	pbuf = param->value.sequence->data;
 	plen = param->value.sequence->length;
 
 	if (!(kdf = d2i_PBKDF2PARAM(NULL, &pbuf, plen)) ) {
-		EVPerror(EVP_R_DECODE_ERROR);
-		return 0;
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_DECODE_ERROR);
+		goto err;
 	}
+
+	keylen = EVP_CIPHER_CTX_key_length(ctx);
 
 	/* Now check the parameters of the kdf */
 
 	if (kdf->keylength &&
 	    (ASN1_INTEGER_get(kdf->keylength) != (int)keylen)){
-		EVPerror(EVP_R_UNSUPPORTED_KEYLENGTH);
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN,
+		    EVP_R_UNSUPPORTED_KEYLENGTH);
 		goto err;
 	}
 
@@ -271,37 +289,43 @@ PKCS5_v2_PBKDF2_keyivgen(EVP_CIPHER_CTX *ctx, const char *pass, int passlen,
 		prf_nid = NID_hmacWithSHA1;
 
 	if (!EVP_PBE_find(EVP_PBE_TYPE_PRF, prf_nid, NULL, &hmac_md_nid, 0)) {
-		EVPerror(EVP_R_UNSUPPORTED_PRF);
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_UNSUPPORTED_PRF);
 		goto err;
 	}
 
 	prfmd = EVP_get_digestbynid(hmac_md_nid);
 	if (prfmd == NULL) {
-		EVPerror(EVP_R_UNSUPPORTED_PRF);
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN, EVP_R_UNSUPPORTED_PRF);
 		goto err;
 	}
 
 	if (kdf->salt->type != V_ASN1_OCTET_STRING) {
-		EVPerror(EVP_R_UNSUPPORTED_SALT_TYPE);
+		EVPerr(EVP_F_PKCS5_V2_PBKDF2_KEYIVGEN,
+		    EVP_R_UNSUPPORTED_SALT_TYPE);
 		goto err;
 	}
 
 	/* it seems that its all OK */
 	salt = kdf->salt->value.octet_string->data;
 	saltlen = kdf->salt->value.octet_string->length;
-	if ((iter = ASN1_INTEGER_get(kdf->iter)) <= 0) {
-		EVPerror(EVP_R_UNSUPORTED_NUMBER_OF_ROUNDS);
-		goto err;
-	}
+	iter = ASN1_INTEGER_get(kdf->iter);
 	if (!PKCS5_PBKDF2_HMAC(pass, passlen, salt, saltlen, iter, prfmd,
 	    keylen, key))
 		goto err;
 	rv = EVP_CipherInit_ex(ctx, NULL, NULL, key, NULL, en_de);
 
 err:
-	explicit_bzero(key, keylen);
+	OPENSSL_cleanse(key, keylen);
 	PBKDF2PARAM_free(kdf);
 	return rv;
 }
 
+#ifdef DEBUG_PKCS5V2
+static void h__dump (const unsigned char *p, int len)
+{
+	for (; len --; p++)
+		fprintf(stderr, "%02X ", *p);
+	fprintf(stderr, "\n");
+}
+#endif
 #endif

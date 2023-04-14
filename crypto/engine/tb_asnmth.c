@@ -1,4 +1,4 @@
-/* $OpenBSD: tb_asnmth.c,v 1.7 2022/11/26 16:08:52 tb Exp $ */
+/* $OpenBSD: tb_asnmth.c,v 1.3 2014/06/12 15:49:29 deraadt Exp $ */
 /* ====================================================================
  * Copyright (c) 2006 The OpenSSL Project.  All rights reserved.
  *
@@ -55,10 +55,8 @@
 
 #include <string.h>
 
-#include <openssl/err.h>
-
 #include "eng_int.h"
-#include "asn1_local.h"
+#include "asn1_locl.h"
 #include <openssl/evp.h>
 
 /* If this symbol is defined then ENGINE_get_pkey_asn1_meth_engine(), the
@@ -135,7 +133,8 @@ ENGINE_get_pkey_asn1_meth(ENGINE *e, int nid)
 	ENGINE_PKEY_ASN1_METHS_PTR fn = ENGINE_get_pkey_asn1_meths(e);
 
 	if (!fn || !fn(e, &ret, NULL, nid)) {
-		ENGINEerror(ENGINE_R_UNIMPLEMENTED_PUBLIC_KEY_METHOD);
+		ENGINEerr(ENGINE_F_ENGINE_GET_PKEY_ASN1_METH,
+		    ENGINE_R_UNIMPLEMENTED_PUBLIC_KEY_METHOD);
 		return NULL;
 	}
 	return ret;

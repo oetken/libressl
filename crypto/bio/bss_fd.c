@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_fd.c,v 1.20 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bss_fd.c,v 1.16 2014/07/10 22:45:56 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -63,9 +63,13 @@
 
 #include <openssl/opensslconf.h>
 
+#if defined(OPENSSL_NO_POSIX_IO)
+/*
+ * One can argue that one should implement dummy placeholder for
+ * BIO_s_fd here...
+ */
+#else
 #include <openssl/bio.h>
-
-#include "bio_local.h"
 
 static int fd_write(BIO *h, const char *buf, int num);
 static int fd_read(BIO *h, char *buf, int size);
@@ -76,7 +80,7 @@ static int fd_new(BIO *h);
 static int fd_free(BIO *data);
 int BIO_fd_should_retry(int s);
 
-static const BIO_METHOD methods_fdp = {
+static BIO_METHOD methods_fdp = {
 	.type = BIO_TYPE_FD,
 	.name = "file descriptor",
 	.bwrite = fd_write,
@@ -88,7 +92,7 @@ static const BIO_METHOD methods_fdp = {
 	.destroy = fd_free
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_fd(void)
 {
 	return (&methods_fdp);
@@ -267,3 +271,4 @@ BIO_fd_non_fatal_error(int err)
 	}
 	return (0);
 }
+#endif

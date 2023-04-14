@@ -1,4 +1,4 @@
-/* $OpenBSD: asn1_par.c,v 1.34 2022/02/12 03:07:24 jsing Exp $ */
+/* $OpenBSD: asn1_par.c,v 1.18 2014/06/12 15:49:27 deraadt Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -71,6 +71,7 @@ static int
 asn1_print_info(BIO *bp, int tag, int xclass, int constructed,
     int indent)
 {
+	static const char fmt[] = "%-18s";
 	char str[128];
 	const char *p;
 
@@ -80,8 +81,7 @@ asn1_print_info(BIO *bp, int tag, int xclass, int constructed,
 		p="prim: ";
 	if (BIO_write(bp, p, 6) < 6)
 		goto err;
-	if (!BIO_indent(bp, indent, 128))
-		goto err;
+	BIO_indent(bp, indent, 128);
 
 	p = str;
 	if ((xclass & V_ASN1_PRIVATE) == V_ASN1_PRIVATE)
@@ -95,10 +95,10 @@ asn1_print_info(BIO *bp, int tag, int xclass, int constructed,
 	else
 		p = ASN1_tag2str(tag);
 
-	if (BIO_printf(bp, "%-18s", p) <= 0)
+	if (BIO_printf(bp, fmt, p) <= 0)
 		goto err;
 	return (1);
- err:
+err:
 	return (0);
 }
 
@@ -124,19 +124,17 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 	int nl, hl, j, r;
 	ASN1_OBJECT *o = NULL;
 	ASN1_OCTET_STRING *os = NULL;
-	ASN1_INTEGER *ai = NULL;
-	ASN1_ENUMERATED *ae = NULL;
 	/* ASN1_BMPSTRING *bmp=NULL;*/
 	int dump_indent;
 
+#if 0
+	dump_indent = indent;
+#else
 	dump_indent = 6;	/* Because we know BIO_dump_indent() */
+#endif
 	p = *pp;
 	tot = p + length;
 	op = p - 1;
-	if (depth > 128) {
-		BIO_printf(bp, "Max depth exceeded\n");
-		goto end;
-	}
 	while ((p < tot) && (op < p)) {
 		op = p;
 		j = ASN1_get_object(&p, &len, &tag, &xclass, length);
@@ -184,14 +182,12 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 						ret = 0;
 						goto end;
 					}
-					if ((r == 2) || (p >= tot)) {
-						len = (long)(p - ep);
+					if ((r == 2) || (p >= tot))
 						break;
-					}
 				}
-			} else {
+			} else
 				while (p < ep) {
-					r = asn1_parse2(bp, &p, (long)(ep - p),
+					r = asn1_parse2(bp, &p, (long)len,
 					    offset + (p - *pp), depth + 1,
 					    indent, dump);
 					if (r == 0) {
@@ -199,7 +195,6 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 						goto end;
 					}
 				}
-			}
 		} else if (xclass != 0) {
 			p += len;
 			if (BIO_write(bp, "\n", 1) <= 0)
@@ -233,13 +228,16 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 						goto end;
 				}
 			} else if (tag == V_ASN1_BOOLEAN) {
-				if (len == 1 && p < tot) {
-					BIO_printf(bp, ":%u", p[0]);
-				} else {
+				int ii;
+
+				opp = op;
+				ii = d2i_ASN1_BOOLEAN(NULL, &opp, len + hl);
+				if (ii < 0) {
 					if (BIO_write(bp, "Bad boolean\n",
 					    12) <= 0)
 						goto end;
 				}
+				BIO_printf(bp, ":%d", ii);
 			} else if (tag == V_ASN1_BMPSTRING) {
 				/* do the BMP thang */
 			} else if (tag == V_ASN1_OCTET_STRING) {
@@ -293,25 +291,28 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 						nl = 1;
 					}
 				}
-				ASN1_OCTET_STRING_free(os);
-				os = NULL;
+				if (os != NULL) {
+					M_ASN1_OCTET_STRING_free(os);
+					os = NULL;
+				}
 			} else if (tag == V_ASN1_INTEGER) {
+				ASN1_INTEGER *bs;
 				int i;
 
 				opp = op;
-				ai = d2i_ASN1_INTEGER(NULL, &opp, len + hl);
-				if (ai != NULL) {
+				bs = d2i_ASN1_INTEGER(NULL, &opp, len + hl);
+				if (bs != NULL) {
 					if (BIO_write(bp, ":", 1) <= 0)
 						goto end;
-					if (ai->type == V_ASN1_NEG_INTEGER)
+					if (bs->type == V_ASN1_NEG_INTEGER)
 						if (BIO_write(bp, "-", 1) <= 0)
 							goto end;
-					for (i = 0; i < ai->length; i++) {
+					for (i = 0; i < bs->length; i++) {
 						if (BIO_printf(bp, "%02X",
-						    ai->data[i]) <= 0)
+						    bs->data[i]) <= 0)
 							goto end;
 					}
-					if (ai->length == 0) {
+					if (bs->length == 0) {
 						if (BIO_write(bp, "00", 2) <= 0)
 							goto end;
 					}
@@ -319,25 +320,25 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 					if (BIO_write(bp, "BAD INTEGER", 11) <= 0)
 						goto end;
 				}
-				ASN1_INTEGER_free(ai);
-				ai = NULL;
+				M_ASN1_INTEGER_free(bs);
 			} else if (tag == V_ASN1_ENUMERATED) {
+				ASN1_ENUMERATED *bs;
 				int i;
 
 				opp = op;
-				ae = d2i_ASN1_ENUMERATED(NULL, &opp, len + hl);
-				if (ae != NULL) {
+				bs = d2i_ASN1_ENUMERATED(NULL, &opp, len + hl);
+				if (bs != NULL) {
 					if (BIO_write(bp, ":", 1) <= 0)
 						goto end;
-					if (ae->type == V_ASN1_NEG_ENUMERATED)
+					if (bs->type == V_ASN1_NEG_ENUMERATED)
 						if (BIO_write(bp, "-", 1) <= 0)
 							goto end;
-					for (i = 0; i < ae->length; i++) {
+					for (i = 0; i < bs->length; i++) {
 						if (BIO_printf(bp, "%02X",
-						    ae->data[i]) <= 0)
+						    bs->data[i]) <= 0)
 							goto end;
 					}
-					if (ae->length == 0) {
+					if (bs->length == 0) {
 						if (BIO_write(bp, "00", 2) <= 0)
 							goto end;
 					}
@@ -345,8 +346,7 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 					if (BIO_write(bp, "BAD ENUMERATED", 14) <= 0)
 						goto end;
 				}
-				ASN1_ENUMERATED_free(ae);
-				ae = NULL;
+				M_ASN1_ENUMERATED_free(bs);
 			} else if (len > 0 && dump) {
 				if (!nl) {
 					if (BIO_write(bp, "\n", 1) <= 0)
@@ -373,12 +373,33 @@ asn1_parse2(BIO *bp, const unsigned char **pp, long length, int offset,
 	}
 	ret = 1;
 
- end:
+end:
 	if (o != NULL)
 		ASN1_OBJECT_free(o);
-	ASN1_OCTET_STRING_free(os);
-	ASN1_INTEGER_free(ai);
-	ASN1_ENUMERATED_free(ae);
+	if (os != NULL)
+		M_ASN1_OCTET_STRING_free(os);
 	*pp = p;
 	return (ret);
+}
+
+const char *
+ASN1_tag2str(int tag)
+{
+	static const char * const tag2str[] = {
+		"EOC", "BOOLEAN", "INTEGER", "BIT STRING", "OCTET STRING", /* 0-4 */
+		"NULL", "OBJECT", "OBJECT DESCRIPTOR", "EXTERNAL", "REAL", /* 5-9 */
+		"ENUMERATED", "<ASN1 11>", "UTF8STRING", "<ASN1 13>", 	    /* 10-13 */
+		"<ASN1 14>", "<ASN1 15>", "SEQUENCE", "SET", 		    /* 15-17 */
+		"NUMERICSTRING", "PRINTABLESTRING", "T61STRING",	    /* 18-20 */
+		"VIDEOTEXSTRING", "IA5STRING", "UTCTIME", "GENERALIZEDTIME", /* 21-24 */
+		"GRAPHICSTRING", "VISIBLESTRING", "GENERALSTRING",	    /* 25-27 */
+		"UNIVERSALSTRING", "<ASN1 29>", "BMPSTRING"		    /* 28-30 */
+	};
+
+	if ((tag == V_ASN1_NEG_INTEGER) || (tag == V_ASN1_NEG_ENUMERATED))
+		tag &= ~0x100;
+
+	if (tag < 0 || tag > 30)
+		return "(unknown)";
+	return tag2str[tag];
 }

@@ -1,11 +1,12 @@
-/* $OpenBSD: sha512.c,v 1.16 2021/11/09 18:40:21 bcook Exp $ */
+/* $OpenBSD: sha512.c,v 1.12 2014/07/10 22:45:58 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 2004 The OpenSSL Project.  All rights reserved
  * according to the OpenSSL license [found in ../../LICENSE].
  * ====================================================================
  */
 
-#include <endian.h>
+#include <machine/endian.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -247,7 +248,7 @@ unsigned char *SHA384(const unsigned char *d, size_t n, unsigned char *md)
 	SHA384_Init(&c);
 	SHA512_Update(&c,d,n);
 	SHA512_Final(md,&c);
-	explicit_bzero(&c,sizeof(c));
+	OPENSSL_cleanse(&c,sizeof(c));
 	return(md);
 	}
 
@@ -260,7 +261,7 @@ unsigned char *SHA512(const unsigned char *d, size_t n, unsigned char *md)
 	SHA512_Init(&c);
 	SHA512_Update(&c,d,n);
 	SHA512_Final(md,&c);
-	explicit_bzero(&c,sizeof(c));
+	OPENSSL_cleanse(&c,sizeof(c));
 	return(md);
 	}
 
@@ -319,12 +320,23 @@ static const SHA_LONG64 K512[80] = {
 				: "=r"(ret)			\
 				: "0"(ret)); ret;		})
 # elif (defined(__i386) || defined(__i386__))
+#  if defined(I386_ONLY)
+#   define PULL64(x) ({ const unsigned int *p=(const unsigned int *)(&(x));\
+			 unsigned int hi=p[0],lo=p[1];		\
+				asm("xchgb %%ah,%%al;xchgb %%dh,%%dl;"\
+				    "roll $16,%%eax; roll $16,%%edx; "\
+				    "xchgb %%ah,%%al;xchgb %%dh,%%dl;" \
+				: "=a"(lo),"=d"(hi)		\
+				: "0"(lo),"1"(hi) : "cc");	\
+				((SHA_LONG64)hi)<<32|lo;	})
+#  else
 #   define PULL64(x) ({ const unsigned int *p=(const unsigned int *)(&(x));\
 			 unsigned int hi=p[0],lo=p[1];		\
 				asm ("bswapl %0; bswapl %1;"	\
 				: "=r"(lo),"=r"(hi)		\
 				: "0"(lo),"1"(hi));		\
 				((SHA_LONG64)hi)<<32|lo;	})
+#  endif
 # elif (defined(_ARCH_PPC) && defined(__64BIT__)) || defined(_ARCH_PPC64)
 #  define ROTR(a,n)	({ SHA_LONG64 ret;		\
 				asm ("rotrdi %0,%1,%2"	\

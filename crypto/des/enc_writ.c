@@ -1,4 +1,4 @@
-/* $OpenBSD: enc_writ.c,v 1.15 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: enc_writ.c,v 1.11 2014/07/10 22:45:56 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -58,12 +58,13 @@
 
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <time.h>
 
 #include <openssl/opensslconf.h>
 
-#include "des_local.h"
+#include <openssl/rand.h>
+
+#include "des_locl.h"
 
 /*
  * WARNINGS:
@@ -82,6 +83,9 @@
 int DES_enc_write(int fd, const void *_buf, int len,
 		  DES_key_schedule *sched, DES_cblock *iv)
 	{
+#if defined(OPENSSL_NO_POSIX_IO)
+	return (-1);
+#else
 #ifdef _LIBC
 	extern unsigned long time();
 	extern int write();
@@ -132,7 +136,7 @@ int DES_enc_write(int fd, const void *_buf, int len,
 		{
 		cp=shortbuf;
 		memcpy(shortbuf,buf,len);
-		arc4random_buf(shortbuf+len, 8-len);
+		RAND_pseudo_bytes(shortbuf+len, 8-len);
 		rnum=8;
 		}
 	else
@@ -170,4 +174,5 @@ int DES_enc_write(int fd, const void *_buf, int len,
 		}
 
 	return(len);
+#endif /* OPENSSL_NO_POSIX_IO */
 	}

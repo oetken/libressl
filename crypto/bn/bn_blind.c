@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_blind.c,v 1.20 2023/03/07 09:27:10 jsing Exp $ */
+/* $OpenBSD: bn_blind.c,v 1.12 2014/07/10 22:45:56 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 1998-2006 The OpenSSL Project.  All rights reserved.
  *
@@ -115,7 +115,7 @@
 
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 #define BN_BLINDING_COUNTER	32
 
@@ -141,9 +141,10 @@ BN_BLINDING_new(const BIGNUM *A, const BIGNUM *Ai, BIGNUM *mod)
 {
 	BN_BLINDING *ret = NULL;
 
+	bn_check_top(mod);
 
 	if ((ret = calloc(1, sizeof(BN_BLINDING))) == NULL) {
-		BNerror(ERR_R_MALLOC_FAILURE);
+		BNerr(BN_F_BN_BLINDING_NEW, ERR_R_MALLOC_FAILURE);
 		return (NULL);
 	}
 	if (A != NULL) {
@@ -180,10 +181,14 @@ BN_BLINDING_free(BN_BLINDING *r)
 	if (r == NULL)
 		return;
 
-	BN_free(r->A);
-	BN_free(r->Ai);
-	BN_free(r->e);
-	BN_free(r->mod);
+	if (r->A  != NULL)
+		BN_clear_free(r->A );
+	if (r->Ai != NULL)
+		BN_clear_free(r->Ai);
+	if (r->e  != NULL)
+		BN_clear_free(r->e );
+	if (r->mod != NULL)
+		BN_clear_free(r->mod);
 	free(r);
 }
 
@@ -193,7 +198,7 @@ BN_BLINDING_update(BN_BLINDING *b, BN_CTX *ctx)
 	int ret = 0;
 
 	if ((b->A == NULL) || (b->Ai == NULL)) {
-		BNerror(BN_R_NOT_INITIALIZED);
+		BNerr(BN_F_BN_BLINDING_UPDATE, BN_R_NOT_INITIALIZED);
 		goto err;
 	}
 
@@ -231,9 +236,10 @@ BN_BLINDING_convert_ex(BIGNUM *n, BIGNUM *r, BN_BLINDING *b, BN_CTX *ctx)
 {
 	int ret = 1;
 
+	bn_check_top(n);
 
 	if ((b->A == NULL) || (b->Ai == NULL)) {
-		BNerror(BN_R_NOT_INITIALIZED);
+		BNerr(BN_F_BN_BLINDING_CONVERT_EX, BN_R_NOT_INITIALIZED);
 		return (0);
 	}
 
@@ -265,17 +271,19 @@ BN_BLINDING_invert_ex(BIGNUM *n, const BIGNUM *r, BN_BLINDING *b, BN_CTX *ctx)
 {
 	int ret;
 
+	bn_check_top(n);
 
 	if (r != NULL)
 		ret = BN_mod_mul(n, n, r, b->mod, ctx);
 	else {
 		if (b->Ai == NULL) {
-			BNerror(BN_R_NOT_INITIALIZED);
+			BNerr(BN_F_BN_BLINDING_INVERT_EX, BN_R_NOT_INITIALIZED);
 			return (0);
 		}
 		ret = BN_mod_mul(n, n, b->Ai, b->mod, ctx);
 	}
 
+	bn_check_top(n);
 	return (ret);
 }
 
@@ -333,7 +341,8 @@ BN_BLINDING_create_param(BN_BLINDING *b, const BIGNUM *e, BIGNUM *m,
 		goto err;
 
 	if (e != NULL) {
-		BN_free(ret->e);
+		if (ret->e != NULL)
+			BN_free(ret->e);
 		ret->e = BN_dup(e);
 	}
 	if (ret->e == NULL)
@@ -347,12 +356,13 @@ BN_BLINDING_create_param(BN_BLINDING *b, const BIGNUM *e, BIGNUM *m,
 	do {
 		if (!BN_rand_range(ret->A, ret->mod))
 			goto err;
-		if (BN_mod_inverse_ct(ret->Ai, ret->A, ret->mod, ctx) == NULL) {
+		if (BN_mod_inverse(ret->Ai, ret->A, ret->mod, ctx) == NULL) {
 			/* this should almost never happen for good RSA keys */
 			unsigned long error = ERR_peek_last_error();
 			if (ERR_GET_REASON(error) == BN_R_NO_INVERSE) {
 				if (retry_counter-- == 0) {
-					BNerror(BN_R_TOO_MANY_ITERATIONS);
+					BNerr(BN_F_BN_BLINDING_CREATE_PARAM,
+					    BN_R_TOO_MANY_ITERATIONS);
 					goto err;
 				}
 				ERR_clear_error();
@@ -367,7 +377,7 @@ BN_BLINDING_create_param(BN_BLINDING *b, const BIGNUM *e, BIGNUM *m,
 		    ctx, ret->m_ctx))
 			goto err;
 	} else {
-		if (!BN_mod_exp_ct(ret->A, ret->A, ret->e, ret->mod, ctx))
+		if (!BN_mod_exp(ret->A, ret->A, ret->e, ret->mod, ctx))
 			goto err;
 	}
 

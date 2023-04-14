@@ -1,4 +1,4 @@
-/* $OpenBSD: ncbc_enc.c,v 1.8 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /*
  * #included by:
  *    cbc_enc.c  (DES_cbc_encrypt)
@@ -61,7 +61,7 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_local.h"
+#include "des_locl.h"
 
 #ifdef CBC_ENC_C__DONT_UPDATE_IV
 void DES_cbc_encrypt(const unsigned char *in, unsigned char *out, long length,
@@ -71,9 +71,9 @@ void DES_ncbc_encrypt(const unsigned char *in, unsigned char *out, long length,
 		     DES_key_schedule *_schedule, DES_cblock *ivec, int enc)
 #endif
 	{
-	DES_LONG tin0,tin1;
-	DES_LONG tout0,tout1,xor0,xor1;
-	long l=length;
+	register DES_LONG tin0,tin1;
+	register DES_LONG tout0,tout1,xor0,xor1;
+	register long l=length;
 	DES_LONG tin[2];
 	unsigned char *iv;
 

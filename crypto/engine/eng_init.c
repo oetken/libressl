@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_init.c,v 1.9 2018/04/14 07:09:21 tb Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1999-2001 The OpenSSL Project.  All rights reserved.
  *
@@ -53,8 +53,6 @@
  *
  */
 
-#include <openssl/err.h>
-
 #include "eng_int.h"
 
 /* Initialise a engine type for use (or up its functional reference count
@@ -106,7 +104,8 @@ engine_unlocked_finish(ENGINE *e, int unlock_for_handlers)
 
 	/* Release the structural reference too */
 	if (!engine_free_util(e, 0)) {
-		ENGINEerror(ENGINE_R_FINISH_FAILED);
+		ENGINEerr(ENGINE_F_ENGINE_UNLOCKED_FINISH,
+		    ENGINE_R_FINISH_FAILED);
 		return 0;
 	}
 	return to_return;
@@ -119,7 +118,7 @@ ENGINE_init(ENGINE *e)
 	int ret;
 
 	if (e == NULL) {
-		ENGINEerror(ERR_R_PASSED_NULL_PARAMETER);
+		ENGINEerr(ENGINE_F_ENGINE_INIT, ERR_R_PASSED_NULL_PARAMETER);
 		return 0;
 	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
@@ -134,13 +133,15 @@ ENGINE_finish(ENGINE *e)
 {
 	int to_return = 1;
 
-	if (e == NULL)
-		return 1;
+	if (e == NULL) {
+		ENGINEerr(ENGINE_F_ENGINE_FINISH, ERR_R_PASSED_NULL_PARAMETER);
+		return 0;
+	}
 	CRYPTO_w_lock(CRYPTO_LOCK_ENGINE);
 	to_return = engine_unlocked_finish(e, 1);
 	CRYPTO_w_unlock(CRYPTO_LOCK_ENGINE);
 	if (!to_return) {
-		ENGINEerror(ENGINE_R_FINISH_FAILED);
+		ENGINEerr(ENGINE_F_ENGINE_FINISH, ENGINE_R_FINISH_FAILED);
 		return 0;
 	}
 	return to_return;

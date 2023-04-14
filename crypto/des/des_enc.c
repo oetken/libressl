@@ -1,4 +1,4 @@
-/* $OpenBSD: des_enc.c,v 1.13 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,21 +56,21 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_local.h"
+#include "des_locl.h"
 #include "spr.h"
 
 #ifndef OPENBSD_DES_ASM
 
 void DES_encrypt1(DES_LONG *data, DES_key_schedule *ks, int enc)
 	{
-	DES_LONG l,r,t,u;
+	register DES_LONG l,r,t,u;
 #ifdef DES_PTR
-	const unsigned char *des_SP=(const unsigned char *)DES_SPtrans;
+	register const unsigned char *des_SP=(const unsigned char *)DES_SPtrans;
 #endif
 #ifndef DES_UNROLL
-	int i;
+	register int i;
 #endif
-	DES_LONG *s;
+	register DES_LONG *s;
 
 	r=data[0];
 	l=data[1];
@@ -157,14 +157,14 @@ void DES_encrypt1(DES_LONG *data, DES_key_schedule *ks, int enc)
 
 void DES_encrypt2(DES_LONG *data, DES_key_schedule *ks, int enc)
 	{
-	DES_LONG l,r,t,u;
+	register DES_LONG l,r,t,u;
 #ifdef DES_PTR
-	const unsigned char *des_SP=(const unsigned char *)DES_SPtrans;
+	register const unsigned char *des_SP=(const unsigned char *)DES_SPtrans;
 #endif
 #ifndef DES_UNROLL
-	int i;
+	register int i;
 #endif
-	DES_LONG *s;
+	register DES_LONG *s;
 
 	r=data[0];
 	l=data[1];
@@ -247,7 +247,7 @@ void DES_encrypt2(DES_LONG *data, DES_key_schedule *ks, int enc)
 void DES_encrypt3(DES_LONG *data, DES_key_schedule *ks1,
 		  DES_key_schedule *ks2, DES_key_schedule *ks3)
 	{
-	DES_LONG l,r;
+	register DES_LONG l,r;
 
 	l=data[0];
 	r=data[1];
@@ -267,7 +267,7 @@ void DES_encrypt3(DES_LONG *data, DES_key_schedule *ks1,
 void DES_decrypt3(DES_LONG *data, DES_key_schedule *ks1,
 		  DES_key_schedule *ks2, DES_key_schedule *ks3)
 	{
-	DES_LONG l,r;
+	register DES_LONG l,r;
 
 	l=data[0];
 	r=data[1];
@@ -294,11 +294,11 @@ void DES_ede3_cbc_encrypt(const unsigned char *input, unsigned char *output,
 			  DES_key_schedule *ks2, DES_key_schedule *ks3,
 			  DES_cblock *ivec, int enc)
 	{
-	DES_LONG tin0,tin1;
-	DES_LONG tout0,tout1,xor0,xor1;
-	const unsigned char *in;
+	register DES_LONG tin0,tin1;
+	register DES_LONG tout0,tout1,xor0,xor1;
+	register const unsigned char *in;
 	unsigned char *out;
-	long l=length;
+	register long l=length;
 	DES_LONG tin[2];
 	unsigned char *iv;
 
@@ -347,7 +347,7 @@ void DES_ede3_cbc_encrypt(const unsigned char *input, unsigned char *output,
 		}
 	else
 		{
-		DES_LONG t0,t1;
+		register DES_LONG t0,t1;
 
 		c2l(iv,xor0);
 		c2l(iv,xor1);

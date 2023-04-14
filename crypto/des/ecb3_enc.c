@@ -1,4 +1,4 @@
-/* $OpenBSD: ecb3_enc.c,v 1.8 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD$ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,14 +56,14 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_local.h"
+#include "des_locl.h"
 
 void DES_ecb3_encrypt(const_DES_cblock *input, DES_cblock *output,
 		      DES_key_schedule *ks1, DES_key_schedule *ks2,
 		      DES_key_schedule *ks3,
 	     int enc)
 	{
-	DES_LONG l0,l1;
+	register DES_LONG l0,l1;
 	DES_LONG ll[2];
 	const unsigned char *in = &(*input)[0];
 	unsigned char *out = &(*output)[0];

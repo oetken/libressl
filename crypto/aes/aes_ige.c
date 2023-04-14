@@ -1,4 +1,4 @@
-/* $OpenBSD: aes_ige.c,v 1.9 2022/11/26 16:08:50 tb Exp $ */
+/* $OpenBSD: aes_ige.c,v 1.5 2014/06/12 15:49:27 deraadt Exp $ */
 /* ====================================================================
  * Copyright (c) 2006 The OpenSSL Project.  All rights reserved.
  *
@@ -52,7 +52,7 @@
 #include <openssl/aes.h>
 #include <openssl/crypto.h>
 
-#include "aes_local.h"
+#include "aes_locl.h"
 
 #define N_WORDS (AES_BLOCK_SIZE / sizeof(unsigned long))
 typedef struct {
@@ -81,8 +81,10 @@ AES_ige_encrypt(const unsigned char *in, unsigned char *out, size_t length,
     const AES_KEY *key, unsigned char *ivec, const int enc)
 {
 	size_t n;
-	size_t len;
+	size_t len = length;
 
+	OPENSSL_assert(in && out && key && ivec);
+	OPENSSL_assert((AES_ENCRYPT == enc) || (AES_DECRYPT == enc));
 	OPENSSL_assert((length % AES_BLOCK_SIZE) == 0);
 
 	len = length / AES_BLOCK_SIZE;
@@ -109,8 +111,8 @@ AES_ige_encrypt(const unsigned char *in, unsigned char *out, size_t length,
 				in += AES_BLOCK_SIZE;
 				out += AES_BLOCK_SIZE;
 			}
-			memmove(ivec, ivp->data, AES_BLOCK_SIZE);
-			memmove(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
+			memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
+			memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
 		} else {
 			aes_block_t tmp, tmp2;
 			aes_block_t iv;
@@ -161,8 +163,8 @@ AES_ige_encrypt(const unsigned char *in, unsigned char *out, size_t length,
 				in += AES_BLOCK_SIZE;
 				out += AES_BLOCK_SIZE;
 			}
-			memmove(ivec, ivp->data, AES_BLOCK_SIZE);
-			memmove(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
+			memcpy(ivec, ivp->data, AES_BLOCK_SIZE);
+			memcpy(ivec + AES_BLOCK_SIZE, iv2p->data, AES_BLOCK_SIZE);
 		} else {
 			aes_block_t tmp, tmp2;
 			aes_block_t iv;

@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_info.c,v 1.26 2022/11/26 16:08:53 tb Exp $ */
+/* $OpenBSD: pem_info.c,v 1.18 2014/07/10 22:45:57 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -75,8 +75,6 @@
 #include <openssl/rsa.h>
 #endif
 
-#include "evp_local.h"
-
 STACK_OF(X509_INFO) *
 PEM_X509_INFO_read(FILE *fp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
     void *u)
@@ -85,7 +83,7 @@ PEM_X509_INFO_read(FILE *fp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 	STACK_OF(X509_INFO) *ret;
 
 	if ((b = BIO_new(BIO_s_file())) == NULL) {
-		PEMerror(ERR_R_BUF_LIB);
+		PEMerr(PEM_F_PEM_X509_INFO_READ, ERR_R_BUF_LIB);
 		return (0);
 	}
 	BIO_set_fp(b, fp, BIO_NOCLOSE);
@@ -103,33 +101,36 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 	void *pp;
 	unsigned char *data = NULL;
 	const unsigned char *p;
-	long len;
+	long len, error = 0;
 	int ok = 0;
-	int num_in, ptype, raw;
-	STACK_OF(X509_INFO) *ret = sk;
-	d2i_of_void *d2i = NULL;
+	STACK_OF(X509_INFO) *ret = NULL;
+	unsigned int i, raw, ptype;
+	d2i_of_void *d2i = 0;
 
-	if (ret == NULL) {
+	if (sk == NULL) {
 		if ((ret = sk_X509_INFO_new_null()) == NULL) {
-			PEMerror(ERR_R_MALLOC_FAILURE);
-			return NULL;
+			PEMerr(PEM_F_PEM_X509_INFO_READ_BIO,
+			    ERR_R_MALLOC_FAILURE);
+			return 0;
 		}
-	}
-	num_in = sk_X509_INFO_num(ret);
+	} else
+		ret = sk;
 
 	if ((xi = X509_INFO_new()) == NULL)
 		goto err;
 	for (;;) {
 		raw = 0;
 		ptype = 0;
-		if (!PEM_read_bio(bp, &name, &header, &data, &len)) {
-			if (ERR_GET_REASON(ERR_peek_last_error()) ==
-			    PEM_R_NO_START_LINE) {
+		i = PEM_read_bio(bp, &name, &header, &data, &len);
+		if (i == 0) {
+			error = ERR_GET_REASON(ERR_peek_last_error());
+			if (error == PEM_R_NO_START_LINE) {
 				ERR_clear_error();
 				break;
 			}
 			goto err;
 		}
+start:
 		if ((strcmp(name, PEM_STRING_X509) == 0) ||
 		    (strcmp(name, PEM_STRING_X509_OLD) == 0)) {
 			d2i = (D2I_OF(void))d2i_X509;
@@ -138,6 +139,7 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
 			pp = &(xi->x509);
 		} else if ((strcmp(name, PEM_STRING_X509_TRUSTED) == 0)) {
@@ -147,6 +149,7 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
 			pp = &(xi->x509);
 		} else if (strcmp(name, PEM_STRING_X509_CRL) == 0) {
@@ -156,6 +159,7 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
 			pp = &(xi->crl);
 		} else
@@ -167,9 +171,12 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
+
 			xi->enc_data = NULL;
 			xi->enc_len = 0;
+
 			xi->x_pkey = X509_PKEY_new();
 			if (xi->x_pkey == NULL)
 				goto err;
@@ -187,9 +194,12 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
+
 			xi->enc_data = NULL;
 			xi->enc_len = 0;
+
 			xi->x_pkey = X509_PKEY_new();
 			if (xi->x_pkey == NULL)
 				goto err;
@@ -207,9 +217,12 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 					goto err;
 				if ((xi = X509_INFO_new()) == NULL)
 					goto err;
+				goto start;
 			}
+
 			xi->enc_data = NULL;
 			xi->enc_len = 0;
+
 			xi->x_pkey = X509_PKEY_new();
 			if (xi->x_pkey == NULL)
 				goto err;
@@ -236,11 +249,13 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 				if (ptype) {
 					if (!d2i_PrivateKey(ptype, pp, &p,
 					    len)) {
-						PEMerror(ERR_R_ASN1_LIB);
+						PEMerr(PEM_F_PEM_X509_INFO_READ_BIO,
+						    ERR_R_ASN1_LIB);
 						goto err;
 					}
 				} else if (d2i(pp, &p, len) == NULL) {
-					PEMerror(ERR_R_ASN1_LIB);
+					PEMerr(PEM_F_PEM_X509_INFO_READ_BIO,
+					    ERR_R_ASN1_LIB);
 					goto err;
 				}
 			} else { /* encrypted RSA data */
@@ -274,19 +289,22 @@ PEM_X509_INFO_read_bio(BIO *bp, STACK_OF(X509_INFO) *sk, pem_password_cb *cb,
 	ok = 1;
 
 err:
+	if (xi != NULL)
+		X509_INFO_free(xi);
 	if (!ok) {
-		while (sk_X509_INFO_num(ret) > num_in)
-			X509_INFO_free(sk_X509_INFO_pop(ret));
+		for (i = 0; ((int)i) < sk_X509_INFO_num(ret); i++) {
+			xi = sk_X509_INFO_value(ret, i);
+			X509_INFO_free(xi);
+		}
 		if (ret != sk)
 			sk_X509_INFO_free(ret);
 		ret = NULL;
 	}
-	X509_INFO_free(xi);
+
 	free(name);
 	free(header);
 	free(data);
-
-	return ret;
+	return (ret);
 }
 
 
@@ -305,7 +323,8 @@ PEM_X509_INFO_write_bio(BIO *bp, X509_INFO *xi, EVP_CIPHER *enc,
 	if (enc != NULL) {
 		objstr = OBJ_nid2sn(EVP_CIPHER_nid(enc));
 		if (objstr == NULL) {
-			PEMerror(PEM_R_UNSUPPORTED_CIPHER);
+			PEMerr(PEM_F_PEM_X509_INFO_WRITE_BIO,
+			    PEM_R_UNSUPPORTED_CIPHER);
 			goto err;
 		}
 	}
@@ -318,7 +337,8 @@ PEM_X509_INFO_write_bio(BIO *bp, X509_INFO *xi, EVP_CIPHER *enc,
 	if (xi->x_pkey != NULL) {
 		if ((xi->enc_data != NULL) && (xi->enc_len > 0) ) {
 			if (enc == NULL) {
-				PEMerror(PEM_R_CIPHER_IS_NULL);
+				PEMerr(PEM_F_PEM_X509_INFO_WRITE_BIO,
+				    PEM_R_CIPHER_IS_NULL);
 				goto err;
 			}
 
@@ -335,16 +355,14 @@ PEM_X509_INFO_write_bio(BIO *bp, X509_INFO *xi, EVP_CIPHER *enc,
 			objstr = OBJ_nid2sn(
 			    EVP_CIPHER_nid(xi->enc_cipher.cipher));
 			if (objstr == NULL) {
-				PEMerror(PEM_R_UNSUPPORTED_CIPHER);
+				PEMerr(PEM_F_PEM_X509_INFO_WRITE_BIO,
+				    PEM_R_UNSUPPORTED_CIPHER);
 				goto err;
 			}
 
 			/* create the right magic header stuff */
-			if (strlen(objstr) + 23 + 2 * enc->iv_len + 13 >
-			    sizeof buf) {
-				PEMerror(ASN1_R_BUFFER_TOO_SMALL);
-				goto err;
-			}
+			OPENSSL_assert(strlen(objstr) + 23 +
+			    2 * enc->iv_len + 13 <= sizeof buf);
 			buf[0] = '\0';
 			PEM_proc_type(buf, PEM_TYPE_ENCRYPTED);
 			PEM_dek_info(buf, objstr, enc->iv_len, (char *)iv);
@@ -378,7 +396,7 @@ PEM_X509_INFO_write_bio(BIO *bp, X509_INFO *xi, EVP_CIPHER *enc,
 	ret = 1;
 
 err:
-	explicit_bzero((char *)&ctx, sizeof(ctx));
-	explicit_bzero(buf, PEM_BUFSIZE);
+	OPENSSL_cleanse((char *)&ctx, sizeof(ctx));
+	OPENSSL_cleanse(buf, PEM_BUFSIZE);
 	return (ret);
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: p12_mutl.c,v 1.35 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: p12_mutl.c,v 1.16 2014/07/10 22:45:57 jsing Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -57,7 +57,6 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include <openssl/opensslconf.h>
@@ -67,46 +66,7 @@
 #include <openssl/err.h>
 #include <openssl/hmac.h>
 #include <openssl/pkcs12.h>
-
-#include "evp_local.h"
-#include "hmac_local.h"
-#include "pkcs12_local.h"
-#include "x509_local.h"
-
-int
-PKCS12_mac_present(const PKCS12 *p12)
-{
-	return p12->mac != NULL;
-}
-LCRYPTO_ALIAS(PKCS12_mac_present);
-
-void
-PKCS12_get0_mac(const ASN1_OCTET_STRING **pmac, const X509_ALGOR **pmacalg,
-    const ASN1_OCTET_STRING **psalt, const ASN1_INTEGER **piter,
-    const PKCS12 *p12)
-{
-	if (p12->mac == NULL) {
-		if (pmac != NULL)
-			*pmac = NULL;
-		if (pmacalg != NULL)
-			*pmacalg = NULL;
-		if (psalt != NULL)
-			*psalt = NULL;
-		if (piter != NULL)
-			*piter = NULL;
-		return;
-	}
-
-	if (pmac != NULL)
-		*pmac = p12->mac->dinfo->digest;
-	if (pmacalg != NULL)
-		*pmacalg = p12->mac->dinfo->algor;
-	if (psalt != NULL)
-		*psalt = p12->mac->salt;
-	if (piter != NULL)
-		*piter = p12->mac->iter;
-}
-LCRYPTO_ALIAS(PKCS12_get0_mac);
+#include <openssl/rand.h>
 
 /* Generate a MAC */
 int
@@ -114,62 +74,48 @@ PKCS12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
     unsigned char *mac, unsigned int *maclen)
 {
 	const EVP_MD *md_type;
-	HMAC_CTX *hmac = NULL;
+	HMAC_CTX hmac;
 	unsigned char key[EVP_MAX_MD_SIZE], *salt;
 	int saltlen, iter;
 	int md_size;
-	int ret = 0;
 
 	if (!PKCS7_type_is_data(p12->authsafes)) {
-		PKCS12error(PKCS12_R_CONTENT_TYPE_NOT_DATA);
-		goto err;
+		PKCS12err(PKCS12_F_PKCS12_GEN_MAC,
+		    PKCS12_R_CONTENT_TYPE_NOT_DATA);
+		return 0;
 	}
 
 	salt = p12->mac->salt->data;
 	saltlen = p12->mac->salt->length;
-
-	iter = 1;
-	if (p12->mac->iter != NULL) {
-		if ((iter = ASN1_INTEGER_get(p12->mac->iter)) <= 0) {
-			PKCS12error(PKCS12_R_DECODE_ERROR);
-			goto err;
-		}
+	if (!p12->mac->iter)
+		iter = 1;
+	else
+		iter = ASN1_INTEGER_get(p12->mac->iter);
+	if (!(md_type = EVP_get_digestbyobj(
+	    p12->mac->dinfo->algor->algorithm))) {
+		PKCS12err(PKCS12_F_PKCS12_GEN_MAC,
+		    PKCS12_R_UNKNOWN_DIGEST_ALGORITHM);
+		return 0;
 	}
-
-	md_type = EVP_get_digestbyobj(p12->mac->dinfo->algor->algorithm);
-	if (md_type == NULL) {
-		PKCS12error(PKCS12_R_UNKNOWN_DIGEST_ALGORITHM);
-		goto err;
-	}
-
-	if ((md_size = EVP_MD_size(md_type)) < 0)
-		goto err;
-
-	if (!PKCS12_key_gen(pass, passlen, salt, saltlen, PKCS12_MAC_ID, iter,
+	md_size = EVP_MD_size(md_type);
+	if (md_size < 0)
+		return 0;
+	if (!PKCS12_key_gen (pass, passlen, salt, saltlen, PKCS12_MAC_ID, iter,
 	    md_size, key, md_type)) {
-		PKCS12error(PKCS12_R_KEY_GEN_ERROR);
-		goto err;
+		PKCS12err(PKCS12_F_PKCS12_GEN_MAC, PKCS12_R_KEY_GEN_ERROR);
+		return 0;
 	}
-
-	if ((hmac = HMAC_CTX_new()) == NULL)
-		goto err;
-	if (!HMAC_Init_ex(hmac, key, md_size, md_type, NULL))
-		goto err;
-	if (!HMAC_Update(hmac, p12->authsafes->d.data->data,
-	    p12->authsafes->d.data->length))
-		goto err;
-	if (!HMAC_Final(hmac, mac, maclen))
-		goto err;
-
-	ret = 1;
-
- err:
-	explicit_bzero(key, sizeof(key));
-	HMAC_CTX_free(hmac);
-
-	return ret;
+	HMAC_CTX_init(&hmac);
+	if (!HMAC_Init_ex(&hmac, key, md_size, md_type, NULL) ||
+	    !HMAC_Update(&hmac, p12->authsafes->d.data->data,
+	    p12->authsafes->d.data->length) ||
+	    !HMAC_Final(&hmac, mac, maclen)) {
+		HMAC_CTX_cleanup(&hmac);
+		return 0;
+	}
+	HMAC_CTX_cleanup(&hmac);
+	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_gen_mac);
 
 /* Verify the mac */
 int
@@ -177,13 +123,13 @@ PKCS12_verify_mac(PKCS12 *p12, const char *pass, int passlen)
 {
 	unsigned char mac[EVP_MAX_MD_SIZE];
 	unsigned int maclen;
-
 	if (p12->mac == NULL) {
-		PKCS12error(PKCS12_R_MAC_ABSENT);
+		PKCS12err(PKCS12_F_PKCS12_VERIFY_MAC, PKCS12_R_MAC_ABSENT);
 		return 0;
 	}
-	if (!PKCS12_gen_mac(p12, pass, passlen, mac, &maclen)) {
-		PKCS12error(PKCS12_R_MAC_GENERATION_ERROR);
+	if (!PKCS12_gen_mac (p12, pass, passlen, mac, &maclen)) {
+		PKCS12err(PKCS12_F_PKCS12_VERIFY_MAC,
+		    PKCS12_R_MAC_GENERATION_ERROR);
 		return 0;
 	}
 	if ((maclen != (unsigned int)p12->mac->dinfo->digest->length) ||
@@ -191,7 +137,6 @@ PKCS12_verify_mac(PKCS12 *p12, const char *pass, int passlen)
 		return 0;
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_verify_mac);
 
 /* Set a mac */
 
@@ -204,60 +149,62 @@ PKCS12_set_mac(PKCS12 *p12, const char *pass, int passlen, unsigned char *salt,
 
 	if (!md_type)
 		md_type = EVP_sha1();
-	if (PKCS12_setup_mac(p12, iter, salt, saltlen, md_type) ==
+	if (PKCS12_setup_mac (p12, iter, salt, saltlen, md_type) ==
 	    PKCS12_ERROR) {
-		PKCS12error(PKCS12_R_MAC_SETUP_ERROR);
+		PKCS12err(PKCS12_F_PKCS12_SET_MAC, PKCS12_R_MAC_SETUP_ERROR);
 		return 0;
 	}
-	if (!PKCS12_gen_mac(p12, pass, passlen, mac, &maclen)) {
-		PKCS12error(PKCS12_R_MAC_GENERATION_ERROR);
+	if (!PKCS12_gen_mac (p12, pass, passlen, mac, &maclen)) {
+		PKCS12err(PKCS12_F_PKCS12_SET_MAC,
+		    PKCS12_R_MAC_GENERATION_ERROR);
 		return 0;
 	}
-	if (!(ASN1_STRING_set(p12->mac->dinfo->digest, mac, maclen))) {
-		PKCS12error(PKCS12_R_MAC_STRING_SET_ERROR);
+	if (!(M_ASN1_OCTET_STRING_set (p12->mac->dinfo->digest, mac, maclen))) {
+		PKCS12err(PKCS12_F_PKCS12_SET_MAC,
+		    PKCS12_R_MAC_STRING_SET_ERROR);
 		return 0;
 	}
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_set_mac);
 
 /* Set up a mac structure */
 int
 PKCS12_setup_mac(PKCS12 *p12, int iter, unsigned char *salt, int saltlen,
     const EVP_MD *md_type)
 {
-	PKCS12_MAC_DATA_free(p12->mac);
-	if ((p12->mac = PKCS12_MAC_DATA_new()) == NULL)
+	if (!(p12->mac = PKCS12_MAC_DATA_new()))
 		return PKCS12_ERROR;
 	if (iter > 1) {
-		if (!(p12->mac->iter = ASN1_INTEGER_new())) {
-			PKCS12error(ERR_R_MALLOC_FAILURE);
+		if (!(p12->mac->iter = M_ASN1_INTEGER_new())) {
+			PKCS12err(PKCS12_F_PKCS12_SETUP_MAC,
+			    ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 		if (!ASN1_INTEGER_set(p12->mac->iter, iter)) {
-			PKCS12error(ERR_R_MALLOC_FAILURE);
+			PKCS12err(PKCS12_F_PKCS12_SETUP_MAC,
+			    ERR_R_MALLOC_FAILURE);
 			return 0;
 		}
 	}
 	if (!saltlen)
 		saltlen = PKCS12_SALT_LEN;
-	if (!(p12->mac->salt->data = malloc(saltlen))) {
-		PKCS12error(ERR_R_MALLOC_FAILURE);
+	p12->mac->salt->length = saltlen;
+	if (!(p12->mac->salt->data = malloc (saltlen))) {
+		PKCS12err(PKCS12_F_PKCS12_SETUP_MAC, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
-	p12->mac->salt->length = saltlen;
-	if (!salt)
-		arc4random_buf(p12->mac->salt->data, saltlen);
-	else
-		memcpy(p12->mac->salt->data, salt, saltlen);
+	if (!salt) {
+		if (RAND_pseudo_bytes (p12->mac->salt->data, saltlen) < 0)
+			return 0;
+	} else
+		memcpy (p12->mac->salt->data, salt, saltlen);
 	p12->mac->dinfo->algor->algorithm = OBJ_nid2obj(EVP_MD_type(md_type));
 	if (!(p12->mac->dinfo->algor->parameter = ASN1_TYPE_new())) {
-		PKCS12error(ERR_R_MALLOC_FAILURE);
+		PKCS12err(PKCS12_F_PKCS12_SETUP_MAC, ERR_R_MALLOC_FAILURE);
 		return 0;
 	}
 	p12->mac->dinfo->algor->parameter->type = V_ASN1_NULL;
 
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_setup_mac);
 #endif

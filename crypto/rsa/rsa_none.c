@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_none.c,v 1.11 2017/01/29 17:49:23 beck Exp $ */
+/* $OpenBSD: rsa_none.c,v 1.8 2014/07/10 13:58:23 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -61,6 +61,7 @@
 
 #include <openssl/bn.h>
 #include <openssl/err.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 
 int
@@ -68,12 +69,14 @@ RSA_padding_add_none(unsigned char *to, int tlen, const unsigned char *from,
     int flen)
 {
 	if (flen > tlen) {
-		RSAerror(RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
+		RSAerr(RSA_F_RSA_PADDING_ADD_NONE,
+		    RSA_R_DATA_TOO_LARGE_FOR_KEY_SIZE);
 		return 0;
 	}
 
 	if (flen < tlen) {
-		RSAerror(RSA_R_DATA_TOO_SMALL_FOR_KEY_SIZE);
+		RSAerr(RSA_F_RSA_PADDING_ADD_NONE,
+		    RSA_R_DATA_TOO_SMALL_FOR_KEY_SIZE);
 		return 0;
 	}
 
@@ -86,7 +89,7 @@ RSA_padding_check_none(unsigned char *to, int tlen, const unsigned char *from,
     int flen, int num)
 {
 	if (flen > tlen) {
-		RSAerror(RSA_R_DATA_TOO_LARGE);
+		RSAerr(RSA_F_RSA_PADDING_CHECK_NONE, RSA_R_DATA_TOO_LARGE);
 		return -1;
 	}
 

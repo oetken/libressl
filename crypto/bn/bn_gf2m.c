@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_gf2m.c,v 1.29 2022/11/30 01:47:19 jsing Exp $ */
+/* $OpenBSD: bn_gf2m.c,v 1.14 2014/07/10 22:45:56 jsing Exp $ */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -88,6 +88,7 @@
  *
  */
 
+#include <assert.h>
 #include <limits.h>
 #include <stdio.h>
 
@@ -95,7 +96,7 @@
 
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 #ifndef OPENSSL_NO_EC2M
 
@@ -136,9 +137,9 @@ static void
 bn_GF2m_mul_1x1(BN_ULONG *r1, BN_ULONG *r0, const BN_ULONG a, const BN_ULONG b)
 {
 #ifndef _LP64
-	BN_ULONG h, l, s;
+	register BN_ULONG h, l, s;
 	BN_ULONG tab[8], top2b = a >> 30;
-	BN_ULONG a1, a2, a4;
+	register BN_ULONG a1, a2, a4;
 
 	a1 = a & (0x3FFFFFFF);
 	a2 = a1 << 1;
@@ -199,9 +200,9 @@ bn_GF2m_mul_1x1(BN_ULONG *r1, BN_ULONG *r0, const BN_ULONG a, const BN_ULONG b)
 	*r1 = h;
 	*r0 = l;
 #else
-	BN_ULONG h, l, s;
+	register BN_ULONG h, l, s;
 	BN_ULONG tab[16], top3b = a >> 61;
-	BN_ULONG a1, a2, a4, a8;
+	register BN_ULONG a1, a2, a4, a8;
 
 	a1 = a & (0x1FFFFFFFFFFFFFFFULL);
 	a2 = a1 << 1;
@@ -325,6 +326,8 @@ BN_GF2m_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b)
 	int i;
 	const BIGNUM *at, *bt;
 
+	bn_check_top(a);
+	bn_check_top(b);
 
 	if (a->top < b->top) {
 		at = b;
@@ -334,7 +337,7 @@ BN_GF2m_add(BIGNUM *r, const BIGNUM *a, const BIGNUM *b)
 		bt = b;
 	}
 
-	if (!bn_wexpand(r, at->top))
+	if (bn_wexpand(r, at->top) == NULL)
 		return 0;
 
 	for (i = 0; i < bt->top; i++) {
@@ -366,6 +369,7 @@ BN_GF2m_mod_arr(BIGNUM *r, const BIGNUM *a, const int p[])
 	int n, dN, d0, d1;
 	BN_ULONG zz, *z;
 
+	bn_check_top(a);
 
 	if (!p[0]) {
 		/* reduction mod 1 => return 0 */
@@ -440,7 +444,8 @@ BN_GF2m_mod_arr(BIGNUM *r, const BIGNUM *a, const int p[])
 			d0 = p[k] % BN_BITS2;
 			d1 = BN_BITS2 - d0;
 			z[n] ^= (zz << d0);
-			if (d0 && (tmp_ulong = zz >> d1))
+			tmp_ulong = zz >> d1;
+			if (d0 && tmp_ulong)
 				z[n + 1] ^= tmp_ulong;
 		}
 
@@ -461,20 +466,17 @@ int
 BN_GF2m_mod(BIGNUM *r, const BIGNUM *a, const BIGNUM *p)
 {
 	int ret = 0;
-	const int max = BN_num_bits(p) + 1;
-	int *arr = NULL;
+	int arr[6];
 
-	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
-		goto err;
-	ret = BN_GF2m_poly2arr(p, arr, max);
-	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
-		goto err;
+	bn_check_top(a);
+	bn_check_top(p);
+	ret = BN_GF2m_poly2arr(p, arr, sizeof(arr) / sizeof(arr[0]));
+	if (!ret || ret > (int)(sizeof(arr) / sizeof(arr[0]))) {
+		BNerr(BN_F_BN_GF2M_MOD, BN_R_INVALID_LENGTH);
+		return 0;
 	}
 	ret = BN_GF2m_mod_arr(r, a, arr);
-
- err:
-	free(arr);
+	bn_check_top(r);
 	return ret;
 }
 
@@ -490,6 +492,8 @@ BN_GF2m_mod_mul_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const int p[],
 	BIGNUM *s;
 	BN_ULONG x1, x0, y1, y0, zz[4];
 
+	bn_check_top(a);
+	bn_check_top(b);
 
 	if (a == b) {
 		return BN_GF2m_mod_sqr_arr(r, a, p, ctx);
@@ -522,6 +526,7 @@ BN_GF2m_mod_mul_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const int p[],
 	bn_correct_top(s);
 	if (BN_GF2m_mod_arr(r, s, p))
 		ret = 1;
+	bn_check_top(r);
 
 err:
 	BN_CTX_end(ctx);
@@ -543,14 +548,18 @@ BN_GF2m_mod_mul(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *p,
 	const int max = BN_num_bits(p) + 1;
 	int *arr = NULL;
 
+	bn_check_top(a);
+	bn_check_top(b);
+	bn_check_top(p);
 	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
 		goto err;
 	ret = BN_GF2m_poly2arr(p, arr, max);
 	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_GF2M_MOD_MUL, BN_R_INVALID_LENGTH);
 		goto err;
 	}
 	ret = BN_GF2m_mod_mul_arr(r, a, b, arr, ctx);
+	bn_check_top(r);
 
 err:
 	free(arr);
@@ -565,9 +574,10 @@ BN_GF2m_mod_sqr_arr(BIGNUM *r, const BIGNUM *a, const int p[], BN_CTX *ctx)
 	int i, ret = 0;
 	BIGNUM *s;
 
+	bn_check_top(a);
 	BN_CTX_start(ctx);
 	if ((s = BN_CTX_get(ctx)) == NULL)
-		goto err;
+		return 0;
 	if (!bn_wexpand(s, 2 * a->top))
 		goto err;
 
@@ -580,6 +590,7 @@ BN_GF2m_mod_sqr_arr(BIGNUM *r, const BIGNUM *a, const int p[], BN_CTX *ctx)
 	bn_correct_top(s);
 	if (!BN_GF2m_mod_arr(r, s, p))
 		goto err;
+	bn_check_top(r);
 	ret = 1;
 
 err:
@@ -600,14 +611,17 @@ BN_GF2m_mod_sqr(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 	const int max = BN_num_bits(p) + 1;
 	int *arr = NULL;
 
+	bn_check_top(a);
+	bn_check_top(p);
 	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
 		goto err;
 	ret = BN_GF2m_poly2arr(p, arr, max);
 	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_GF2M_MOD_SQR, BN_R_INVALID_LENGTH);
 		goto err;
 	}
 	ret = BN_GF2m_mod_sqr_arr(r, a, arr, ctx);
+	bn_check_top(r);
 
 err:
 	free(arr);
@@ -626,6 +640,8 @@ BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 	BIGNUM *b, *c = NULL, *u = NULL, *v = NULL, *tmp;
 	int ret = 0;
 
+	bn_check_top(a);
+	bn_check_top(p);
 
 	BN_CTX_start(ctx);
 
@@ -687,21 +703,18 @@ BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 		top = p->top;
 		BN_ULONG *udp, *bdp, *vdp, *cdp;
 
-		if (!bn_wexpand(u, top))
-                        goto err;
+		bn_wexpand(u, top);
 		udp = u->d;
 		for (i = u->top; i < top; i++)
 			udp[i] = 0;
 		u->top = top;
-		if (!bn_wexpand(b, top))
-                        goto err;
+		bn_wexpand(b, top);
 		bdp = b->d;
 		bdp[0] = 1;
 		for (i = 1; i < top; i++)
 			bdp[i] = 0;
 		b->top = top;
-		if (!bn_wexpand(c, top))
-                        goto err;
+		bn_wexpand(c, top);
 		cdp = c->d;
 		for (i = 0; i < top; i++)
 			cdp[i] = 0;
@@ -733,13 +746,8 @@ BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 				ubits--;
 			}
 
-			if (ubits <= BN_BITS2) {
-				/* See if poly was reducible. */
-				if (udp[0] == 0)
-					goto err;
-				if (udp[0] == 1)
-					break;
-			}
+			if (ubits <= BN_BITS2 && udp[0] == 1)
+				break;
 
 			if (ubits < vbits) {
 				i = ubits;
@@ -775,9 +783,15 @@ BN_GF2m_mod_inv(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 
 	if (!BN_copy(r, b))
 		goto err;
+	bn_check_top(r);
 	ret = 1;
 
 err:
+#ifdef BN_DEBUG /* BN_CTX_end would complain about the expanded form */
+	bn_correct_top(c);
+	bn_correct_top(u);
+	bn_correct_top(v);
+#endif
 	BN_CTX_end(ctx);
 	return ret;
 }
@@ -794,6 +808,7 @@ BN_GF2m_mod_inv_arr(BIGNUM *r, const BIGNUM *xx, const int p[], BN_CTX *ctx)
 	BIGNUM *field;
 	int ret = 0;
 
+	bn_check_top(xx);
 	BN_CTX_start(ctx);
 	if ((field = BN_CTX_get(ctx)) == NULL)
 		goto err;
@@ -801,6 +816,7 @@ BN_GF2m_mod_inv_arr(BIGNUM *r, const BIGNUM *xx, const int p[], BN_CTX *ctx)
 		goto err;
 
 	ret = BN_GF2m_mod_inv(r, xx, field, ctx);
+	bn_check_top(r);
 
 err:
 	BN_CTX_end(ctx);
@@ -819,15 +835,20 @@ BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x, const BIGNUM *p,
 	BIGNUM *xinv = NULL;
 	int ret = 0;
 
+	bn_check_top(y);
+	bn_check_top(x);
+	bn_check_top(p);
 
 	BN_CTX_start(ctx);
-	if ((xinv = BN_CTX_get(ctx)) == NULL)
+	xinv = BN_CTX_get(ctx);
+	if (xinv == NULL)
 		goto err;
 
 	if (!BN_GF2m_mod_inv(xinv, x, p, ctx))
 		goto err;
 	if (!BN_GF2m_mod_mul(r, y, xinv, p, ctx))
 		goto err;
+	bn_check_top(r);
 	ret = 1;
 
 err:
@@ -848,16 +869,17 @@ BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x, const BIGNUM *p,
 	BIGNUM *a, *b, *u, *v;
 	int ret = 0;
 
+	bn_check_top(y);
+	bn_check_top(x);
+	bn_check_top(p);
 
 	BN_CTX_start(ctx);
 
-	if ((a = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((b = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((u = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((v = BN_CTX_get(ctx)) == NULL)
+	a = BN_CTX_get(ctx);
+	b = BN_CTX_get(ctx);
+	u = BN_CTX_get(ctx);
+	v = BN_CTX_get(ctx);
+	if (v == NULL)
 		goto err;
 
 	/* reduce x and y mod p */
@@ -914,6 +936,7 @@ BN_GF2m_mod_div(BIGNUM *r, const BIGNUM *y, const BIGNUM *x, const BIGNUM *p,
 
 	if (!BN_copy(r, u))
 		goto err;
+	bn_check_top(r);
 	ret = 1;
 
 err:
@@ -936,6 +959,8 @@ BN_GF2m_mod_div_arr(BIGNUM *r, const BIGNUM *yy, const BIGNUM *xx,
 	BIGNUM *field;
 	int ret = 0;
 
+	bn_check_top(yy);
+	bn_check_top(xx);
 
 	BN_CTX_start(ctx);
 	if ((field = BN_CTX_get(ctx)) == NULL)
@@ -944,6 +969,7 @@ BN_GF2m_mod_div_arr(BIGNUM *r, const BIGNUM *yy, const BIGNUM *xx,
 		goto err;
 
 	ret = BN_GF2m_mod_div(r, yy, xx, field, ctx);
+	bn_check_top(r);
 
 err:
 	BN_CTX_end(ctx);
@@ -962,6 +988,8 @@ BN_GF2m_mod_exp_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const int p[],
 	int ret = 0, i, n;
 	BIGNUM *u;
 
+	bn_check_top(a);
+	bn_check_top(b);
 
 	if (BN_is_zero(b))
 		return (BN_one(r));
@@ -987,6 +1015,7 @@ BN_GF2m_mod_exp_arr(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const int p[],
 	}
 	if (!BN_copy(r, u))
 		goto err;
+	bn_check_top(r);
 	ret = 1;
 
 err:
@@ -1009,14 +1038,18 @@ BN_GF2m_mod_exp(BIGNUM *r, const BIGNUM *a, const BIGNUM *b, const BIGNUM *p,
 	const int max = BN_num_bits(p) + 1;
 	int *arr = NULL;
 
+	bn_check_top(a);
+	bn_check_top(b);
+	bn_check_top(p);
 	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
 		goto err;
 	ret = BN_GF2m_poly2arr(p, arr, max);
 	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_GF2M_MOD_EXP, BN_R_INVALID_LENGTH);
 		goto err;
 	}
 	ret = BN_GF2m_mod_exp_arr(r, a, b, arr, ctx);
+	bn_check_top(r);
 
 err:
 	free(arr);
@@ -1033,6 +1066,7 @@ BN_GF2m_mod_sqrt_arr(BIGNUM *r, const BIGNUM *a, const int p[], BN_CTX *ctx)
 	int ret = 0;
 	BIGNUM *u;
 
+	bn_check_top(a);
 
 	if (!p[0]) {
 		/* reduction mod 1 => return 0 */
@@ -1047,6 +1081,7 @@ BN_GF2m_mod_sqrt_arr(BIGNUM *r, const BIGNUM *a, const int p[], BN_CTX *ctx)
 	if (!BN_set_bit(u, p[0] - 1))
 		goto err;
 	ret = BN_GF2m_mod_exp_arr(r, a, u, p, ctx);
+	bn_check_top(r);
 
 err:
 	BN_CTX_end(ctx);
@@ -1066,14 +1101,17 @@ BN_GF2m_mod_sqrt(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 	int ret = 0;
 	const int max = BN_num_bits(p) + 1;
 	int *arr = NULL;
+	bn_check_top(a);
+	bn_check_top(p);
 	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
 		goto err;
 	ret = BN_GF2m_poly2arr(p, arr, max);
 	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_GF2M_MOD_SQRT, BN_R_INVALID_LENGTH);
 		goto err;
 	}
 	ret = BN_GF2m_mod_sqrt_arr(r, a, arr, ctx);
+	bn_check_top(r);
 
 err:
 	free(arr);
@@ -1090,6 +1128,7 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	int ret = 0, count = 0, j;
 	BIGNUM *a, *z, *rho, *w, *w2, *tmp;
 
+	bn_check_top(a_);
 
 	if (!p[0]) {
 		/* reduction mod 1 => return 0 */
@@ -1098,11 +1137,10 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	}
 
 	BN_CTX_start(ctx);
-	if ((a = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((w = BN_CTX_get(ctx)) == NULL)
+	a = BN_CTX_get(ctx);
+	z = BN_CTX_get(ctx);
+	w = BN_CTX_get(ctx);
+	if (w == NULL)
 		goto err;
 
 	if (!BN_GF2m_mod_arr(a, a_, p))
@@ -1131,11 +1169,10 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	}
 	else /* m is even */
 	{
-		if ((rho = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((w2 = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((tmp = BN_CTX_get(ctx)) == NULL)
+		rho = BN_CTX_get(ctx);
+		w2 = BN_CTX_get(ctx);
+		tmp = BN_CTX_get(ctx);
+		if (tmp == NULL)
 			goto err;
 		do {
 			if (!BN_rand(rho, p[0], 0, 0))
@@ -1160,7 +1197,8 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 			count++;
 		} while (BN_is_zero(w) && (count < MAX_ITERATIONS));
 		if (BN_is_zero(w)) {
-			BNerror(BN_R_TOO_MANY_ITERATIONS);
+			BNerr(BN_F_BN_GF2M_MOD_SOLVE_QUAD_ARR,
+			    BN_R_TOO_MANY_ITERATIONS);
 			goto err;
 		}
 	}
@@ -1170,12 +1208,13 @@ BN_GF2m_mod_solve_quad_arr(BIGNUM *r, const BIGNUM *a_, const int p[],
 	if (!BN_GF2m_add(w, z, w))
 		goto err;
 	if (BN_GF2m_cmp(w, a)) {
-		BNerror(BN_R_NO_SOLUTION);
+		BNerr(BN_F_BN_GF2M_MOD_SOLVE_QUAD_ARR, BN_R_NO_SOLUTION);
 		goto err;
 	}
 
 	if (!BN_copy(r, z))
 		goto err;
+	bn_check_top(r);
 
 	ret = 1;
 
@@ -1197,14 +1236,17 @@ BN_GF2m_mod_solve_quad(BIGNUM *r, const BIGNUM *a, const BIGNUM *p, BN_CTX *ctx)
 	const int max = BN_num_bits(p) + 1;
 	int *arr = NULL;
 
+	bn_check_top(a);
+	bn_check_top(p);
 	if ((arr = reallocarray(NULL, max, sizeof(int))) == NULL)
 		goto err;
 	ret = BN_GF2m_poly2arr(p, arr, max);
 	if (!ret || ret > max) {
-		BNerror(BN_R_INVALID_LENGTH);
+		BNerr(BN_F_BN_GF2M_MOD_SOLVE_QUAD, BN_R_INVALID_LENGTH);
 		goto err;
 	}
 	ret = BN_GF2m_mod_solve_quad_arr(r, a, arr, ctx);
+	bn_check_top(r);
 
 err:
 	free(arr);
@@ -1241,9 +1283,10 @@ BN_GF2m_poly2arr(const BIGNUM *a, int p[], int max)
 		}
 	}
 
-	if (k < max)
+	if (k < max) {
 		p[k] = -1;
-	k++;
+		k++;
+	}
 
 	return k;
 }
@@ -1256,11 +1299,13 @@ BN_GF2m_arr2poly(const int p[], BIGNUM *a)
 {
 	int i;
 
+	bn_check_top(a);
 	BN_zero(a);
 	for (i = 0; p[i] != -1; i++) {
 		if (BN_set_bit(a, p[i]) == 0)
 			return 0;
 	}
+	bn_check_top(a);
 
 	return 1;
 }

@@ -1,4 +1,4 @@
-/* $OpenBSD: bss_log.c,v 1.23 2022/01/07 09:02:17 tb Exp $ */
+/* $OpenBSD: bss_log.c,v 1.20 2014/07/10 13:58:22 jsing Exp $ */
 /* ====================================================================
  * Copyright (c) 1999 The OpenSSL Project.  All rights reserved.
  *
@@ -70,8 +70,6 @@
 #include <openssl/buffer.h>
 #include <openssl/err.h>
 
-#include "bio_local.h"
-
 #ifndef NO_SYSLOG
 
 static int slg_write(BIO *h, const char *buf, int num);
@@ -83,7 +81,7 @@ static void xopenlog(BIO* bp, char* name, int level);
 static void xsyslog(BIO* bp, int priority, const char* string);
 static void xcloselog(BIO* bp);
 
-static const BIO_METHOD methods_slg = {
+static BIO_METHOD methods_slg = {
 	.type = BIO_TYPE_MEM,
 	.name = "syslog",
 	.bwrite = slg_write,
@@ -93,7 +91,7 @@ static const BIO_METHOD methods_slg = {
 	.destroy = slg_free
 };
 
-const BIO_METHOD *
+BIO_METHOD *
 BIO_s_log(void)
 {
 	return (&methods_slg);
