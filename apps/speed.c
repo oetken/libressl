@@ -1,4 +1,4 @@
-/* $OpenBSD: speed.c,v 1.4 2015/01/03 03:03:39 lteo Exp $ */
+/* $OpenBSD: speed.c,v 1.1 2014/08/26 17:47:25 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -480,7 +480,9 @@ speed_main(int argc, char **argv)
 	int multi = 0;
 	const char *errstr = NULL;
 
+#ifndef TIMES
 	usertime = -1;
+#endif
 
 	memset(results, 0, sizeof(results));
 	memset(dsa_key, 0, sizeof(dsa_key));
@@ -674,6 +676,12 @@ speed_main(int argc, char **argv)
 		else if (strcmp(*argv, "camellia-256-cbc") == 0)
 			doit[D_CBC_256_CML] = 1;
 		else
+#endif
+#if 0				/* was: #ifdef RSAref */
+		if (strcmp(*argv, "rsaref") == 0) {
+			RSA_set_default_openssl_method(RSA_PKCS1_RSAref());
+			j--;
+		} else
 #endif
 #ifndef RSA_NULL
 		if (strcmp(*argv, "openssl") == 0) {
@@ -950,7 +958,9 @@ speed_main(int argc, char **argv)
 
 			BIO_printf(bio_err, "\n");
 			BIO_printf(bio_err, "Available options:\n");
+#if defined(TIMES) || defined(USE_TOD)
 			BIO_printf(bio_err, "-elapsed        measure time in real time instead of CPU user time.\n");
+#endif
 #ifndef OPENSSL_NO_ENGINE
 			BIO_printf(bio_err, "-engine e       use engine e, possibly a hardware device.\n");
 #endif
@@ -998,6 +1008,15 @@ speed_main(int argc, char **argv)
 			BIO_printf(bio_err, "internal error loading RSA key number %d\n", i);
 			goto end;
 		}
+#if 0
+		else {
+			BIO_printf(bio_err, mr ? "+RK:%d:"
+			    : "Loaded RSA key, %d bit modulus and e= 0x",
+			    BN_num_bits(rsa_key[i]->n));
+			BN_print(bio_err, rsa_key[i]->e);
+			BIO_printf(bio_err, "\n");
+		}
+#endif
 	}
 
 	dsa_key[0] = get_dsa512();
@@ -1486,6 +1505,7 @@ speed_main(int argc, char **argv)
 			rsa_count = count;
 		}
 
+#if 1
 		ret = RSA_verify(NID_md5_sha1, buf, 36, buf2, rsa_num, rsa_key[j]);
 		if (ret <= 0) {
 			BIO_printf(bio_err, "RSA verify failure.  No RSA verify will be done.\n");
@@ -1513,6 +1533,7 @@ speed_main(int argc, char **argv)
 			    count, rsa_bits[j], d);
 			rsa_results[j][1] = d / (double) count;
 		}
+#endif
 
 		if (rsa_count <= 1) {
 			/* if longer than 10s, don't do any more */
@@ -1607,8 +1628,9 @@ speed_main(int argc, char **argv)
 			ERR_print_errors(bio_err);
 			rsa_count = 1;
 		} else {
+#if 1
 			EC_KEY_precompute_mult(ecdsa[j], NULL);
-
+#endif
 			/* Perform ECDSA signature test */
 			EC_KEY_generate_key(ecdsa[j]);
 			ret = ECDSA_sign(0, buf, 20, ecdsasig,
@@ -1980,10 +2002,6 @@ do_multi(int multi)
 	const char *errstr = NULL;
 
 	fds = reallocarray(NULL, multi, sizeof *fds);
-	if (fds == NULL) {
-		fprintf(stderr, "reallocarray failure\n");
-		exit(1);
-	}
 	for (n = 0; n < multi; ++n) {
 		if (pipe(fd) == -1) {
 			fprintf(stderr, "pipe failure\n");

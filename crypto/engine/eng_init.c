@@ -1,4 +1,4 @@
-/* $OpenBSD: eng_init.c,v 1.6 2014/06/12 15:49:29 deraadt Exp $ */
+/* $OpenBSD$ */
 /* ====================================================================
  * Copyright (c) 1999-2001 The OpenSSL Project.  All rights reserved.
  *
@@ -52,8 +52,6 @@
  * Hudson (tjh@cryptsoft.com).
  *
  */
-
-#include <openssl/err.h>
 
 #include "eng_int.h"
 

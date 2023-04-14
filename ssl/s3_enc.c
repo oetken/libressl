@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_enc.c,v 1.58 2014/12/15 00:46:53 doug Exp $ */
+/* $OpenBSD: s3_enc.c,v 1.55 2014/10/18 03:04:28 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -187,8 +187,7 @@ ssl3_generate_key_block(SSL *s, unsigned char *km, int num)
 		for (j = 0; j < k; j++)
 			buf[j] = c;
 		c++;
-		if (!EVP_DigestInit_ex(&s1, EVP_sha1(), NULL))
-			return 0;
+		EVP_DigestInit_ex(&s1, EVP_sha1(), NULL);
 		EVP_DigestUpdate(&s1, buf, k);
 		EVP_DigestUpdate(&s1, s->session->master_key,
 		    s->session->master_key_length);
@@ -196,8 +195,7 @@ ssl3_generate_key_block(SSL *s, unsigned char *km, int num)
 		EVP_DigestUpdate(&s1, s->s3->client_random, SSL3_RANDOM_SIZE);
 		EVP_DigestFinal_ex(&s1, smd, NULL);
 
-		if (!EVP_DigestInit_ex(&m5, EVP_md5(), NULL))
-			return 0;
+		EVP_DigestInit_ex(&m5, EVP_md5(), NULL);
 		EVP_DigestUpdate(&m5, s->session->master_key,
 		    s->session->master_key_length);
 		EVP_DigestUpdate(&m5, smd, SHA_DIGEST_LENGTH);
@@ -471,19 +469,14 @@ ssl3_enc(SSL *s, int send)
 	return (1);
 }
 
-int
+void
 ssl3_init_finished_mac(SSL *s)
 {
 	BIO_free(s->s3->handshake_buffer);
 	ssl3_free_digest_list(s);
-
 	s->s3->handshake_buffer = BIO_new(BIO_s_mem());
-	if (s->s3->handshake_buffer == NULL)
-		return (0);
 
 	(void)BIO_set_close(s->s3->handshake_buffer, BIO_CLOSE);
-
-	return (1);
 }
 
 void
@@ -549,10 +542,8 @@ ssl3_digest_cached_records(SSL *s)
 				return 0;
 			}
 			if (!EVP_DigestInit_ex(s->s3->handshake_dgst[i],
-			    md, NULL)) {
-				EVP_MD_CTX_destroy(s->s3->handshake_dgst[i]);
+			    md, NULL))
 				return 0;
-			}
 			if (!EVP_DigestUpdate(s->s3->handshake_dgst[i], hdata,
 			    hdatalen))
 				return 0;
@@ -629,8 +620,7 @@ ssl3_handshake_mac(SSL *s, int md_nid, const char *sender, int len,
 	EVP_DigestUpdate(&ctx, ssl3_pad_1, npad);
 	EVP_DigestFinal_ex(&ctx, md_buf, &i);
 
-	if (!EVP_DigestInit_ex(&ctx, EVP_MD_CTX_md(&ctx), NULL))
-		return 0;
+	EVP_DigestInit_ex(&ctx, EVP_MD_CTX_md(&ctx), NULL);
 	EVP_DigestUpdate(&ctx, s->session->master_key,
 	    s->session->master_key_length);
 	EVP_DigestUpdate(&ctx, ssl3_pad_2, npad);
@@ -702,10 +692,9 @@ n_ssl3_mac(SSL *ssl, unsigned char *md, int send)
 		header[j++] = rec->length >> 8;
 		header[j++] = rec->length & 0xff;
 
-		if (!ssl3_cbc_digest_record(hash, md, &md_size, header,
-		    rec->input, rec->length + md_size, orig_len, mac_sec,
-		    md_size, 1 /* is SSLv3 */))
-			return (-1);
+		ssl3_cbc_digest_record(hash, md, &md_size, header, rec->input,
+		    rec->length + md_size, orig_len, mac_sec, md_size,
+		    1 /* is SSLv3 */);
 	} else {
 		unsigned int md_size_u;
 		/* Chop the digest off the end :-) */
@@ -763,16 +752,14 @@ ssl3_generate_master_secret(SSL *s, unsigned char *out, unsigned char *p,
 
 	EVP_MD_CTX_init(&ctx);
 	for (i = 0; i < 3; i++) {
-		if (!EVP_DigestInit_ex(&ctx, s->ctx->sha1, NULL))
-			return 0;
+		EVP_DigestInit_ex(&ctx, s->ctx->sha1, NULL);
 		EVP_DigestUpdate(&ctx, salt[i], strlen((const char *)salt[i]));
 		EVP_DigestUpdate(&ctx, p, len);
 		EVP_DigestUpdate(&ctx, s->s3->client_random, SSL3_RANDOM_SIZE);
 		EVP_DigestUpdate(&ctx, s->s3->server_random, SSL3_RANDOM_SIZE);
 		EVP_DigestFinal_ex(&ctx, buf, &n);
 
-		if (!EVP_DigestInit_ex(&ctx, s->ctx->md5, NULL))
-			return 0;
+		EVP_DigestInit_ex(&ctx, s->ctx->md5, NULL);
 		EVP_DigestUpdate(&ctx, p, len);
 		EVP_DigestUpdate(&ctx, buf, n);
 		EVP_DigestFinal_ex(&ctx, out, &n);
@@ -846,8 +833,6 @@ ssl3_alert_code(int code)
 		return (SSL3_AD_HANDSHAKE_FAILURE);
 	case SSL_AD_UNKNOWN_PSK_IDENTITY:
 		return (TLS1_AD_UNKNOWN_PSK_IDENTITY);
-	case SSL_AD_INAPPROPRIATE_FALLBACK:
-		return (TLS1_AD_INAPPROPRIATE_FALLBACK);
 	default:
 		return (-1);
 	}

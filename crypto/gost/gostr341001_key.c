@@ -1,4 +1,4 @@
-/* $OpenBSD: gostr341001_key.c,v 1.4 2015/02/11 03:19:37 doug Exp $ */
+/* $OpenBSD: gostr341001_key.c,v 1.2 2014/11/09 23:06:52 miod Exp $ */
 /*
  * Copyright (c) 2014 Dmitry Eremin-Solenikov <dbaryshkov@gmail.com>
  * Copyright (c) 2005-2006 Cryptocom LTD
@@ -52,7 +52,6 @@
 #include <openssl/opensslconf.h>
 
 #ifndef OPENSSL_NO_GOST
-#include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/gost.h>
 #include <openssl/objects.h>
@@ -198,9 +197,9 @@ GOST_KEY_set_public_key_affine_coordinates(GOST_KEY *key, BIGNUM *x, BIGNUM *y)
 	if (point == NULL)
 		goto err;
 
-	if ((tx = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((ty = BN_CTX_get(ctx)) == NULL)
+	tx = BN_CTX_get(ctx);
+	ty = BN_CTX_get(ctx);
+	if (ty == NULL)
 		goto err;
 	if (EC_POINT_set_affine_coordinates_GFp(key->group, point, x, y,
 	    ctx) == 0)

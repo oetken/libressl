@@ -1257,6 +1257,3 @@ rc4_md5_enc:
 .Labort:
 	.byte	0xf3,0xc3
 .size	rc4_md5_enc,.-rc4_md5_enc
-#if defined(HAVE_GNU_STACK)
-.section .note.GNU-stack,"",%progbits
-#endif

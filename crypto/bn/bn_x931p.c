@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_x931p.c,v 1.6 2015/02/09 15:49:22 jsing Exp $ */
+/* $OpenBSD$ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2005.
  */
@@ -107,21 +107,17 @@ BN_X931_derive_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2, const BIGNUM *Xp,
 		return 0;
 
 	BN_CTX_start(ctx);
-	if (p1 == NULL) {
-		if ((p1 = BN_CTX_get(ctx)) == NULL)
-			goto err;
-	}
-	if (p2 == NULL) {
-		if ((p2 = BN_CTX_get(ctx)) == NULL)
-			goto err;
-	}
+	if (!p1)
+		p1 = BN_CTX_get(ctx);
 
-	if ((t = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((p1p2 = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((pm1 = BN_CTX_get(ctx)) == NULL)
-		goto err;
+	if (!p2)
+		p2 = BN_CTX_get(ctx);
+
+	t = BN_CTX_get(ctx);
+
+	p1p2 = BN_CTX_get(ctx);
+
+	pm1 = BN_CTX_get(ctx);
 
 	if (!bn_x931_derive_pi(p1, Xp1, ctx, cb))
 		goto err;
@@ -217,8 +213,7 @@ BN_X931_generate_Xpq(BIGNUM *Xp, BIGNUM *Xq, int nbits, BN_CTX *ctx)
 		return 0;
 
 	BN_CTX_start(ctx);
-	if ((t = BN_CTX_get(ctx)) == NULL)
-		return 0;
+	t = BN_CTX_get(ctx);
 
 	for (i = 0; i < 1000; i++) {
 		if (!BN_rand(Xq, nbits, 1, 0))
@@ -252,14 +247,10 @@ BN_X931_generate_prime_ex(BIGNUM *p, BIGNUM *p1, BIGNUM *p2, BIGNUM *Xp1,
 	int ret = 0;
 
 	BN_CTX_start(ctx);
-	if (Xp1 == NULL) {
-		if ((Xp1 = BN_CTX_get(ctx)) == NULL)
-			goto error;
-	}
-	if (Xp2 == NULL) {
-		if ((Xp2 = BN_CTX_get(ctx)) == NULL)
-			goto error;
-	}
+	if (!Xp1)
+		Xp1 = BN_CTX_get(ctx);
+	if (!Xp2)
+		Xp2 = BN_CTX_get(ctx);
 
 	if (!BN_rand(Xp1, 101, 0, 0))
 		goto error;

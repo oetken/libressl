@@ -666,6 +666,3 @@ md5_block_asm_data_order:
 .Lepilogue:
 	.byte	0xf3,0xc3
 .size	md5_block_asm_data_order,.-md5_block_asm_data_order
-#if defined(HAVE_GNU_STACK)
-.section .note.GNU-stack,"",%progbits
-#endif

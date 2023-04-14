@@ -1,4 +1,4 @@
-/* $OpenBSD: ec2_oct.c,v 1.6 2015/02/08 22:25:03 miod Exp $ */
+/* $OpenBSD: ec2_oct.c,v 1.4 2014/07/10 22:45:56 jsing Exp $ */
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -109,13 +109,11 @@ ec_GF2m_simple_set_compressed_coordinates(const EC_GROUP *group, EC_POINT *point
 	y_bit = (y_bit != 0) ? 1 : 0;
 
 	BN_CTX_start(ctx);
-	if ((tmp = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((x = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((y = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((z = BN_CTX_get(ctx)) == NULL)
+	tmp = BN_CTX_get(ctx);
+	x = BN_CTX_get(ctx);
+	y = BN_CTX_get(ctx);
+	z = BN_CTX_get(ctx);
+	if (z == NULL)
 		goto err;
 
 	if (!BN_GF2m_mod_arr(x, x_, group->poly))
@@ -185,7 +183,7 @@ ec_GF2m_simple_point2oct(const EC_GROUP *group, const EC_POINT *point,
 		ECerr(EC_F_EC_GF2M_SIMPLE_POINT2OCT, EC_R_INVALID_FORM);
 		goto err;
 	}
-	if (EC_POINT_is_at_infinity(group, point) > 0) {
+	if (EC_POINT_is_at_infinity(group, point)) {
 		/* encodes to a single 0 octet */
 		if (buf != NULL) {
 			if (len < 1) {
@@ -214,11 +212,10 @@ ec_GF2m_simple_point2oct(const EC_GROUP *group, const EC_POINT *point,
 		}
 		BN_CTX_start(ctx);
 		used_ctx = 1;
-		if ((x = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((y = BN_CTX_get(ctx)) == NULL)
-			goto err;
-		if ((yxi = BN_CTX_get(ctx)) == NULL)
+		x = BN_CTX_get(ctx);
+		y = BN_CTX_get(ctx);
+		yxi = BN_CTX_get(ctx);
+		if (yxi == NULL)
 			goto err;
 
 		if (!EC_POINT_get_affine_coordinates_GF2m(group, point, x, y, ctx))
@@ -332,11 +329,10 @@ ec_GF2m_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
 			return 0;
 	}
 	BN_CTX_start(ctx);
-	if ((x = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((y = BN_CTX_get(ctx)) == NULL)
-		goto err;
-	if ((yxi = BN_CTX_get(ctx)) == NULL)
+	x = BN_CTX_get(ctx);
+	y = BN_CTX_get(ctx);
+	yxi = BN_CTX_get(ctx);
+	if (yxi == NULL)
 		goto err;
 
 	if (!BN_bin2bn(buf + 1, field_len, x))
@@ -367,8 +363,8 @@ ec_GF2m_simple_oct2point(const EC_GROUP *group, EC_POINT *point,
 			goto err;
 	}
 
-	/* test required by X9.62 */
-	if (EC_POINT_is_on_curve(group, point, ctx) <= 0) {
+	if (!EC_POINT_is_on_curve(group, point, ctx)) {
+		/* test required by X9.62 */
 		ECerr(EC_F_EC_GF2M_SIMPLE_OCT2POINT, EC_R_POINT_IS_NOT_ON_CURVE);
 		goto err;
 	}
