@@ -33,6 +33,15 @@ if NO_STRLCPY
 libcompat_la_SOURCES += compat/strlcpy.c
 endif
 
+if NO_STRNDUP
+libcompat_la_SOURCES += compat/strndup.c
+libcompat_la_SOURCES += compat/strnlen.c
+endif
+
+if NO_ASPRINTF
+libcompat_la_SOURCES += compat/bsd-asprintf.c
+endif
+
 if NO_REALLOCARRAY
 libcompat_la_SOURCES += compat/reallocarray.c
 endif
@@ -69,10 +78,12 @@ if NO_ISSETUGID
 if HOST_LINUX
 libcompat_la_SOURCES += compat/issetugid_linux.c
 endif
+if HOST_WIN
+libcompat_la_SOURCES += compat/issetugid_win.c
+endif
 endif
 
 noinst_HEADERS = des/ncbc_enc.c
-noinst_HEADERS += compat/thread_private.h
 noinst_HEADERS += compat/arc4random.h
 noinst_HEADERS += compat/arc4random_linux.h
 noinst_HEADERS += compat/arc4random_osx.h

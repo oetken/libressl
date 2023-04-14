@@ -84,15 +84,18 @@ DIST_COMMON = $(top_srcdir)/Makefile.am.common $(srcdir)/Makefile.in \
 @NO_EXPLICIT_BZERO_TRUE@am__append_1 = compat/explicit_bzero.c
 @NO_STRLCAT_TRUE@am__append_2 = compat/strlcat.c
 @NO_STRLCPY_TRUE@am__append_3 = compat/strlcpy.c
-@NO_REALLOCARRAY_TRUE@am__append_4 = compat/reallocarray.c
-@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_5 = compat/timingsafe_memcmp.c
-@NO_TIMINGSAFE_BCMP_TRUE@am__append_6 = compat/timingsafe_bcmp.c
-@NO_ARC4RANDOM_BUF_TRUE@am__append_7 = compat/arc4random.c
-@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_8 = compat/getentropy_linux.c
-@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_9 = compat/getentropy_osx.c
-@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_10 = compat/getentropy_solaris.c
-@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_11 = compat/getentropy_win.c
-@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__append_12 = compat/issetugid_linux.c
+@NO_STRNDUP_TRUE@am__append_4 = compat/strndup.c compat/strnlen.c
+@NO_ASPRINTF_TRUE@am__append_5 = compat/bsd-asprintf.c
+@NO_REALLOCARRAY_TRUE@am__append_6 = compat/reallocarray.c
+@NO_TIMINGSAFE_MEMCMP_TRUE@am__append_7 = compat/timingsafe_memcmp.c
+@NO_TIMINGSAFE_BCMP_TRUE@am__append_8 = compat/timingsafe_bcmp.c
+@NO_ARC4RANDOM_BUF_TRUE@am__append_9 = compat/arc4random.c
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_10 = compat/getentropy_linux.c
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_11 = compat/getentropy_osx.c
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_12 = compat/getentropy_solaris.c
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__append_13 = compat/getentropy_win.c
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__append_14 = compat/issetugid_linux.c
+@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__append_15 = compat/issetugid_win.c
 subdir = crypto
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/libtool.m4 \
@@ -136,29 +139,35 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libcompat_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__libcompat_la_SOURCES_DIST = compat/strlcat.c compat/strlcpy.c \
+	compat/strndup.c compat/strnlen.c compat/bsd-asprintf.c \
 	compat/reallocarray.c compat/timingsafe_memcmp.c \
 	compat/timingsafe_bcmp.c compat/arc4random.c \
 	compat/getentropy_linux.c compat/getentropy_osx.c \
 	compat/getentropy_solaris.c compat/getentropy_win.c \
-	compat/issetugid_linux.c
+	compat/issetugid_linux.c compat/issetugid_win.c
 am__dirstamp = $(am__leading_dot)dirstamp
 @NO_STRLCAT_TRUE@am__objects_1 = compat/libcompat_la-strlcat.lo
 @NO_STRLCPY_TRUE@am__objects_2 = compat/libcompat_la-strlcpy.lo
-@NO_REALLOCARRAY_TRUE@am__objects_3 =  \
+@NO_STRNDUP_TRUE@am__objects_3 = compat/libcompat_la-strndup.lo \
+@NO_STRNDUP_TRUE@	compat/libcompat_la-strnlen.lo
+@NO_ASPRINTF_TRUE@am__objects_4 = compat/libcompat_la-bsd-asprintf.lo
+@NO_REALLOCARRAY_TRUE@am__objects_5 =  \
 @NO_REALLOCARRAY_TRUE@	compat/libcompat_la-reallocarray.lo
-@NO_TIMINGSAFE_MEMCMP_TRUE@am__objects_4 = compat/libcompat_la-timingsafe_memcmp.lo
-@NO_TIMINGSAFE_BCMP_TRUE@am__objects_5 = compat/libcompat_la-timingsafe_bcmp.lo
-@NO_ARC4RANDOM_BUF_TRUE@am__objects_6 =  \
+@NO_TIMINGSAFE_MEMCMP_TRUE@am__objects_6 = compat/libcompat_la-timingsafe_memcmp.lo
+@NO_TIMINGSAFE_BCMP_TRUE@am__objects_7 = compat/libcompat_la-timingsafe_bcmp.lo
+@NO_ARC4RANDOM_BUF_TRUE@am__objects_8 =  \
 @NO_ARC4RANDOM_BUF_TRUE@	compat/libcompat_la-arc4random.lo
-@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_7 = compat/libcompat_la-getentropy_linux.lo
-@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_8 = compat/libcompat_la-getentropy_osx.lo
-@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_9 = compat/libcompat_la-getentropy_solaris.lo
-@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_10 = compat/libcompat_la-getentropy_win.lo
-@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__objects_11 = compat/libcompat_la-issetugid_linux.lo
+@HOST_LINUX_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_9 = compat/libcompat_la-getentropy_linux.lo
+@HOST_DARWIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_10 = compat/libcompat_la-getentropy_osx.lo
+@HOST_SOLARIS_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_11 = compat/libcompat_la-getentropy_solaris.lo
+@HOST_WIN_TRUE@@NO_ARC4RANDOM_BUF_TRUE@@NO_GETENTROPY_TRUE@am__objects_12 = compat/libcompat_la-getentropy_win.lo
+@HOST_LINUX_TRUE@@NO_ISSETUGID_TRUE@am__objects_13 = compat/libcompat_la-issetugid_linux.lo
+@HOST_WIN_TRUE@@NO_ISSETUGID_TRUE@am__objects_14 = compat/libcompat_la-issetugid_win.lo
 am_libcompat_la_OBJECTS = $(am__objects_1) $(am__objects_2) \
 	$(am__objects_3) $(am__objects_4) $(am__objects_5) \
 	$(am__objects_6) $(am__objects_7) $(am__objects_8) \
-	$(am__objects_9) $(am__objects_10) $(am__objects_11)
+	$(am__objects_9) $(am__objects_10) $(am__objects_11) \
+	$(am__objects_12) $(am__objects_13) $(am__objects_14)
 libcompat_la_OBJECTS = $(am_libcompat_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -169,8 +178,8 @@ libcompat_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 libcompatnoopt_la_LIBADD =
 am__libcompatnoopt_la_SOURCES_DIST = compat/explicit_bzero.c
-@NO_EXPLICIT_BZERO_TRUE@am__objects_12 = compat/libcompatnoopt_la-explicit_bzero.lo
-am_libcompatnoopt_la_OBJECTS = $(am__objects_12)
+@NO_EXPLICIT_BZERO_TRUE@am__objects_15 = compat/libcompatnoopt_la-explicit_bzero.lo
+am_libcompatnoopt_la_OBJECTS = $(am__objects_15)
 libcompatnoopt_la_OBJECTS = $(am_libcompatnoopt_la_OBJECTS)
 libcompatnoopt_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
@@ -563,16 +572,6 @@ MANIFEST_TOOL = @MANIFEST_TOOL@
 MKDIR_P = @MKDIR_P@
 NM = @NM@
 NMEDIT = @NMEDIT@
-NO_ARC4RANDOM_BUF = @NO_ARC4RANDOM_BUF@
-NO_EXPLICIT_BZERO = @NO_EXPLICIT_BZERO@
-NO_GETENTROPY = @NO_GETENTROPY@
-NO_ISSETUGID = @NO_ISSETUGID@
-NO_REALLOCARRAY = @NO_REALLOCARRAY@
-NO_STRLCAT = @NO_STRLCAT@
-NO_STRLCPY = @NO_STRLCPY@
-NO_STRTONUM = @NO_STRTONUM@
-NO_TIMINGSAFE_BCMP = @NO_TIMINGSAFE_BCMP@
-NO_TIMINGSAFE_MEMCMP = @NO_TIMINGSAFE_MEMCMP@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
 OTOOL = @OTOOL@
@@ -664,23 +663,23 @@ libcompat_la_CFLAGS = $(CFLAGS) $(USER_CFLAGS)
 libcompat_la_SOURCES = $(am__append_2) $(am__append_3) $(am__append_4) \
 	$(am__append_5) $(am__append_6) $(am__append_7) \
 	$(am__append_8) $(am__append_9) $(am__append_10) \
-	$(am__append_11) $(am__append_12)
+	$(am__append_11) $(am__append_12) $(am__append_13) \
+	$(am__append_14) $(am__append_15)
 libcompat_la_LIBADD = $(PLATFORM_LDADD)
-noinst_HEADERS = des/ncbc_enc.c compat/thread_private.h \
-	compat/arc4random.h compat/arc4random_linux.h \
-	compat/arc4random_osx.h compat/arc4random_solaris.h \
-	compat/arc4random_win.h compat/chacha_private.h cryptlib.h \
-	md32_common.h o_time.h aes/aes_locl.h asn1/asn1_locl.h \
-	asn1/charmap.h bf/bf_locl.h bf/bf_pi.h bn/bn_lcl.h \
-	bn/bn_prime.h cast/cast_lcl.h cast/cast_s.h conf/conf_def.h \
-	des/des_locl.h des/spr.h dsa/dsa_locl.h ec/ec_lcl.h \
-	ecdh/ech_locl.h ecdsa/ecs_locl.h engine/eng_int.h \
-	evp/evp_locl.h idea/idea_lcl.h md4/md4_locl.h md5/md5_locl.h \
-	modes/modes_lcl.h objects/obj_dat.h objects/obj_xref.h \
-	rc2/rc2_locl.h rc4/rc4_locl.h ripemd/rmd_locl.h \
-	ripemd/rmdconst.h rsa/rsa_locl.h sha/sha_locl.h ui/ui_locl.h \
-	whrlpool/wp_locl.h x509/x509_lcl.h x509v3/ext_dat.h \
-	x509v3/pcy_int.h
+noinst_HEADERS = des/ncbc_enc.c compat/arc4random.h \
+	compat/arc4random_linux.h compat/arc4random_osx.h \
+	compat/arc4random_solaris.h compat/arc4random_win.h \
+	compat/chacha_private.h cryptlib.h md32_common.h o_time.h \
+	aes/aes_locl.h asn1/asn1_locl.h asn1/charmap.h bf/bf_locl.h \
+	bf/bf_pi.h bn/bn_lcl.h bn/bn_prime.h cast/cast_lcl.h \
+	cast/cast_s.h conf/conf_def.h des/des_locl.h des/spr.h \
+	dsa/dsa_locl.h ec/ec_lcl.h ecdh/ech_locl.h ecdsa/ecs_locl.h \
+	engine/eng_int.h evp/evp_locl.h idea/idea_lcl.h md4/md4_locl.h \
+	md5/md5_locl.h modes/modes_lcl.h objects/obj_dat.h \
+	objects/obj_xref.h rc2/rc2_locl.h rc4/rc4_locl.h \
+	ripemd/rmd_locl.h ripemd/rmdconst.h rsa/rsa_locl.h \
+	sha/sha_locl.h ui/ui_locl.h whrlpool/wp_locl.h x509/x509_lcl.h \
+	x509v3/ext_dat.h x509v3/pcy_int.h
 libcrypto_la_SOURCES = cpt_err.c cryptlib.c cversion.c ex_data.c \
 	malloc-wrapper.c mem_clr.c mem_dbg.c o_init.c o_str.c o_time.c \
 	aes/aes_cbc.c aes/aes_cfb.c aes/aes_core.c aes/aes_ctr.c \
@@ -915,6 +914,12 @@ compat/libcompat_la-strlcat.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-strlcpy.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
+compat/libcompat_la-strndup.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
+compat/libcompat_la-strnlen.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
+compat/libcompat_la-bsd-asprintf.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-reallocarray.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-timingsafe_memcmp.lo: compat/$(am__dirstamp) \
@@ -932,6 +937,8 @@ compat/libcompat_la-getentropy_solaris.lo: compat/$(am__dirstamp) \
 compat/libcompat_la-getentropy_win.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/libcompat_la-issetugid_linux.lo: compat/$(am__dirstamp) \
+	compat/$(DEPDIR)/$(am__dirstamp)
+compat/libcompat_la-issetugid_win.lo: compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 
 libcompat.la: $(libcompat_la_OBJECTS) $(libcompat_la_DEPENDENCIES) $(EXTRA_libcompat_la_DEPENDENCIES) 
@@ -2531,14 +2538,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@comp/$(DEPDIR)/libcrypto_la-comp_err.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@comp/$(DEPDIR)/libcrypto_la-comp_lib.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-arc4random.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-bsd-asprintf.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_linux.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_osx.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_solaris.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-getentropy_win.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-issetugid_linux.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-issetugid_win.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-strlcat.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-strlcpy.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-strndup.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-strnlen.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-timingsafe_bcmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompat_la-timingsafe_memcmp.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/libcompatnoopt_la-explicit_bzero.Plo@am__quote@
@@ -2940,6 +2951,27 @@ compat/libcompat_la-strlcpy.lo: compat/strlcpy.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-strlcpy.lo `test -f 'compat/strlcpy.c' || echo '$(srcdir)/'`compat/strlcpy.c
 
+compat/libcompat_la-strndup.lo: compat/strndup.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-strndup.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-strndup.Tpo -c -o compat/libcompat_la-strndup.lo `test -f 'compat/strndup.c' || echo '$(srcdir)/'`compat/strndup.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-strndup.Tpo compat/$(DEPDIR)/libcompat_la-strndup.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/strndup.c' object='compat/libcompat_la-strndup.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-strndup.lo `test -f 'compat/strndup.c' || echo '$(srcdir)/'`compat/strndup.c
+
+compat/libcompat_la-strnlen.lo: compat/strnlen.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-strnlen.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-strnlen.Tpo -c -o compat/libcompat_la-strnlen.lo `test -f 'compat/strnlen.c' || echo '$(srcdir)/'`compat/strnlen.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-strnlen.Tpo compat/$(DEPDIR)/libcompat_la-strnlen.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/strnlen.c' object='compat/libcompat_la-strnlen.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-strnlen.lo `test -f 'compat/strnlen.c' || echo '$(srcdir)/'`compat/strnlen.c
+
+compat/libcompat_la-bsd-asprintf.lo: compat/bsd-asprintf.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-bsd-asprintf.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-bsd-asprintf.Tpo -c -o compat/libcompat_la-bsd-asprintf.lo `test -f 'compat/bsd-asprintf.c' || echo '$(srcdir)/'`compat/bsd-asprintf.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-bsd-asprintf.Tpo compat/$(DEPDIR)/libcompat_la-bsd-asprintf.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/bsd-asprintf.c' object='compat/libcompat_la-bsd-asprintf.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-bsd-asprintf.lo `test -f 'compat/bsd-asprintf.c' || echo '$(srcdir)/'`compat/bsd-asprintf.c
+
 compat/libcompat_la-reallocarray.lo: compat/reallocarray.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-reallocarray.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-reallocarray.Tpo -c -o compat/libcompat_la-reallocarray.lo `test -f 'compat/reallocarray.c' || echo '$(srcdir)/'`compat/reallocarray.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-reallocarray.Tpo compat/$(DEPDIR)/libcompat_la-reallocarray.Plo
@@ -3002,6 +3034,13 @@ compat/libcompat_la-issetugid_linux.lo: compat/issetugid_linux.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/issetugid_linux.c' object='compat/libcompat_la-issetugid_linux.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-issetugid_linux.lo `test -f 'compat/issetugid_linux.c' || echo '$(srcdir)/'`compat/issetugid_linux.c
+
+compat/libcompat_la-issetugid_win.lo: compat/issetugid_win.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -MT compat/libcompat_la-issetugid_win.lo -MD -MP -MF compat/$(DEPDIR)/libcompat_la-issetugid_win.Tpo -c -o compat/libcompat_la-issetugid_win.lo `test -f 'compat/issetugid_win.c' || echo '$(srcdir)/'`compat/issetugid_win.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) compat/$(DEPDIR)/libcompat_la-issetugid_win.Tpo compat/$(DEPDIR)/libcompat_la-issetugid_win.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compat/issetugid_win.c' object='compat/libcompat_la-issetugid_win.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompat_la_CFLAGS) $(CFLAGS) -c -o compat/libcompat_la-issetugid_win.lo `test -f 'compat/issetugid_win.c' || echo '$(srcdir)/'`compat/issetugid_win.c
 
 compat/libcompatnoopt_la-explicit_bzero.lo: compat/explicit_bzero.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libcompatnoopt_la_CFLAGS) $(CFLAGS) -MT compat/libcompatnoopt_la-explicit_bzero.lo -MD -MP -MF compat/$(DEPDIR)/libcompatnoopt_la-explicit_bzero.Tpo -c -o compat/libcompatnoopt_la-explicit_bzero.lo `test -f 'compat/explicit_bzero.c' || echo '$(srcdir)/'`compat/explicit_bzero.c
