@@ -833,6 +833,7 @@ NM = @NM@
 NMEDIT = @NMEDIT@
 OBJDUMP = @OBJDUMP@
 OBJEXT = @OBJEXT@
+OPENSSLDIR = @OPENSSLDIR@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
@@ -903,16 +904,16 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -I$(top_srcdir)/include
+AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat
 AM_CPPFLAGS = -DLIBRESSL_INTERNAL -I $(top_srcdir)/crypto/modes -I \
 	$(top_srcdir)/crypto/asn1 -I $(top_srcdir)/ssl -I \
 	$(top_srcdir)/apps
 LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) $(top_builddir)/ssl/libssl.la \
 	$(top_builddir)/crypto/libcrypto.la
-EXTRA_DIST = aeadtest.sh aeadtests.txt arc4randomforktest.sh \
-	evptest.sh evptests.txt pq_test.sh pq_expected.txt ssltest.sh \
-	testssl ca.pem server.pem testdsa.sh openssl.cnf testenc.sh \
-	testrsa.sh
+EXTRA_DIST = CMakeLists.txt aeadtest.sh aeadtests.txt \
+	arc4randomforktest.sh evptest.sh evptests.txt pq_test.sh \
+	pq_expected.txt ssltest.sh testssl ca.pem server.pem \
+	testdsa.sh openssl.cnf testenc.sh testrsa.sh
 DISTCLEANFILES = pidwraptest.txt
 aeadtest_SOURCES = aeadtest.c
 aes_wrap_SOURCES = aes_wrap.c

@@ -1,4 +1,4 @@
-/* $OpenBSD: pk7_doit.c,v 1.31 2015/02/07 13:19:15 doug Exp $ */
+/* $OpenBSD: pk7_doit.c,v 1.35 2015/07/19 18:25:59 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -417,7 +417,7 @@ pkcs7_cmp_ri(PKCS7_RECIP_INFO *ri, X509 *pcert)
 	    pcert->cert_info->issuer);
 	if (ret)
 		return ret;
-	return M_ASN1_INTEGER_cmp(pcert->cert_info->serialNumber,
+	return ASN1_STRING_cmp(pcert->cert_info->serialNumber,
 	    ri->issuer_and_serial->serial);
 }
 
@@ -631,7 +631,6 @@ PKCS7_dataDecode(PKCS7 *p7, EVP_PKEY *pkey, BIO *in_bio, X509 *pcert)
 			goto err;
 	}
 	BIO_push(out, bio);
-	bio = NULL;
 
 	if (0) {
 err:
@@ -649,8 +648,6 @@ err:
 			BIO_free_all(btmp);
 		if (etmp != NULL)
 			BIO_free_all(etmp);
-		if (bio != NULL)
-			BIO_free_all(bio);
 		out = NULL;
 	}
 	return (out);
@@ -853,12 +850,15 @@ PKCS7_dataFinal(PKCS7 *p7, BIO *bio)
 	} else if (i == NID_pkcs7_digest) {
 		unsigned char md_data[EVP_MAX_MD_SIZE];
 		unsigned int md_len;
+
 		if (!PKCS7_find_digest(&mdc, bio,
 		    OBJ_obj2nid(p7->d.digest->md->algorithm)))
 			goto err;
 		if (!EVP_DigestFinal_ex(mdc, md_data, &md_len))
 			goto err;
-		M_ASN1_OCTET_STRING_set(p7->d.digest->digest, md_data, md_len);
+		if (ASN1_STRING_set(p7->d.digest->digest, md_data,
+		    md_len) == 0)
+			goto err;
 	}
 
 	if (!PKCS7_is_detached(p7)) {
@@ -1186,6 +1186,8 @@ PKCS7_digest_from_attributes(STACK_OF(X509_ATTRIBUTE) *sk)
 	ASN1_TYPE *astype;
 
 	if (!(astype = get_attribute(sk, NID_pkcs9_messageDigest)))
+		return NULL;
+	if (astype->type != V_ASN1_OCTET_STRING)
 		return NULL;
 	return astype->value.octet_string;
 }

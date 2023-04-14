@@ -57,14 +57,10 @@ AC_CHECK_HEADERS([err.h])
 AC_ARG_WITH([openssldir],
 	AS_HELP_STRING([--with-openssldir],
 		       [Set the default openssl directory]),
-	AC_DEFINE_UNQUOTED(OPENSSLDIR, "$withval")
+	OPENSSLDIR="$withval"
+	AC_SUBST(OPENSSLDIR)
 )
-
-AC_ARG_WITH([enginesdir],
-	AS_HELP_STRING([--with-enginesdir],
-		       [Set the default engines directory (use with openssldir)]),
-	AC_DEFINE_UNQUOTED(ENGINESDIR, "$withval")
-)
+AM_CONDITIONAL([OPENSSLDIR_DEFINED], [test x$with_openssldir != x])
 
 AC_ARG_ENABLE([extratests],
 	AS_HELP_STRING([--enable-extratests], [Enable extra tests that may be unreliable on some platforms]))
@@ -91,6 +87,18 @@ case $host_cpu in
 		    CPPFLAGS="$CPPFLAGS -D__STRICT_ALIGNMENT")
 		;;
 esac
+
+AC_MSG_CHECKING([if .gnu.warning accepts long strings])
+AC_LINK_IFELSE([AC_LANG_SOURCE([[
+extern void SSLv3_method();
+__asm__(".section .gnu.warning.SSLv3_method; .ascii \"SSLv3_method is insecure\" ; .text");
+int main() {return 0;}
+]])], [
+    AC_DEFINE(HAS_GNU_WARNING_LONG, 1, [Define if .gnu.warning accepts long strings.])
+    AC_MSG_RESULT(yes)
+], [
+   AC_MSG_RESULT(no)
+])
 
 AC_ARG_ENABLE([asm],
 	AS_HELP_STRING([--disable-asm], [Disable assembly]))
