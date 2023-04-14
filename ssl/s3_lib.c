@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.198.4.1 2021/03/15 15:59:04 tb Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.201 2020/10/14 16:57:33 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -170,7 +170,7 @@
 #define FIXED_NONCE_LEN(x) (((x / 2) & 0xf) << 24)
 
 /* list of available SSLv3 ciphers (sorted by id) */
-SSL_CIPHER ssl3_ciphers[] = {
+const SSL_CIPHER ssl3_ciphers[] = {
 
 	/* The RSA ciphers */
 	/* Cipher 01 */
@@ -1447,7 +1447,7 @@ ssl3_pending(const SSL *s)
 int
 ssl3_handshake_msg_hdr_len(SSL *s)
 {
-	return (SSL_IS_DTLS(s) ? DTLS1_HM_HEADER_LENGTH :
+	return (SSL_is_dtls(s) ? DTLS1_HM_HEADER_LENGTH :
             SSL3_HM_HEADER_LENGTH);
 }
 
@@ -1460,7 +1460,7 @@ ssl3_handshake_msg_start(SSL *s, CBB *handshake, CBB *body, uint8_t msg_type)
 		goto err;
 	if (!CBB_add_u8(handshake, msg_type))
 		goto err;
-	if (SSL_IS_DTLS(s)) {
+	if (SSL_is_dtls(s)) {
 		unsigned char *data;
 
 		if (!CBB_add_space(handshake, &data, DTLS1_HM_HEADER_LENGTH -
@@ -1497,7 +1497,7 @@ ssl3_handshake_msg_finish(SSL *s, CBB *handshake)
 	s->internal->init_num = (int)outlen;
 	s->internal->init_off = 0;
 
-	if (SSL_IS_DTLS(s)) {
+	if (SSL_is_dtls(s)) {
 		unsigned long len;
 		uint8_t msg_type;
 		CBS cbs;
@@ -1529,7 +1529,7 @@ ssl3_handshake_write(SSL *s)
 int
 ssl3_record_write(SSL *s, int type)
 {
-	if (SSL_IS_DTLS(s))
+	if (SSL_is_dtls(s))
 		return dtls1_do_write(s, type);
 
 	return ssl3_do_write(s, type);
@@ -1576,10 +1576,6 @@ ssl3_free(SSL *s)
 	tls1_transcript_hash_free(s);
 
 	free(S3I(s)->alpn_selected);
-
-	/* Clear reference to sequence numbers. */
-	tls12_record_layer_clear_read_state(s->internal->rl);
-	tls12_record_layer_clear_write_state(s->internal->rl);
 
 	freezero(S3I(s), sizeof(*S3I(s)));
 	freezero(s->s3, sizeof(*s->s3));
@@ -1652,11 +1648,6 @@ ssl3_clear(SSL *s)
 
 	s->internal->packet_length = 0;
 	s->version = TLS1_VERSION;
-
-	tls12_record_layer_set_read_seq_num(s->internal->rl,
-	    S3I(s)->read_sequence);
-	tls12_record_layer_set_write_seq_num(s->internal->rl,
-	    S3I(s)->write_sequence);
 
 	S3I(s)->hs.state = SSL_ST_BEFORE|((s->server) ? SSL_ST_ACCEPT : SSL_ST_CONNECT);
 }
@@ -2740,7 +2731,7 @@ ssl_get_algorithm2(SSL *s)
 {
 	long	alg2 = S3I(s)->hs.new_cipher->algorithm2;
 
-	if (s->method->internal->ssl3_enc->enc_flags & SSL_ENC_FLAG_SHA256_PRF &&
+	if (SSL_USE_SHA256_PRF(s) &&
 	    alg2 == (SSL_HANDSHAKE_MAC_DEFAULT|TLS1_PRF))
 		return SSL_HANDSHAKE_MAC_SHA256 | TLS1_PRF_SHA256;
 	return alg2;
