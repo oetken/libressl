@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "EC_POINT_new 3"
-.TH EC_POINT_new 3 "2014-07-13" "LibreSSL " "LibreSSL"
+.TH EC_POINT_new 3 "2014-07-15" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -227,7 +227,7 @@ The function EC_POINT_point2oct must be supplied with a buffer long enough to st
 octets stored. Calling the function with a \s-1NULL\s0 buffer will not perform the conversion but will still return the required buffer length.
 .PP
 The function EC_POINT_point2hex will allocate sufficient memory to store the hexadecimal string. It is the caller's responsibility to free
-this memory with a subsequent call to \fIOPENSSL_free()\fR.
+this memory with a subsequent call to \fIfree()\fR.
 .SH "RETURN VALUES"
 .IX Header "RETURN VALUES"
 EC_POINT_new and EC_POINT_dup return the newly allocated \s-1EC_POINT\s0 or \s-1NULL\s0 on error.
