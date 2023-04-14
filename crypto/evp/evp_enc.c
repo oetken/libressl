@@ -1,4 +1,4 @@
-/* $OpenBSD: evp_enc.c,v 1.25 2014/10/22 13:02:04 jsing Exp $ */
+/* $OpenBSD: evp_enc.c,v 1.26 2015/02/10 09:52:35 miod Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
