@@ -150,9 +150,9 @@ am_openssl_OBJECTS = apps.$(OBJEXT) asn1pars.$(OBJEXT) ca.$(OBJEXT) \
 	$(am__objects_5) $(am__objects_6)
 openssl_OBJECTS = $(am_openssl_OBJECTS)
 am__DEPENDENCIES_1 =
-openssl_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(abs_top_builddir)/ssl/libssl.la \
-	$(abs_top_builddir)/crypto/libcrypto.la
+openssl_DEPENDENCIES = $(abs_top_builddir)/ssl/libssl.la \
+	$(abs_top_builddir)/crypto/libcrypto.la $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
@@ -375,11 +375,13 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AM_CFLAGS = 
-AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat -DLIBRESSL_INTERNAL
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
+	-DLIBRESSL_INTERNAL -D__BEGIN_HIDDEN_DECLS= \
+	-D__END_HIDDEN_DECLS=
 dist_man_MANS = openssl.1
-openssl_LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) \
-	$(abs_top_builddir)/ssl/libssl.la \
-	$(abs_top_builddir)/crypto/libcrypto.la
+openssl_LDADD = $(abs_top_builddir)/ssl/libssl.la \
+	$(abs_top_builddir)/crypto/libcrypto.la $(PLATFORM_LDADD) \
+	$(PROG_LDADD)
 openssl_SOURCES = apps.c asn1pars.c ca.c ciphers.c crl.c crl2p7.c \
 	dgst.c dh.c dhparam.c dsa.c dsaparam.c ec.c ecparam.c enc.c \
 	errstr.c gendh.c gendsa.c genpkey.c genrsa.c nseq.c ocsp.c \
@@ -841,9 +843,9 @@ uninstall-man: uninstall-man1
 
 install-exec-hook:
 	@if [ "@OPENSSLDIR@x" != "x" ]; then \
-		OPENSSLDIR="$(DESTDIR)/@OPENSSLDIR@"; \
+		OPENSSLDIR="$(DESTDIR)@OPENSSLDIR@"; \
 	else \
-		OPENSSLDIR="$(DESTDIR)/$(sysconfdir)/ssl"; \
+		OPENSSLDIR="$(DESTDIR)$(sysconfdir)/ssl"; \
 	fi; \
 	mkdir -p "$$OPENSSLDIR/certs"; \
 	for i in cert.pem openssl.cnf x509v3.cnf; do \
@@ -856,9 +858,9 @@ install-exec-hook:
 
 uninstall-local:
 	@if [ "@OPENSSLDIR@x" != "x" ]; then \
-		OPENSSLDIR="$(DESTDIR)/@OPENSSLDIR@"; \
+		OPENSSLDIR="$(DESTDIR)@OPENSSLDIR@"; \
 	else \
-		OPENSSLDIR="$(DESTDIR)/$(sysconfdir)/ssl"; \
+		OPENSSLDIR="$(DESTDIR)$(sysconfdir)/ssl"; \
 	fi; \
 	for i in cert.pem openssl.cnf x509v3.cnf; do \
 		if cmp -s "$$OPENSSLDIR/$$i" "$(srcdir)/$$i"; then \
