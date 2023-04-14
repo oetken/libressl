@@ -463,6 +463,7 @@ set(
 	gost/gostr341001_pmeth.c
 	gost/gostr341194.c
 	gost/streebog.c
+	hkdf/hkdf.c
 	hmac/hm_ameth.c
 	hmac/hm_pmeth.c
 	hmac/hmac.c
@@ -681,6 +682,11 @@ if(NOT HAVE_ASPRINTF)
 	set(EXTRA_EXPORT ${EXTRA_EXPORT} vasprintf)
 endif()
 
+if(NOT HAVE_FREEZERO)
+	set(CRYPTO_SRC ${CRYPTO_SRC} compat/freezero.c)
+	set(EXTRA_EXPORT ${EXTRA_EXPORT} freezero)
+endif()
+
 if(NOT HAVE_GETPAGESIZE)
 	set(CRYPTO_SRC ${CRYPTO_SRC} compat/getpagesize.c)
 endif()
@@ -823,9 +829,13 @@ if (BUILD_SHARED)
 		ARCHIVE_OUTPUT_NAME crypto${CRYPTO_POSTFIX})
 	set_target_properties(crypto-shared PROPERTIES VERSION
 		${CRYPTO_VERSION} SOVERSION ${CRYPTO_MAJOR_VERSION})
-	install(TARGETS crypto crypto-shared DESTINATION ${CMAKE_INSTALL_LIBDIR})
+	if(ENABLE_LIBRESSL_INSTALL)
+		install(TARGETS crypto crypto-shared DESTINATION ${CMAKE_INSTALL_LIBDIR})
+	endif(ENABLE_LIBRESSL_INSTALL)
 else()
 	add_library(crypto STATIC ${CRYPTO_SRC})
-	install(TARGETS crypto DESTINATION ${CMAKE_INSTALL_LIBDIR})
+	if(ENABLE_LIBRESSL_INSTALL)
+		install(TARGETS crypto DESTINATION ${CMAKE_INSTALL_LIBDIR})
+	endif(ENABLE_LIBRESSL_INSTALL)
 endif()
 

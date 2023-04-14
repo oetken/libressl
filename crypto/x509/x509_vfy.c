@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_vfy.c,v 1.61.4.1 2017/04/28 23:12:04 beck Exp $ */
+/* $OpenBSD: x509_vfy.c,v 1.64 2017/04/28 23:03:58 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *

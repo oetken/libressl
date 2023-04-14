@@ -98,18 +98,18 @@ TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_2) \
 	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
 	ectest$(EXEEXT) enginetest$(EXEEXT) evptest.sh $(am__EXEEXT_3) \
 	exptest$(EXEEXT) gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
-	hmactest$(EXEEXT) ideatest$(EXEEXT) igetest$(EXEEXT) \
-	md4test$(EXEEXT) md5test$(EXEEXT) mont$(EXEEXT) \
-	$(am__append_9) optionstest$(EXEEXT) pbkdf2$(EXEEXT) \
-	$(am__append_11) pkcs7test$(EXEEXT) poly1305test$(EXEEXT) \
-	pq_test.sh randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
-	$(am__append_13) $(am__EXEEXT_6) rmdtest$(EXEEXT) \
-	rsa_test$(EXEEXT) servertest.sh sha1test$(EXEEXT) \
-	sha256test$(EXEEXT) sha512test$(EXEEXT) ssl_versions$(EXEEXT) \
-	ssltest.sh testdsa.sh testenc.sh testrsa.sh \
-	timingsafe$(EXEEXT) tlstest.sh tls_ext_alpn$(EXEEXT) \
-	tls_prf$(EXEEXT) utf8test$(EXEEXT) verifytest$(EXEEXT) \
-	x25519test$(EXEEXT)
+	hkdftest$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
+	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
+	mont$(EXEEXT) $(am__append_9) optionstest$(EXEEXT) \
+	pbkdf2$(EXEEXT) $(am__append_11) pkcs7test$(EXEEXT) \
+	poly1305test$(EXEEXT) pq_test.sh randtest$(EXEEXT) \
+	rc2test$(EXEEXT) rc4test$(EXEEXT) $(am__append_13) \
+	$(am__EXEEXT_6) rmdtest$(EXEEXT) rsa_test$(EXEEXT) \
+	servertest.sh sha1test$(EXEEXT) sha256test$(EXEEXT) \
+	sha512test$(EXEEXT) ssl_versions$(EXEEXT) ssltest.sh \
+	testdsa.sh testenc.sh testrsa.sh timingsafe$(EXEEXT) \
+	tlstest.sh tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) \
+	utf8test$(EXEEXT) verifytest$(EXEEXT) x25519test$(EXEEXT)
 check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	asn1test$(EXEEXT) asn1time$(EXEEXT) base64test$(EXEEXT) \
 	bftest$(EXEEXT) $(am__EXEEXT_2) bntest$(EXEEXT) \
@@ -119,17 +119,18 @@ check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	dsatest$(EXEEXT) ecdhtest$(EXEEXT) ecdsatest$(EXEEXT) \
 	ectest$(EXEEXT) enginetest$(EXEEXT) evptest$(EXEEXT) \
 	$(am__EXEEXT_3) exptest$(EXEEXT) gcm128test$(EXEEXT) \
-	gost2814789t$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
-	igetest$(EXEEXT) md4test$(EXEEXT) md5test$(EXEEXT) \
-	mont$(EXEEXT) $(am__EXEEXT_4) optionstest$(EXEEXT) \
-	pbkdf2$(EXEEXT) $(am__EXEEXT_5) pkcs7test$(EXEEXT) \
-	poly1305test$(EXEEXT) pq_test$(EXEEXT) randtest$(EXEEXT) \
-	rc2test$(EXEEXT) rc4test$(EXEEXT) rfc5280time$(EXEEXT) \
-	rmdtest$(EXEEXT) rsa_test$(EXEEXT) servertest$(EXEEXT) \
-	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
-	ssl_versions$(EXEEXT) ssltest$(EXEEXT) timingsafe$(EXEEXT) \
-	tlstest$(EXEEXT) tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) \
-	utf8test$(EXEEXT) verifytest$(EXEEXT) x25519test$(EXEEXT)
+	gost2814789t$(EXEEXT) hkdftest$(EXEEXT) hmactest$(EXEEXT) \
+	ideatest$(EXEEXT) igetest$(EXEEXT) md4test$(EXEEXT) \
+	md5test$(EXEEXT) mont$(EXEEXT) $(am__EXEEXT_4) \
+	optionstest$(EXEEXT) pbkdf2$(EXEEXT) $(am__EXEEXT_5) \
+	pkcs7test$(EXEEXT) poly1305test$(EXEEXT) pq_test$(EXEEXT) \
+	randtest$(EXEEXT) rc2test$(EXEEXT) rc4test$(EXEEXT) \
+	rfc5280time$(EXEEXT) rmdtest$(EXEEXT) rsa_test$(EXEEXT) \
+	servertest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
+	sha512test$(EXEEXT) ssl_versions$(EXEEXT) ssltest$(EXEEXT) \
+	timingsafe$(EXEEXT) tlstest$(EXEEXT) tls_ext_alpn$(EXEEXT) \
+	tls_prf$(EXEEXT) utf8test$(EXEEXT) verifytest$(EXEEXT) \
+	x25519test$(EXEEXT)
 
 # arc4randomforktest
 # Windows/mingw does not have fork, but Cygwin does.
@@ -388,6 +389,13 @@ am_gost2814789t_OBJECTS = gost2814789t.$(OBJEXT)
 gost2814789t_OBJECTS = $(am_gost2814789t_OBJECTS)
 gost2814789t_LDADD = $(LDADD)
 gost2814789t_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_hkdftest_OBJECTS = hkdf_test.$(OBJEXT)
+hkdftest_OBJECTS = $(am_hkdftest_OBJECTS)
+hkdftest_LDADD = $(LDADD)
+hkdftest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -665,10 +673,10 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(ecdsatest_SOURCES) $(ectest_SOURCES) $(enginetest_SOURCES) \
 	$(evptest_SOURCES) $(explicit_bzero_SOURCES) \
 	$(exptest_SOURCES) $(gcm128test_SOURCES) \
-	$(gost2814789t_SOURCES) $(hmactest_SOURCES) \
-	$(ideatest_SOURCES) $(igetest_SOURCES) $(md4test_SOURCES) \
-	$(md5test_SOURCES) $(mont_SOURCES) $(ocsp_test_SOURCES) \
-	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
+	$(gost2814789t_SOURCES) $(hkdftest_SOURCES) \
+	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
+	$(md4test_SOURCES) $(md5test_SOURCES) $(mont_SOURCES) \
+	$(ocsp_test_SOURCES) $(optionstest_SOURCES) $(pbkdf2_SOURCES) \
 	$(pidwraptest_SOURCES) $(pkcs7test_SOURCES) \
 	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
 	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rfc5280time_SOURCES) \
@@ -691,20 +699,20 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(ectest_SOURCES) $(enginetest_SOURCES) $(evptest_SOURCES) \
 	$(am__explicit_bzero_SOURCES_DIST) $(exptest_SOURCES) \
 	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
-	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
-	$(md4test_SOURCES) $(md5test_SOURCES) $(mont_SOURCES) \
-	$(am__ocsp_test_SOURCES_DIST) $(optionstest_SOURCES) \
-	$(pbkdf2_SOURCES) $(am__pidwraptest_SOURCES_DIST) \
-	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
-	$(pq_test_SOURCES) $(randtest_SOURCES) $(rc2test_SOURCES) \
-	$(rc4test_SOURCES) $(rfc5280time_SOURCES) $(rmdtest_SOURCES) \
-	$(rsa_test_SOURCES) $(servertest_SOURCES) $(sha1test_SOURCES) \
-	$(sha256test_SOURCES) $(sha512test_SOURCES) \
-	$(ssl_versions_SOURCES) $(ssltest_SOURCES) \
-	$(timingsafe_SOURCES) $(tls_ext_alpn_SOURCES) \
-	$(tls_prf_SOURCES) $(am__tlstest_SOURCES_DIST) \
-	$(utf8test_SOURCES) $(verifytest_SOURCES) \
-	$(x25519test_SOURCES)
+	$(hkdftest_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
+	$(igetest_SOURCES) $(md4test_SOURCES) $(md5test_SOURCES) \
+	$(mont_SOURCES) $(am__ocsp_test_SOURCES_DIST) \
+	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
+	$(am__pidwraptest_SOURCES_DIST) $(pkcs7test_SOURCES) \
+	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(randtest_SOURCES) \
+	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rfc5280time_SOURCES) \
+	$(rmdtest_SOURCES) $(rsa_test_SOURCES) $(servertest_SOURCES) \
+	$(sha1test_SOURCES) $(sha256test_SOURCES) \
+	$(sha512test_SOURCES) $(ssl_versions_SOURCES) \
+	$(ssltest_SOURCES) $(timingsafe_SOURCES) \
+	$(tls_ext_alpn_SOURCES) $(tls_prf_SOURCES) \
+	$(am__tlstest_SOURCES_DIST) $(utf8test_SOURCES) \
+	$(verifytest_SOURCES) $(x25519test_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -967,7 +975,6 @@ EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
 GREP = @GREP@
-HOSTARCH = @HOSTARCH@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 INSTALL_PROGRAM = @INSTALL_PROGRAM@
@@ -1117,6 +1124,7 @@ exptest_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
 exptest_SOURCES = exptest.c
 gcm128test_SOURCES = gcm128test.c
 gost2814789t_SOURCES = gost2814789t.c
+hkdftest_SOURCES = hkdf_test.c
 hmactest_SOURCES = hmactest.c
 ideatest_SOURCES = ideatest.c
 igetest_SOURCES = igetest.c
@@ -1313,6 +1321,10 @@ gost2814789t$(EXEEXT): $(gost2814789t_OBJECTS) $(gost2814789t_DEPENDENCIES) $(EX
 	@rm -f gost2814789t$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(gost2814789t_OBJECTS) $(gost2814789t_LDADD) $(LIBS)
 
+hkdftest$(EXEEXT): $(hkdftest_OBJECTS) $(hkdftest_DEPENDENCIES) $(EXTRA_hkdftest_DEPENDENCIES) 
+	@rm -f hkdftest$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(hkdftest_OBJECTS) $(hkdftest_LDADD) $(LIBS)
+
 hmactest$(EXEEXT): $(hmactest_OBJECTS) $(hmactest_DEPENDENCIES) $(EXTRA_hmactest_DEPENDENCIES) 
 	@rm -f hmactest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(hmactest_OBJECTS) $(hmactest_LDADD) $(LIBS)
@@ -1478,6 +1490,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exptest-exptest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcm128test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gost2814789t.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hkdf_test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hmactest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ideatest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/igetest.Po@am__quote@
@@ -1956,6 +1969,13 @@ gcm128test.log: gcm128test$(EXEEXT)
 gost2814789t.log: gost2814789t$(EXEEXT)
 	@p='gost2814789t$(EXEEXT)'; \
 	b='gost2814789t'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+hkdftest.log: hkdftest$(EXEEXT)
+	@p='hkdftest$(EXEEXT)'; \
+	b='hkdftest'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
