@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_lib.c,v 1.165.4.1 2020/08/10 18:59:47 tb Exp $ */
+/* $OpenBSD: t1_lib.c,v 1.167 2020/05/29 17:39:42 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -250,14 +250,7 @@ static const uint16_t eccurves_list[] = {
 };
 #endif
 
-static const uint16_t eccurves_client_default[] = {
-	29,			/* X25519 (29) */
-	23,			/* secp256r1 (23) */
-	24,			/* secp384r1 (24) */
-	25,			/* secp521r1 (25) */
-};
-
-static const uint16_t eccurves_server_default[] = {
+static const uint16_t eccurves_default[] = {
 	29,			/* X25519 (29) */
 	23,			/* secp256r1 (23) */
 	24,			/* secp384r1 (24) */
@@ -381,15 +374,9 @@ tls1_get_group_list(SSL *s, int client_groups, const uint16_t **pgroups,
 
 	*pgroups = s->internal->tlsext_supportedgroups;
 	*pgroupslen = s->internal->tlsext_supportedgroups_length;
-	if (*pgroups != NULL)
-		return;
-
-	if (!s->server) {
-		*pgroups = eccurves_client_default;
-		*pgroupslen = sizeof(eccurves_client_default) / 2;
-	} else {
-		*pgroups = eccurves_server_default;
-		*pgroupslen = sizeof(eccurves_server_default) / 2;
+	if (*pgroups == NULL) {
+		*pgroups = eccurves_default;
+		*pgroupslen = sizeof(eccurves_default) / 2;
 	}
 }
 
@@ -642,7 +629,6 @@ ssl_check_clienthello_tlsext_early(SSL *s)
 		ssl3_send_alert(s, SSL3_AL_WARNING, al);
 		return 1;
 	case SSL_TLSEXT_ERR_NOACK:
-		s->internal->servername_done = 0;
 	default:
 		return 1;
 	}
@@ -730,12 +716,11 @@ ssl_check_serverhello_tlsext(SSL *s)
 	if ((s->tlsext_status_type != -1) && !(s->internal->tlsext_status_expected) &&
 	    s->ctx && s->ctx->internal->tlsext_status_cb) {
 		int r;
-		/* Set resp to NULL, resplen to -1 so callback knows
- 		 * there is no response.
- 		 */
+
 		free(s->internal->tlsext_ocsp_resp);
 		s->internal->tlsext_ocsp_resp = NULL;
-		s->internal->tlsext_ocsp_resplen = -1;
+		s->internal->tlsext_ocsp_resp_len = 0;
+
 		r = s->ctx->internal->tlsext_status_cb(s,
 		    s->ctx->internal->tlsext_status_arg);
 		if (r == 0) {
@@ -751,14 +736,11 @@ ssl_check_serverhello_tlsext(SSL *s)
 	switch (ret) {
 	case SSL_TLSEXT_ERR_ALERT_FATAL:
 		ssl3_send_alert(s, SSL3_AL_FATAL, al);
-
 		return -1;
 	case SSL_TLSEXT_ERR_ALERT_WARNING:
 		ssl3_send_alert(s, SSL3_AL_WARNING, al);
-
 		return 1;
 	case SSL_TLSEXT_ERR_NOACK:
-		s->internal->servername_done = 0;
 	default:
 		return 1;
 	}
