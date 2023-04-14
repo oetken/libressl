@@ -1,4 +1,4 @@
-/* $OpenBSD: tls_internal.h,v 1.62 2017/07/06 17:12:22 jsing Exp $ */
+/* $OpenBSD: tls_internal.h,v 1.64 2017/08/10 18:18:30 jsing Exp $ */
 /*
  * Copyright (c) 2014 Jeremie Courreges-Anglas <jca@openbsd.org>
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
@@ -35,6 +35,8 @@ __BEGIN_HIDDEN_DECLS
 #define TLS_CIPHERS_LEGACY	"HIGH:MEDIUM:!aNULL"
 #define TLS_CIPHERS_ALL		"ALL:!aNULL:!eNULL"
 
+#define TLS_ECDHE_CURVES	"X25519,P-256,P-384"
+
 union tls_addr {
 	struct in_addr ip4;
 	struct in6_addr ip6;
@@ -55,7 +57,7 @@ struct tls_keypair {
 	size_t key_len;
 	char *ocsp_staple;
 	size_t ocsp_staple_len;
-	char *cert_hash;
+	char *pubkey_hash;
 };
 
 #define TLS_MIN_SESSION_TIMEOUT (4)
@@ -89,7 +91,8 @@ struct tls_config {
 	char *crl_mem;
 	size_t crl_len;
 	int dheparams;
-	int ecdhecurve;
+	int *ecdhecurves;
+	size_t ecdhecurves_len;
 	struct tls_keypair *keypair;
 	int ocsp_require_stapling;
 	uint32_t protocols;
