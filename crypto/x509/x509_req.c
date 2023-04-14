@@ -86,18 +86,15 @@ X509_to_X509_REQ(X509 *x, EVP_PKEY *pkey, const EVP_MD *md)
 
 	ri = ret->req_info;
 
-	ri->version->length = 1;
-	ri->version->data = malloc(1);
-	if (ri->version->data == NULL)
+	if ((ri->version = M_ASN1_INTEGER_new()) == NULL)
 		goto err;
-	ri->version->data[0] = 0; /* version == 0 */
+	if (ASN1_INTEGER_set(ri->version, 0) == 0)
+		goto err;
 
 	if (!X509_REQ_set_subject_name(ret, X509_get_subject_name(x)))
 		goto err;
 
-	if ((pktmp = X509_get_pubkey(x)) == NULL)
-		goto err;
-
+	pktmp = X509_get_pubkey(x);
 	i = X509_REQ_set_pubkey(ret, pktmp);
 	EVP_PKEY_free(pktmp);
 	if (!i)
