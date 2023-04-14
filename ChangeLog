@@ -28,34 +28,31 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
-2.3.8 - Security and reliability fixes
+2.4.0 - Build improvements, new features
 
-	* Avoid unbounded memory growth in libssl, which can be triggered by a
-	  TLS client repeatedly renegotiating and sending OCSP Status Request
-	  TLS extensions.
+	* Many improvements to the CMake build infrastructure, including
+	  Solaris, mingw-w64, Cygwin, and HP-UX support. Thanks to Kinichiro
+	  Inoguchi for this work.
 
-	* Avoid falling back to a weak digest for (EC)DH when using SNI with
-	  libssl.
+	* Added missing error handling around bn_wexpand() calls.
 
-2.3.7 - OCSP fixes
+	* Added explicit_bzero calls for freed ASN.1 objects.
 
-	* Fix several issues in the OCSP code that could result in the
-	  incorrect generation and parsing of OCSP requests. This remediates a
-	  lack of error checking on time parsing in these functions, and
-	  ensures that only GENERALIZEDTIME formats are accepted for OCSP, as
-	  per RFC 6960.
+	* Fixed X509_*set_object functions to return 0 on allocation failure.
 
-	  Issues reported, and fixes provided by  Kazuki Yamaguchi <k@rhe.jp>
-	  and Kinichiro Inoguchi <kinichiro.inoguchi@gmail.com>
+	* Implemented the IETF ChaCha20-Poly1305 cipher suites.
 
-2.3.6 - Security fix
+	* Changed default EVP_aead_chacha20_poly1305() implementation to the
+	  IETF version, which is now the default.
 
-	* Correct a problem that prevents the DSA signing algorithm from
-	  running in constant time even if the flag BN_FLG_CONSTTIME is set.
-	  This issue was reported by Cesar Pereida (Aalto University), Billy
-	  Brumley (Tampere University of Technology), and Yuval Yarom (The
-	  University of Adelaide and NICTA). The fix was developed by Cesar
-	  Pereida. See OpenBSD 5.9 errata 11, June 6, 2016
+	* Fixed password prompts from openssl(1) to properly handle ^C.
+
+	* Reworked error handling in libtls so that configuration errors are
+	  visible.
+
+	* Deprecated internal use of EVP_[Cipher|Encrypt|Decrypt]_Final.
+
+	* Manpage fixes and updates
 
 2.3.5 - Reliability fix
 

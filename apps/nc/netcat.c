@@ -1,4 +1,4 @@
-/* $OpenBSD: netcat.c,v 1.149 2015/12/28 14:17:47 bcook Exp $ */
+/* $OpenBSD: netcat.c,v 1.151 2016/05/28 19:39:16 beck Exp $ */
 /*
  * Copyright (c) 2001 Eric Jackson <ericj@monkey.org>
  * Copyright (c) 2015 Bob Beck.  All rights reserved.
@@ -143,7 +143,7 @@ int	unix_listen(char *);
 void	set_common_sockopts(int, int);
 int	map_tos(char *, int *);
 int	map_tls(char *, int *);
-void	report_connect(const struct sockaddr *, socklen_t);
+void	report_connect(const struct sockaddr *, socklen_t, char *);
 void	report_tls(struct tls *tls_ctx, char * host, char *tls_expectname);
 void	usage(int);
 ssize_t drainbuf(int, unsigned char *, size_t *, struct tls *);
@@ -339,7 +339,13 @@ main(int argc, char *argv[])
 		if (pledge("stdio rpath wpath cpath tmppath unix", NULL) == -1)
 			err(1, "pledge");
 	} else if (Fflag) {
-		if (pledge("stdio inet dns sendfd", NULL) == -1)
+		if (Pflag) {
+			if (pledge("stdio inet dns sendfd tty", NULL) == -1)
+				err(1, "pledge");
+		} else if (pledge("stdio inet dns sendfd", NULL) == -1)
+			err(1, "pledge");
+	} else if (Pflag) {
+		if (pledge("stdio inet dns tty", NULL) == -1)
 			err(1, "pledge");
 	} else if (usetls) {
 		if (pledge("stdio rpath inet dns", NULL) == -1)
@@ -450,7 +456,10 @@ main(int argc, char *argv[])
 		if (Kflag && (privkey = tls_load_file(Kflag, &privkeylen, NULL)) == NULL)
 			errx(1, "unable to load TLS key file %s", Kflag);
 
-		if (pledge("stdio inet dns", NULL) == -1)
+		if (Pflag) {
+			if (pledge("stdio inet dns tty", NULL) == -1)
+				err(1, "pledge");
+		} else if (pledge("stdio inet dns", NULL) == -1)
 			err(1, "pledge");
 
 		if (tls_init() == -1)
@@ -535,7 +544,7 @@ main(int argc, char *argv[])
 					err(1, "connect");
 
 				if (vflag)
-					report_connect((struct sockaddr *)&z, len);
+					report_connect((struct sockaddr *)&z, len, NULL);
 
 				readwrite(s, NULL);
 			} else {
@@ -547,7 +556,8 @@ main(int argc, char *argv[])
 					err(1, "accept");
 				}
 				if (vflag)
-					report_connect((struct sockaddr *)&cliaddr, len);
+					report_connect((struct sockaddr *)&cliaddr, len,
+					    family == AF_UNIX ? host : NULL);
 				if ((usetls) &&
 				    (tls_cctx = tls_setup_server(tls_ctx, connfd, host)))
 					readwrite(connfd, tls_cctx);
@@ -1518,12 +1528,17 @@ report_tls(struct tls * tls_ctx, char * host, char *tls_expectname)
 }
 
 void
-report_connect(const struct sockaddr *sa, socklen_t salen)
+report_connect(const struct sockaddr *sa, socklen_t salen, char *path)
 {
 	char remote_host[NI_MAXHOST];
 	char remote_port[NI_MAXSERV];
 	int herr;
 	int flags = NI_NUMERICSERV;
+
+	if (path != NULL) {
+		fprintf(stderr, "Connection on %s received!\n", path);
+		return;
+	}
 
 	if (nflag)
 		flags |= NI_NUMERICHOST;
