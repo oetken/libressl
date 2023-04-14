@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.167 2018/06/02 16:29:01 jsing Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.170 2018/09/06 16:40:45 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -674,7 +674,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 128,
 		.alg_bits = 128,
@@ -692,7 +692,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA384|TLS1_PRF_SHA384|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 256,
 		.alg_bits = 256,
@@ -710,7 +710,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 128,
 		.alg_bits = 128,
@@ -728,7 +728,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA384|TLS1_PRF_SHA384|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 256,
 		.alg_bits = 256,
@@ -746,7 +746,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 128,
 		.alg_bits = 128,
@@ -764,7 +764,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA384|TLS1_PRF_SHA384|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 256,
 		.alg_bits = 256,
@@ -1191,7 +1191,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 128,
 		.alg_bits = 128,
@@ -1209,7 +1209,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA384|TLS1_PRF_SHA384|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 256,
 		.alg_bits = 256,
@@ -1227,7 +1227,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 128,
 		.alg_bits = 128,
@@ -1245,7 +1245,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA384|TLS1_PRF_SHA384|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(4)|
+		    FIXED_NONCE_LEN(4)|
 		    SSL_CIPHER_ALGORITHM2_VARIABLE_NONCE_IN_RECORD,
 		.strength_bits = 256,
 		.alg_bits = 256,
@@ -1263,7 +1263,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(12),
+		    FIXED_NONCE_LEN(12),
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -1280,7 +1280,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(12),
+		    FIXED_NONCE_LEN(12),
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -1297,7 +1297,7 @@ SSL_CIPHER ssl3_ciphers[] = {
 		.algorithm_ssl = SSL_TLSV1_2,
 		.algo_strength = SSL_HIGH,
 		.algorithm2 = SSL_HANDSHAKE_MAC_SHA256|TLS1_PRF_SHA256|
-		    SSL_CIPHER_ALGORITHM2_AEAD|FIXED_NONCE_LEN(12),
+		    FIXED_NONCE_LEN(12),
 		.strength_bits = 256,
 		.alg_bits = 256,
 	},
@@ -1397,44 +1397,8 @@ ssl3_handshake_msg_hdr_len(SSL *s)
             SSL3_HM_HEADER_LENGTH);
 }
 
-unsigned char *
-ssl3_handshake_msg_start(SSL *s, uint8_t msg_type)
-{
-	unsigned char *d, *p;
-
-	d = p = (unsigned char *)s->internal->init_buf->data;
-
-	/* Handshake message type and length. */
-	*(p++) = msg_type;
-	l2n3(0, p);
-
-	return (d + ssl3_handshake_msg_hdr_len(s));
-}
-
-void
-ssl3_handshake_msg_finish(SSL *s, unsigned int len)
-{
-	unsigned char *p;
-	uint8_t msg_type;
-
-	p = (unsigned char *)s->internal->init_buf->data;
-
-	/* Handshake message length. */
-	msg_type = *(p++);
-	l2n3(len, p);
-
-	s->internal->init_num = ssl3_handshake_msg_hdr_len(s) + (int)len;
-	s->internal->init_off = 0;
-
-	if (SSL_IS_DTLS(s)) {
-		dtls1_set_message_header(s, msg_type, len, 0, len);
-		dtls1_buffer_message(s, 0);
-	}
-}
-
 int
-ssl3_handshake_msg_start_cbb(SSL *s, CBB *handshake, CBB *body,
-    uint8_t msg_type)
+ssl3_handshake_msg_start(SSL *s, CBB *handshake, CBB *body, uint8_t msg_type)
 {
 	int ret = 0;
 
@@ -1459,7 +1423,7 @@ ssl3_handshake_msg_start_cbb(SSL *s, CBB *handshake, CBB *body,
 }
 
 int
-ssl3_handshake_msg_finish_cbb(SSL *s, CBB *handshake)
+ssl3_handshake_msg_finish(SSL *s, CBB *handshake)
 {
 	unsigned char *data = NULL;
 	size_t outlen;
@@ -2118,14 +2082,14 @@ _SSL_CTX_add_extra_chain_cert(SSL_CTX *ctx, X509 *cert)
 	return 1;
 }
 
-int
+static int
 _SSL_CTX_get_extra_chain_certs(SSL_CTX *ctx, STACK_OF(X509) **certs)
 {
 	*certs = ctx->extra_certs;
 	return 1;
 }
 
-int
+static int
 _SSL_CTX_clear_extra_chain_certs(SSL_CTX *ctx)
 {
 	sk_X509_pop_free(ctx->extra_certs, X509_free);
