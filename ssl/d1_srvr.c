@@ -1,4 +1,4 @@
-/* $OpenBSD: d1_srvr.c,v 1.50 2015/03/27 12:29:54 jsing Exp $ */
+/* $OpenBSD: d1_srvr.c,v 1.54 2015/06/18 22:30:47 doug Exp $ */
 /*
  * DTLS implementation written by Nagendra Modadugu
  * (nagendra@cs.stanford.edu) for the OpenSSL project 2005.
@@ -468,22 +468,13 @@ dtls1_accept(SSL *s)
 
 		case SSL3_ST_SR_CERT_A:
 		case SSL3_ST_SR_CERT_B:
-			/* Check for second client hello (MS SGC) */
-			ret = ssl3_check_client_hello(s);
-			if (ret <= 0)
-				goto end;
-			if (ret == 2) {
-				dtls1_stop_timer(s);
-				s->state = SSL3_ST_SR_CLNT_HELLO_C;
-			} else {
-				/* could be sent for a DH cert, even if we
-				 * have not asked for it :-) */
+			if (s->s3->tmp.cert_request) {
 				ret = ssl3_get_client_certificate(s);
 				if (ret <= 0)
 					goto end;
-				s->init_num = 0;
-				s->state = SSL3_ST_SR_KEY_EXCH_A;
 			}
+			s->init_num = 0;
+			s->state = SSL3_ST_SR_KEY_EXCH_A;
 			break;
 
 		case SSL3_ST_SR_KEY_EXCH_A:
@@ -525,7 +516,7 @@ dtls1_accept(SSL *s)
 			ret = ssl3_get_cert_verify(s);
 			if (ret <= 0)
 				goto end;
-				s->state = SSL3_ST_SR_FINISHED_A;
+			s->state = SSL3_ST_SR_FINISHED_A;
 			s->init_num = 0;
 			break;
 
@@ -1164,20 +1155,10 @@ dtls1_send_certificate_request(SSL *s)
 					goto err;
 				}
 				p = (unsigned char *)&(buf->data[DTLS1_HM_HEADER_LENGTH + n]);
-				if (!(s->options & SSL_OP_NETSCAPE_CA_DN_BUG)) {
-					s2n(j, p);
-					i2d_X509_NAME(name, &p);
-					n += 2 + j;
-					nl += 2 + j;
-				} else {
-					d = p;
-					i2d_X509_NAME(name, &p);
-					j -= 2;
-					s2n(j, d);
-					j += 2;
-					n += j;
-					nl += j;
-				}
+				s2n(j, p);
+				i2d_X509_NAME(name, &p);
+				n += 2 + j;
+				nl += 2 + j;
 			}
 		}
 		/* else no CA names */

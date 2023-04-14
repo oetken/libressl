@@ -1,4 +1,4 @@
-/* $OpenBSD: apps.c,v 1.24 2015/01/03 03:03:39 lteo Exp $ */
+/* $OpenBSD: apps.c,v 1.26 2015/06/16 02:27:24 doug Exp $ */
 /*
  * Copyright (c) 2014 Joel Sing <jsing@openbsd.org>
  *
@@ -1251,21 +1251,6 @@ end:
 }
 
 #ifndef OPENSSL_NO_ENGINE
-/* Try to load an engine in a shareable library */
-static ENGINE *
-try_load_engine(BIO *err, const char *engine, int debug)
-{
-	ENGINE *e = ENGINE_by_id("dynamic");
-
-	if (e) {
-		if (!ENGINE_ctrl_cmd_string(e, "SO_PATH", engine, 0) ||
-		    !ENGINE_ctrl_cmd_string(e, "LOAD", NULL, 0)) {
-			ENGINE_free(e);
-			e = NULL;
-		}
-	}
-	return e;
-}
 
 ENGINE *
 setup_engine(BIO *err, const char *engine, int debug)
@@ -1278,8 +1263,7 @@ setup_engine(BIO *err, const char *engine, int debug)
 			ENGINE_register_all_complete();
 			return NULL;
 		}
-		if ((e = ENGINE_by_id(engine)) == NULL &&
-		    (e = try_load_engine(err, engine, debug)) == NULL) {
+		if ((e = ENGINE_by_id(engine)) == NULL) {
 			BIO_printf(err, "invalid engine \"%s\"\n", engine);
 			ERR_print_errors(err);
 			return NULL;
@@ -2342,6 +2326,9 @@ options_parse(int argc, char **argv, struct option *opts, char **unnamed,
 				return (1);
 			}
 			*opt->opt.value = (int)val;
+			break;
+
+		case OPTION_DISCARD:
 			break;
 
 		case OPTION_FUNC:

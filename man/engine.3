@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "engine 3"
-.TH engine 3 "2015-06-11" "LibreSSL " "LibreSSL"
+.TH engine 3 "2015-07-02" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -445,13 +445,13 @@ consideration is whether any/all available \s-1ENGINE\s0 implementations should 
 made visible to OpenSSL \- this is controlled by calling the various \*(L"load\*(R"
 functions, eg.
 .PP
-.Vb 5
-\& /* Make the "dynamic" ENGINE available */
-\& void ENGINE_load_dynamic(void);
-\& ...
+.Vb 2
 \& /* Make ALL ENGINE implementations bundled with OpenSSL available */
-\& void ENGINE_load_builtin_engines(void);
+\& ENGINE_load_builtin_engines();
 .Ve
+.PP
+Note that ENGINE_load_dynamic(void) is a placeholder and does not enable
+dynamic engine loading support.
 .PP
 Having called any of these functions, \s-1ENGINE\s0 objects would have been
 dynamically allocated and populated with these implementations and linked
