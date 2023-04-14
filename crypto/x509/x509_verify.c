@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_verify.c,v 1.60.2.1 2022/10/20 09:45:18 tb Exp $ */
+/* $OpenBSD: x509_verify.c,v 1.61 2022/10/17 18:56:54 jsing Exp $ */
 /*
  * Copyright (c) 2020-2021 Bob Beck <beck@openbsd.org>
  *

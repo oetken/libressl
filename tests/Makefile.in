@@ -89,35 +89,37 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 @HOST_ASM_MACOSX_X86_64_TRUE@am__append_1 = $(abs_top_builddir)/crypto/.libs/libcrypto_la-cpuid-macosx-x86_64.o
-TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_2) \
-	asn1_string_to_utf8$(EXEEXT) asn1api$(EXEEXT) \
+TESTS = aeadtest.sh aes_test$(EXEEXT) aes_wrap$(EXEEXT) \
+	$(am__append_2) asn1_string_to_utf8$(EXEEXT) asn1api$(EXEEXT) \
 	asn1basic$(EXEEXT) asn1complex$(EXEEXT) asn1evp$(EXEEXT) \
 	asn1object$(EXEEXT) asn1string_copy$(EXEEXT) asn1test$(EXEEXT) \
 	asn1time$(EXEEXT) asn1x509$(EXEEXT) base64test$(EXEEXT) \
-	bftest$(EXEEXT) $(am__EXEEXT_2) bnaddsub$(EXEEXT) \
-	bn_isqrt$(EXEEXT) bn_mod_exp2_mont$(EXEEXT) \
-	bn_mod_sqrt$(EXEEXT) bn_primes$(EXEEXT) \
-	bn_rand_interval$(EXEEXT) bntest$(EXEEXT) \
-	bn_to_string$(EXEEXT) buffertest$(EXEEXT) \
-	bytestringtest$(EXEEXT) casttest$(EXEEXT) chachatest$(EXEEXT) \
-	cipher_list$(EXEEXT) cipherstest$(EXEEXT) clienttest$(EXEEXT) \
-	cmstest$(EXEEXT) configtest$(EXEEXT) constraints$(EXEEXT) \
-	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
-	dsatest$(EXEEXT) $(am__append_6) ec_asn1_test$(EXEEXT) \
+	bf_test$(EXEEXT) bio_chain$(EXEEXT) $(am__EXEEXT_2) \
+	bio_mem$(EXEEXT) bn_add_sub$(EXEEXT) bn_cmp$(EXEEXT) \
+	bn_isqrt$(EXEEXT) bn_mod_exp$(EXEEXT) bn_mod_exp_zero$(EXEEXT) \
+	bn_mod_exp2_mont$(EXEEXT) bn_mod_sqrt$(EXEEXT) \
+	bn_mont$(EXEEXT) bn_primes$(EXEEXT) bn_rand_interval$(EXEEXT) \
+	bn_test$(EXEEXT) bn_to_string$(EXEEXT) bn_unit$(EXEEXT) \
+	buffertest$(EXEEXT) bytestringtest$(EXEEXT) casttest$(EXEEXT) \
+	chachatest$(EXEEXT) cipher_list$(EXEEXT) cipherstest$(EXEEXT) \
+	clienttest$(EXEEXT) cmstest$(EXEEXT) configtest$(EXEEXT) \
+	constraints$(EXEEXT) cts128test$(EXEEXT) destest$(EXEEXT) \
+	dhtest$(EXEEXT) dsatest$(EXEEXT) ec_asn1_test$(EXEEXT) \
 	ec_point_conversion$(EXEEXT) ecdhtest$(EXEEXT) \
-	ecdsatest$(EXEEXT) ectest$(EXEEXT) enginetest$(EXEEXT) \
+	ecdsatest$(EXEEXT) ectest$(EXEEXT) ed25519test$(EXEEXT) \
+	enginetest$(EXEEXT) evp_ecx_test$(EXEEXT) \
 	evp_pkey_check$(EXEEXT) evp_pkey_cleanup$(EXEEXT) evptest.sh \
-	$(am__EXEEXT_4) exptest$(EXEEXT) freenull$(EXEEXT) \
-	gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
-	handshake_table$(EXEEXT) hkdftest$(EXEEXT) hmactest$(EXEEXT) \
-	ideatest$(EXEEXT) igetest$(EXEEXT) key_schedule$(EXEEXT) \
-	keypairtest.sh md_test$(EXEEXT) mont$(EXEEXT) \
-	objectstest$(EXEEXT) $(am__append_11) optionstest$(EXEEXT) \
-	pbkdf2$(EXEEXT) $(am__append_13) pkcs7test$(EXEEXT) \
-	poly1305test$(EXEEXT) pq_test.sh quictest.sh randtest$(EXEEXT) \
-	rc2_test$(EXEEXT) rc4_test$(EXEEXT) recordtest$(EXEEXT) \
-	record_layer_test$(EXEEXT) rfc3779$(EXEEXT) $(am__append_15) \
-	$(am__EXEEXT_7) rmd_test$(EXEEXT) rsa_test$(EXEEXT) \
+	$(am__EXEEXT_3) freenull$(EXEEXT) gcm128test$(EXEEXT) \
+	gost2814789t$(EXEEXT) handshake_table$(EXEEXT) \
+	hkdftest$(EXEEXT) hmactest$(EXEEXT) ideatest$(EXEEXT) \
+	igetest$(EXEEXT) key_schedule$(EXEEXT) keypairtest.sh \
+	md_test$(EXEEXT) objectstest$(EXEEXT) $(am__append_9) \
+	optionstest$(EXEEXT) pbkdf2$(EXEEXT) $(am__append_11) \
+	pkcs7test$(EXEEXT) poly1305test$(EXEEXT) pq_test.sh \
+	quictest.sh randtest$(EXEEXT) rc2_test$(EXEEXT) \
+	rc4_test$(EXEEXT) recordtest$(EXEEXT) \
+	record_layer_test$(EXEEXT) rfc3779$(EXEEXT) $(am__append_13) \
+	$(am__EXEEXT_6) rmd_test$(EXEEXT) rsa_test$(EXEEXT) \
 	servertest.sh sha_test$(EXEEXT) sm3test$(EXEEXT) \
 	sm4test$(EXEEXT) ssl_get_shared_ciphers$(EXEEXT) \
 	ssl_methods$(EXEEXT) ssl_set_alpn_protos$(EXEEXT) \
@@ -128,78 +130,75 @@ TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_2) \
 	valid_handshakes_terminate$(EXEEXT) verifytest$(EXEEXT) \
 	x25519test$(EXEEXT) x509attribute$(EXEEXT) x509_info$(EXEEXT) \
 	x509name$(EXEEXT) x509req_ext$(EXEEXT)
-check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
-	asn1_string_to_utf8$(EXEEXT) asn1api$(EXEEXT) \
+check_PROGRAMS = aeadtest$(EXEEXT) aes_test$(EXEEXT) aes_wrap$(EXEEXT) \
+	$(am__EXEEXT_1) asn1_string_to_utf8$(EXEEXT) asn1api$(EXEEXT) \
 	asn1basic$(EXEEXT) asn1complex$(EXEEXT) asn1evp$(EXEEXT) \
 	asn1object$(EXEEXT) asn1string_copy$(EXEEXT) asn1test$(EXEEXT) \
 	asn1time$(EXEEXT) asn1x509$(EXEEXT) base64test$(EXEEXT) \
-	bftest$(EXEEXT) $(am__EXEEXT_2) bnaddsub$(EXEEXT) \
-	bn_isqrt$(EXEEXT) bn_mod_exp2_mont$(EXEEXT) \
-	bn_mod_sqrt$(EXEEXT) bn_primes$(EXEEXT) \
-	bn_rand_interval$(EXEEXT) bntest$(EXEEXT) \
-	bn_to_string$(EXEEXT) buffertest$(EXEEXT) \
-	bytestringtest$(EXEEXT) casttest$(EXEEXT) chachatest$(EXEEXT) \
-	cipher_list$(EXEEXT) cipherstest$(EXEEXT) clienttest$(EXEEXT) \
-	cmstest$(EXEEXT) configtest$(EXEEXT) constraints$(EXEEXT) \
-	cts128test$(EXEEXT) destest$(EXEEXT) dhtest$(EXEEXT) \
-	dsatest$(EXEEXT) $(am__EXEEXT_3) ec_asn1_test$(EXEEXT) \
+	bf_test$(EXEEXT) bio_chain$(EXEEXT) $(am__EXEEXT_2) \
+	bio_mem$(EXEEXT) bn_add_sub$(EXEEXT) bn_cmp$(EXEEXT) \
+	bn_isqrt$(EXEEXT) bn_mod_exp$(EXEEXT) bn_mod_exp_zero$(EXEEXT) \
+	bn_mod_exp2_mont$(EXEEXT) bn_mod_sqrt$(EXEEXT) \
+	bn_mont$(EXEEXT) bn_primes$(EXEEXT) bn_rand_interval$(EXEEXT) \
+	bn_test$(EXEEXT) bn_to_string$(EXEEXT) bn_unit$(EXEEXT) \
+	buffertest$(EXEEXT) bytestringtest$(EXEEXT) casttest$(EXEEXT) \
+	chachatest$(EXEEXT) cipher_list$(EXEEXT) cipherstest$(EXEEXT) \
+	clienttest$(EXEEXT) cmstest$(EXEEXT) configtest$(EXEEXT) \
+	constraints$(EXEEXT) cts128test$(EXEEXT) destest$(EXEEXT) \
+	dhtest$(EXEEXT) dsatest$(EXEEXT) ec_asn1_test$(EXEEXT) \
 	ec_point_conversion$(EXEEXT) ecdhtest$(EXEEXT) \
-	ecdsatest$(EXEEXT) ectest$(EXEEXT) enginetest$(EXEEXT) \
+	ecdsatest$(EXEEXT) ectest$(EXEEXT) ed25519test$(EXEEXT) \
+	enginetest$(EXEEXT) evp_ecx_test$(EXEEXT) \
 	evp_pkey_check$(EXEEXT) evp_pkey_cleanup$(EXEEXT) \
-	evptest$(EXEEXT) $(am__EXEEXT_4) exptest$(EXEEXT) \
-	freenull$(EXEEXT) gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
+	evptest$(EXEEXT) $(am__EXEEXT_3) freenull$(EXEEXT) \
+	gcm128test$(EXEEXT) gost2814789t$(EXEEXT) \
 	handshake_table$(EXEEXT) hkdftest$(EXEEXT) hmactest$(EXEEXT) \
 	ideatest$(EXEEXT) igetest$(EXEEXT) key_schedule$(EXEEXT) \
-	keypairtest$(EXEEXT) md_test$(EXEEXT) mont$(EXEEXT) \
-	objectstest$(EXEEXT) $(am__EXEEXT_5) optionstest$(EXEEXT) \
-	pbkdf2$(EXEEXT) $(am__EXEEXT_6) pkcs7test$(EXEEXT) \
-	poly1305test$(EXEEXT) pq_test$(EXEEXT) quictest$(EXEEXT) \
-	randtest$(EXEEXT) rc2_test$(EXEEXT) rc4_test$(EXEEXT) \
-	recordtest$(EXEEXT) record_layer_test$(EXEEXT) \
-	rfc3779$(EXEEXT) rfc5280time$(EXEEXT) rmd_test$(EXEEXT) \
-	rsa_test$(EXEEXT) servertest$(EXEEXT) sha_test$(EXEEXT) \
-	sm3test$(EXEEXT) sm4test$(EXEEXT) \
-	ssl_get_shared_ciphers$(EXEEXT) ssl_methods$(EXEEXT) \
-	ssl_set_alpn_protos$(EXEEXT) ssl_versions$(EXEEXT) \
-	ssltest$(EXEEXT) string_table$(EXEEXT) timingsafe$(EXEEXT) \
-	tlsexttest$(EXEEXT) tlslegacytest$(EXEEXT) tlstest$(EXEEXT) \
-	tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) utf8test$(EXEEXT) \
-	valid_handshakes_terminate$(EXEEXT) verifytest$(EXEEXT) \
-	x25519test$(EXEEXT) x509attribute$(EXEEXT) x509_info$(EXEEXT) \
-	x509name$(EXEEXT) x509req_ext$(EXEEXT)
+	keypairtest$(EXEEXT) md_test$(EXEEXT) objectstest$(EXEEXT) \
+	$(am__EXEEXT_4) optionstest$(EXEEXT) pbkdf2$(EXEEXT) \
+	$(am__EXEEXT_5) pkcs7test$(EXEEXT) poly1305test$(EXEEXT) \
+	pq_test$(EXEEXT) quictest$(EXEEXT) randtest$(EXEEXT) \
+	rc2_test$(EXEEXT) rc4_test$(EXEEXT) recordtest$(EXEEXT) \
+	record_layer_test$(EXEEXT) rfc3779$(EXEEXT) \
+	rfc5280time$(EXEEXT) rmd_test$(EXEEXT) rsa_test$(EXEEXT) \
+	servertest$(EXEEXT) sha_test$(EXEEXT) sm3test$(EXEEXT) \
+	sm4test$(EXEEXT) ssl_get_shared_ciphers$(EXEEXT) \
+	ssl_methods$(EXEEXT) ssl_set_alpn_protos$(EXEEXT) \
+	ssl_versions$(EXEEXT) ssltest$(EXEEXT) string_table$(EXEEXT) \
+	timingsafe$(EXEEXT) tlsexttest$(EXEEXT) tlslegacytest$(EXEEXT) \
+	tlstest$(EXEEXT) tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) \
+	utf8test$(EXEEXT) valid_handshakes_terminate$(EXEEXT) \
+	verifytest$(EXEEXT) x25519test$(EXEEXT) x509attribute$(EXEEXT) \
+	x509_info$(EXEEXT) x509name$(EXEEXT) x509req_ext$(EXEEXT)
 
 # arc4randomforktest
 # Windows/mingw does not have fork, but Cygwin does.
 @HOST_WIN_FALSE@am__append_2 = arc4randomforktest.sh
 @HOST_WIN_FALSE@am__append_3 = arc4randomforktest
 
-# biotest
-# the BIO tests rely on resolver results that are OS and environment-specific
-@ENABLE_EXTRATESTS_TRUE@am__append_4 = biotest
-@ENABLE_EXTRATESTS_TRUE@am__append_5 = biotest
-
-# dtlstest
-@HOST_WIN_FALSE@am__append_6 = dtlstest.sh
-@HOST_WIN_FALSE@am__append_7 = dtlstest
+# bio_host
+# this test relies on resolver results that are OS and environment-specific
+@ENABLE_EXTRATESTS_TRUE@am__append_4 = bio_host
+@ENABLE_EXTRATESTS_TRUE@am__append_5 = bio_host
 
 # explicit_bzero
 # explicit_bzero relies on SA_ONSTACK, which is unavailable on Windows
-@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_8 = explicit_bzero
-@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_9 = explicit_bzero
-@HAVE_MEMMEM_FALSE@@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_10 = compat/memmem.c
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_6 = explicit_bzero
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_7 = explicit_bzero
+@HAVE_MEMMEM_FALSE@@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__append_8 = compat/memmem.c
 
 # ocsp_test
-@ENABLE_EXTRATESTS_TRUE@am__append_11 = ocsptest.sh
-@ENABLE_EXTRATESTS_TRUE@am__append_12 = ocsp_test
+@ENABLE_EXTRATESTS_TRUE@am__append_9 = ocsptest.sh
+@ENABLE_EXTRATESTS_TRUE@am__append_10 = ocsp_test
 
 # pidwraptest
 # pidwraptest relies on an OS-specific way to give out pids and is generally
 # awkward on systems with slow fork
-@ENABLE_EXTRATESTS_TRUE@am__append_13 = pidwraptest.sh
-@ENABLE_EXTRATESTS_TRUE@am__append_14 = pidwraptest
-@SMALL_TIME_T_TRUE@am__append_15 = rfc5280time_small.test
-@SMALL_TIME_T_FALSE@am__append_16 = rfc5280time
-@HAVE_PIPE2_FALSE@am__append_17 = compat/pipe2.c
+@ENABLE_EXTRATESTS_TRUE@am__append_11 = pidwraptest.sh
+@ENABLE_EXTRATESTS_TRUE@am__append_12 = pidwraptest
+@SMALL_TIME_T_TRUE@am__append_13 = rfc5280time_small.test
+@SMALL_TIME_T_FALSE@am__append_14 = rfc5280time
+@HAVE_PIPE2_FALSE@am__append_15 = compat/pipe2.c
 subdir = tests
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_add_fortify_source.m4 \
@@ -219,12 +218,11 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 @HOST_WIN_FALSE@am__EXEEXT_1 = arc4randomforktest$(EXEEXT)
-@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_2 = biotest$(EXEEXT)
-@HOST_WIN_FALSE@am__EXEEXT_3 = dtlstest$(EXEEXT)
-@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__EXEEXT_4 =  \
+@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_2 = bio_host$(EXEEXT)
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@am__EXEEXT_3 =  \
 @HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	explicit_bzero$(EXEEXT)
-@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_5 = ocsp_test$(EXEEXT)
-@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_6 = pidwraptest$(EXEEXT)
+@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_4 = ocsp_test$(EXEEXT)
+@ENABLE_EXTRATESTS_TRUE@am__EXEEXT_5 = pidwraptest$(EXEEXT)
 am_aeadtest_OBJECTS = aeadtest.$(OBJEXT)
 aeadtest_OBJECTS = $(am_aeadtest_OBJECTS)
 aeadtest_LDADD = $(LDADD)
@@ -237,6 +235,13 @@ AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_aes_test_OBJECTS = aes_test.$(OBJEXT)
+aes_test_OBJECTS = $(am_aes_test_OBJECTS)
+aes_test_LDADD = $(LDADD)
+aes_test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_aes_wrap_OBJECTS = aes_wrap.$(OBJEXT)
 aes_wrap_OBJECTS = $(am_aes_wrap_OBJECTS)
 aes_wrap_LDADD = $(LDADD)
@@ -332,18 +337,46 @@ base64test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am_bftest_OBJECTS = bftest.$(OBJEXT)
-bftest_OBJECTS = $(am_bftest_OBJECTS)
-bftest_LDADD = $(LDADD)
-bftest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+am_bf_test_OBJECTS = bf_test.$(OBJEXT)
+bf_test_OBJECTS = $(am_bf_test_OBJECTS)
+bf_test_LDADD = $(LDADD)
+bf_test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am__biotest_SOURCES_DIST = biotest.c
-@ENABLE_EXTRATESTS_TRUE@am_biotest_OBJECTS = biotest.$(OBJEXT)
-biotest_OBJECTS = $(am_biotest_OBJECTS)
-biotest_LDADD = $(LDADD)
-biotest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+am_bio_chain_OBJECTS = bio_chain.$(OBJEXT)
+bio_chain_OBJECTS = $(am_bio_chain_OBJECTS)
+bio_chain_LDADD = $(LDADD)
+bio_chain_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am__bio_host_SOURCES_DIST = bio_host.c
+@ENABLE_EXTRATESTS_TRUE@am_bio_host_OBJECTS = bio_host.$(OBJEXT)
+bio_host_OBJECTS = $(am_bio_host_OBJECTS)
+bio_host_LDADD = $(LDADD)
+bio_host_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bio_mem_OBJECTS = bio_mem.$(OBJEXT)
+bio_mem_OBJECTS = $(am_bio_mem_OBJECTS)
+bio_mem_LDADD = $(LDADD)
+bio_mem_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_add_sub_OBJECTS = bn_add_sub.$(OBJEXT)
+bn_add_sub_OBJECTS = $(am_bn_add_sub_OBJECTS)
+bn_add_sub_LDADD = $(LDADD)
+bn_add_sub_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_cmp_OBJECTS = bn_cmp.$(OBJEXT)
+bn_cmp_OBJECTS = $(am_bn_cmp_OBJECTS)
+bn_cmp_LDADD = $(LDADD)
+bn_cmp_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -351,6 +384,13 @@ am_bn_isqrt_OBJECTS = bn_isqrt.$(OBJEXT)
 bn_isqrt_OBJECTS = $(am_bn_isqrt_OBJECTS)
 bn_isqrt_LDADD = $(LDADD)
 bn_isqrt_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_mod_exp_OBJECTS = bn_mod_exp-bn_mod_exp.$(OBJEXT)
+bn_mod_exp_OBJECTS = $(am_bn_mod_exp_OBJECTS)
+bn_mod_exp_LDADD = $(LDADD)
+bn_mod_exp_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -362,10 +402,25 @@ bn_mod_exp2_mont_DEPENDENCIES =  \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_mod_exp_zero_OBJECTS =  \
+	bn_mod_exp_zero-bn_mod_exp_zero.$(OBJEXT)
+bn_mod_exp_zero_OBJECTS = $(am_bn_mod_exp_zero_OBJECTS)
+bn_mod_exp_zero_LDADD = $(LDADD)
+bn_mod_exp_zero_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_bn_mod_sqrt_OBJECTS = bn_mod_sqrt.$(OBJEXT)
 bn_mod_sqrt_OBJECTS = $(am_bn_mod_sqrt_OBJECTS)
 bn_mod_sqrt_LDADD = $(LDADD)
 bn_mod_sqrt_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_mont_OBJECTS = bn_mont.$(OBJEXT)
+bn_mont_OBJECTS = $(am_bn_mont_OBJECTS)
+bn_mont_LDADD = $(LDADD)
+bn_mont_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -384,6 +439,13 @@ bn_rand_interval_DEPENDENCIES =  \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_test_OBJECTS = bn_test-bn_test.$(OBJEXT)
+bn_test_OBJECTS = $(am_bn_test_OBJECTS)
+bn_test_LDADD = $(LDADD)
+bn_test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_bn_to_string_OBJECTS = bn_to_string.$(OBJEXT)
 bn_to_string_OBJECTS = $(am_bn_to_string_OBJECTS)
 bn_to_string_LDADD = $(LDADD)
@@ -391,17 +453,10 @@ bn_to_string_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am_bnaddsub_OBJECTS = bnaddsub.$(OBJEXT)
-bnaddsub_OBJECTS = $(am_bnaddsub_OBJECTS)
-bnaddsub_LDADD = $(LDADD)
-bnaddsub_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
-	$(abs_top_builddir)/ssl/.libs/libssl.a \
-	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am_bntest_OBJECTS = bntest-bntest.$(OBJEXT)
-bntest_OBJECTS = $(am_bntest_OBJECTS)
-bntest_LDADD = $(LDADD)
-bntest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+am_bn_unit_OBJECTS = bn_unit.$(OBJEXT)
+bn_unit_OBJECTS = $(am_bn_unit_OBJECTS)
+bn_unit_LDADD = $(LDADD)
+bn_unit_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -503,14 +558,6 @@ dsatest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am__dtlstest_SOURCES_DIST = dtlstest.c
-@HOST_WIN_FALSE@am_dtlstest_OBJECTS = dtlstest.$(OBJEXT)
-dtlstest_OBJECTS = $(am_dtlstest_OBJECTS)
-dtlstest_LDADD = $(LDADD)
-dtlstest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
-	$(abs_top_builddir)/ssl/.libs/libssl.a \
-	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_ec_asn1_test_OBJECTS = ec_asn1_test.$(OBJEXT)
 ec_asn1_test_OBJECTS = $(am_ec_asn1_test_OBJECTS)
 ec_asn1_test_LDADD = $(LDADD)
@@ -547,10 +594,24 @@ ectest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_ed25519test_OBJECTS = ed25519test.$(OBJEXT)
+ed25519test_OBJECTS = $(am_ed25519test_OBJECTS)
+ed25519test_LDADD = $(LDADD)
+ed25519test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_enginetest_OBJECTS = enginetest.$(OBJEXT)
 enginetest_OBJECTS = $(am_enginetest_OBJECTS)
 enginetest_LDADD = $(LDADD)
 enginetest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_evp_ecx_test_OBJECTS = evp_ecx_test.$(OBJEXT)
+evp_ecx_test_OBJECTS = $(am_evp_ecx_test_OBJECTS)
+evp_ecx_test_LDADD = $(LDADD)
+evp_ecx_test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -585,13 +646,6 @@ am__dirstamp = $(am__leading_dot)dirstamp
 explicit_bzero_OBJECTS = $(am_explicit_bzero_OBJECTS)
 explicit_bzero_LDADD = $(LDADD)
 explicit_bzero_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
-	$(abs_top_builddir)/ssl/.libs/libssl.a \
-	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am_exptest_OBJECTS = exptest-exptest.$(OBJEXT)
-exptest_OBJECTS = $(am_exptest_OBJECTS)
-exptest_LDADD = $(LDADD)
-exptest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -669,13 +723,6 @@ am_md_test_OBJECTS = md_test.$(OBJEXT)
 md_test_OBJECTS = $(am_md_test_OBJECTS)
 md_test_LDADD = $(LDADD)
 md_test_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
-	$(abs_top_builddir)/ssl/.libs/libssl.a \
-	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
-am_mont_OBJECTS = mont.$(OBJEXT)
-mont_OBJECTS = $(am_mont_OBJECTS)
-mont_LDADD = $(LDADD)
-mont_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -1000,49 +1047,53 @@ am__v_at_1 =
 DEFAULT_INCLUDES = -I.@am__isrc@
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__maybe_remake_depfiles = depfiles
-am__depfiles_remade = ./$(DEPDIR)/aeadtest.Po ./$(DEPDIR)/aes_wrap.Po \
-	./$(DEPDIR)/arc4randomforktest.Po \
+am__depfiles_remade = ./$(DEPDIR)/aeadtest.Po ./$(DEPDIR)/aes_test.Po \
+	./$(DEPDIR)/aes_wrap.Po ./$(DEPDIR)/arc4randomforktest.Po \
 	./$(DEPDIR)/asn1_string_to_utf8.Po ./$(DEPDIR)/asn1api.Po \
 	./$(DEPDIR)/asn1basic.Po ./$(DEPDIR)/asn1complex.Po \
 	./$(DEPDIR)/asn1evp.Po ./$(DEPDIR)/asn1object.Po \
 	./$(DEPDIR)/asn1string_copy.Po ./$(DEPDIR)/asn1test.Po \
 	./$(DEPDIR)/asn1time.Po ./$(DEPDIR)/asn1x509.Po \
-	./$(DEPDIR)/base64test.Po ./$(DEPDIR)/bftest.Po \
-	./$(DEPDIR)/biotest.Po ./$(DEPDIR)/bn_isqrt.Po \
-	./$(DEPDIR)/bn_mod_exp2_mont.Po ./$(DEPDIR)/bn_mod_sqrt.Po \
+	./$(DEPDIR)/base64test.Po ./$(DEPDIR)/bf_test.Po \
+	./$(DEPDIR)/bio_chain.Po ./$(DEPDIR)/bio_host.Po \
+	./$(DEPDIR)/bio_mem.Po ./$(DEPDIR)/bn_add_sub.Po \
+	./$(DEPDIR)/bn_cmp.Po ./$(DEPDIR)/bn_isqrt.Po \
+	./$(DEPDIR)/bn_mod_exp-bn_mod_exp.Po \
+	./$(DEPDIR)/bn_mod_exp2_mont.Po \
+	./$(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po \
+	./$(DEPDIR)/bn_mod_sqrt.Po ./$(DEPDIR)/bn_mont.Po \
 	./$(DEPDIR)/bn_primes.Po ./$(DEPDIR)/bn_rand_interval.Po \
-	./$(DEPDIR)/bn_to_string.Po ./$(DEPDIR)/bnaddsub.Po \
-	./$(DEPDIR)/bntest-bntest.Po ./$(DEPDIR)/buffertest.Po \
+	./$(DEPDIR)/bn_test-bn_test.Po ./$(DEPDIR)/bn_to_string.Po \
+	./$(DEPDIR)/bn_unit.Po ./$(DEPDIR)/buffertest.Po \
 	./$(DEPDIR)/bytestringtest.Po ./$(DEPDIR)/casttest.Po \
 	./$(DEPDIR)/chachatest.Po ./$(DEPDIR)/cipher_list.Po \
 	./$(DEPDIR)/cipherstest.Po ./$(DEPDIR)/clienttest.Po \
 	./$(DEPDIR)/cmstest.Po ./$(DEPDIR)/configtest.Po \
 	./$(DEPDIR)/constraints.Po ./$(DEPDIR)/cts128test.Po \
 	./$(DEPDIR)/destest.Po ./$(DEPDIR)/dhtest.Po \
-	./$(DEPDIR)/dsatest.Po ./$(DEPDIR)/dtlstest.Po \
-	./$(DEPDIR)/ec_asn1_test.Po ./$(DEPDIR)/ec_point_conversion.Po \
-	./$(DEPDIR)/ecdhtest.Po ./$(DEPDIR)/ecdsatest.Po \
-	./$(DEPDIR)/ectest.Po ./$(DEPDIR)/enginetest.Po \
-	./$(DEPDIR)/evp_pkey_check.Po ./$(DEPDIR)/evp_pkey_cleanup.Po \
-	./$(DEPDIR)/evptest.Po ./$(DEPDIR)/explicit_bzero.Po \
-	./$(DEPDIR)/exptest-exptest.Po ./$(DEPDIR)/freenull.Po \
+	./$(DEPDIR)/dsatest.Po ./$(DEPDIR)/ec_asn1_test.Po \
+	./$(DEPDIR)/ec_point_conversion.Po ./$(DEPDIR)/ecdhtest.Po \
+	./$(DEPDIR)/ecdsatest.Po ./$(DEPDIR)/ectest.Po \
+	./$(DEPDIR)/ed25519test.Po ./$(DEPDIR)/enginetest.Po \
+	./$(DEPDIR)/evp_ecx_test.Po ./$(DEPDIR)/evp_pkey_check.Po \
+	./$(DEPDIR)/evp_pkey_cleanup.Po ./$(DEPDIR)/evptest.Po \
+	./$(DEPDIR)/explicit_bzero.Po ./$(DEPDIR)/freenull.Po \
 	./$(DEPDIR)/gcm128test.Po ./$(DEPDIR)/gost2814789t.Po \
 	./$(DEPDIR)/handshake_table.Po ./$(DEPDIR)/hkdf_test.Po \
 	./$(DEPDIR)/hmactest.Po ./$(DEPDIR)/ideatest.Po \
 	./$(DEPDIR)/igetest.Po ./$(DEPDIR)/key_schedule.Po \
 	./$(DEPDIR)/keypairtest-keypairtest.Po ./$(DEPDIR)/md_test.Po \
-	./$(DEPDIR)/mont.Po ./$(DEPDIR)/objectstest.Po \
-	./$(DEPDIR)/ocsp_test.Po ./$(DEPDIR)/optionstest.Po \
-	./$(DEPDIR)/pbkdf2.Po ./$(DEPDIR)/pidwraptest.Po \
-	./$(DEPDIR)/pkcs7test.Po ./$(DEPDIR)/poly1305test.Po \
-	./$(DEPDIR)/pq_test.Po ./$(DEPDIR)/quictest.Po \
-	./$(DEPDIR)/randtest.Po ./$(DEPDIR)/rc2_test.Po \
-	./$(DEPDIR)/rc4_test.Po ./$(DEPDIR)/record_layer_test.Po \
-	./$(DEPDIR)/recordtest.Po ./$(DEPDIR)/rfc3779-rfc3779.Po \
-	./$(DEPDIR)/rfc5280time.Po ./$(DEPDIR)/rmd_test.Po \
-	./$(DEPDIR)/rsa_test.Po ./$(DEPDIR)/servertest.Po \
-	./$(DEPDIR)/sha_test.Po ./$(DEPDIR)/sm3test.Po \
-	./$(DEPDIR)/sm4test.Po \
+	./$(DEPDIR)/objectstest.Po ./$(DEPDIR)/ocsp_test.Po \
+	./$(DEPDIR)/optionstest.Po ./$(DEPDIR)/pbkdf2.Po \
+	./$(DEPDIR)/pidwraptest.Po ./$(DEPDIR)/pkcs7test.Po \
+	./$(DEPDIR)/poly1305test.Po ./$(DEPDIR)/pq_test.Po \
+	./$(DEPDIR)/quictest.Po ./$(DEPDIR)/randtest.Po \
+	./$(DEPDIR)/rc2_test.Po ./$(DEPDIR)/rc4_test.Po \
+	./$(DEPDIR)/record_layer_test.Po ./$(DEPDIR)/recordtest.Po \
+	./$(DEPDIR)/rfc3779-rfc3779.Po ./$(DEPDIR)/rfc5280time.Po \
+	./$(DEPDIR)/rmd_test.Po ./$(DEPDIR)/rsa_test.Po \
+	./$(DEPDIR)/servertest.Po ./$(DEPDIR)/sha_test.Po \
+	./$(DEPDIR)/sm3test.Po ./$(DEPDIR)/sm4test.Po \
 	./$(DEPDIR)/ssl_get_shared_ciphers-ssl_get_shared_ciphers.Po \
 	./$(DEPDIR)/ssl_methods.Po ./$(DEPDIR)/ssl_set_alpn_protos.Po \
 	./$(DEPDIR)/ssl_versions.Po ./$(DEPDIR)/ssltest.Po \
@@ -1074,33 +1125,36 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
+SOURCES = $(aeadtest_SOURCES) $(aes_test_SOURCES) $(aes_wrap_SOURCES) \
 	$(arc4randomforktest_SOURCES) $(asn1_string_to_utf8_SOURCES) \
 	$(asn1api_SOURCES) $(asn1basic_SOURCES) $(asn1complex_SOURCES) \
 	$(asn1evp_SOURCES) $(asn1object_SOURCES) \
 	$(asn1string_copy_SOURCES) $(asn1test_SOURCES) \
 	$(asn1time_SOURCES) $(asn1x509_SOURCES) $(base64test_SOURCES) \
-	$(bftest_SOURCES) $(biotest_SOURCES) $(bn_isqrt_SOURCES) \
-	$(bn_mod_exp2_mont_SOURCES) $(bn_mod_sqrt_SOURCES) \
-	$(bn_primes_SOURCES) $(bn_rand_interval_SOURCES) \
-	$(bn_to_string_SOURCES) $(bnaddsub_SOURCES) $(bntest_SOURCES) \
+	$(bf_test_SOURCES) $(bio_chain_SOURCES) $(bio_host_SOURCES) \
+	$(bio_mem_SOURCES) $(bn_add_sub_SOURCES) $(bn_cmp_SOURCES) \
+	$(bn_isqrt_SOURCES) $(bn_mod_exp_SOURCES) \
+	$(bn_mod_exp2_mont_SOURCES) $(bn_mod_exp_zero_SOURCES) \
+	$(bn_mod_sqrt_SOURCES) $(bn_mont_SOURCES) $(bn_primes_SOURCES) \
+	$(bn_rand_interval_SOURCES) $(bn_test_SOURCES) \
+	$(bn_to_string_SOURCES) $(bn_unit_SOURCES) \
 	$(buffertest_SOURCES) $(bytestringtest_SOURCES) \
 	$(casttest_SOURCES) $(chachatest_SOURCES) \
 	$(cipher_list_SOURCES) $(cipherstest_SOURCES) \
 	$(clienttest_SOURCES) $(cmstest_SOURCES) $(configtest_SOURCES) \
 	$(constraints_SOURCES) $(cts128test_SOURCES) \
 	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
-	$(dtlstest_SOURCES) $(ec_asn1_test_SOURCES) \
-	$(ec_point_conversion_SOURCES) $(ecdhtest_SOURCES) \
-	$(ecdsatest_SOURCES) $(ectest_SOURCES) $(enginetest_SOURCES) \
-	$(evp_pkey_check_SOURCES) $(evp_pkey_cleanup_SOURCES) \
-	$(evptest_SOURCES) $(explicit_bzero_SOURCES) \
-	$(exptest_SOURCES) $(freenull_SOURCES) $(gcm128test_SOURCES) \
-	$(gost2814789t_SOURCES) $(handshake_table_SOURCES) \
-	$(hkdftest_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
-	$(igetest_SOURCES) $(key_schedule_SOURCES) \
-	$(keypairtest_SOURCES) $(md_test_SOURCES) $(mont_SOURCES) \
-	$(objectstest_SOURCES) $(ocsp_test_SOURCES) \
+	$(ec_asn1_test_SOURCES) $(ec_point_conversion_SOURCES) \
+	$(ecdhtest_SOURCES) $(ecdsatest_SOURCES) $(ectest_SOURCES) \
+	$(ed25519test_SOURCES) $(enginetest_SOURCES) \
+	$(evp_ecx_test_SOURCES) $(evp_pkey_check_SOURCES) \
+	$(evp_pkey_cleanup_SOURCES) $(evptest_SOURCES) \
+	$(explicit_bzero_SOURCES) $(freenull_SOURCES) \
+	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
+	$(handshake_table_SOURCES) $(hkdftest_SOURCES) \
+	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
+	$(key_schedule_SOURCES) $(keypairtest_SOURCES) \
+	$(md_test_SOURCES) $(objectstest_SOURCES) $(ocsp_test_SOURCES) \
 	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
 	$(pidwraptest_SOURCES) $(pkcs7test_SOURCES) \
 	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(quictest_SOURCES) \
@@ -1119,38 +1173,42 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(verifytest_SOURCES) $(x25519test_SOURCES) \
 	$(x509_info_SOURCES) $(x509attribute_SOURCES) \
 	$(x509name_SOURCES) $(x509req_ext_SOURCES)
-DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
-	$(am__arc4randomforktest_SOURCES_DIST) \
+DIST_SOURCES = $(aeadtest_SOURCES) $(aes_test_SOURCES) \
+	$(aes_wrap_SOURCES) $(am__arc4randomforktest_SOURCES_DIST) \
 	$(asn1_string_to_utf8_SOURCES) $(asn1api_SOURCES) \
 	$(asn1basic_SOURCES) $(asn1complex_SOURCES) $(asn1evp_SOURCES) \
 	$(asn1object_SOURCES) $(asn1string_copy_SOURCES) \
 	$(asn1test_SOURCES) $(asn1time_SOURCES) $(asn1x509_SOURCES) \
-	$(base64test_SOURCES) $(bftest_SOURCES) \
-	$(am__biotest_SOURCES_DIST) $(bn_isqrt_SOURCES) \
-	$(bn_mod_exp2_mont_SOURCES) $(bn_mod_sqrt_SOURCES) \
-	$(bn_primes_SOURCES) $(bn_rand_interval_SOURCES) \
-	$(bn_to_string_SOURCES) $(bnaddsub_SOURCES) $(bntest_SOURCES) \
+	$(base64test_SOURCES) $(bf_test_SOURCES) $(bio_chain_SOURCES) \
+	$(am__bio_host_SOURCES_DIST) $(bio_mem_SOURCES) \
+	$(bn_add_sub_SOURCES) $(bn_cmp_SOURCES) $(bn_isqrt_SOURCES) \
+	$(bn_mod_exp_SOURCES) $(bn_mod_exp2_mont_SOURCES) \
+	$(bn_mod_exp_zero_SOURCES) $(bn_mod_sqrt_SOURCES) \
+	$(bn_mont_SOURCES) $(bn_primes_SOURCES) \
+	$(bn_rand_interval_SOURCES) $(bn_test_SOURCES) \
+	$(bn_to_string_SOURCES) $(bn_unit_SOURCES) \
 	$(buffertest_SOURCES) $(bytestringtest_SOURCES) \
 	$(casttest_SOURCES) $(chachatest_SOURCES) \
 	$(cipher_list_SOURCES) $(cipherstest_SOURCES) \
 	$(clienttest_SOURCES) $(cmstest_SOURCES) $(configtest_SOURCES) \
 	$(constraints_SOURCES) $(cts128test_SOURCES) \
 	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
-	$(am__dtlstest_SOURCES_DIST) $(ec_asn1_test_SOURCES) \
-	$(ec_point_conversion_SOURCES) $(ecdhtest_SOURCES) \
-	$(ecdsatest_SOURCES) $(ectest_SOURCES) $(enginetest_SOURCES) \
-	$(evp_pkey_check_SOURCES) $(evp_pkey_cleanup_SOURCES) \
-	$(evptest_SOURCES) $(am__explicit_bzero_SOURCES_DIST) \
-	$(exptest_SOURCES) $(freenull_SOURCES) $(gcm128test_SOURCES) \
-	$(gost2814789t_SOURCES) $(handshake_table_SOURCES) \
-	$(hkdftest_SOURCES) $(hmactest_SOURCES) $(ideatest_SOURCES) \
-	$(igetest_SOURCES) $(key_schedule_SOURCES) \
-	$(keypairtest_SOURCES) $(md_test_SOURCES) $(mont_SOURCES) \
-	$(objectstest_SOURCES) $(am__ocsp_test_SOURCES_DIST) \
-	$(optionstest_SOURCES) $(pbkdf2_SOURCES) \
-	$(am__pidwraptest_SOURCES_DIST) $(pkcs7test_SOURCES) \
-	$(poly1305test_SOURCES) $(pq_test_SOURCES) $(quictest_SOURCES) \
-	$(randtest_SOURCES) $(rc2_test_SOURCES) $(rc4_test_SOURCES) \
+	$(ec_asn1_test_SOURCES) $(ec_point_conversion_SOURCES) \
+	$(ecdhtest_SOURCES) $(ecdsatest_SOURCES) $(ectest_SOURCES) \
+	$(ed25519test_SOURCES) $(enginetest_SOURCES) \
+	$(evp_ecx_test_SOURCES) $(evp_pkey_check_SOURCES) \
+	$(evp_pkey_cleanup_SOURCES) $(evptest_SOURCES) \
+	$(am__explicit_bzero_SOURCES_DIST) $(freenull_SOURCES) \
+	$(gcm128test_SOURCES) $(gost2814789t_SOURCES) \
+	$(handshake_table_SOURCES) $(hkdftest_SOURCES) \
+	$(hmactest_SOURCES) $(ideatest_SOURCES) $(igetest_SOURCES) \
+	$(key_schedule_SOURCES) $(keypairtest_SOURCES) \
+	$(md_test_SOURCES) $(objectstest_SOURCES) \
+	$(am__ocsp_test_SOURCES_DIST) $(optionstest_SOURCES) \
+	$(pbkdf2_SOURCES) $(am__pidwraptest_SOURCES_DIST) \
+	$(pkcs7test_SOURCES) $(poly1305test_SOURCES) \
+	$(pq_test_SOURCES) $(quictest_SOURCES) $(randtest_SOURCES) \
+	$(rc2_test_SOURCES) $(rc4_test_SOURCES) \
 	$(record_layer_test_SOURCES) $(recordtest_SOURCES) \
 	$(rfc3779_SOURCES) $(rfc5280time_SOURCES) $(rmd_test_SOURCES) \
 	$(rsa_test_SOURCES) $(servertest_SOURCES) $(sha_test_SOURCES) \
@@ -1373,7 +1431,7 @@ am__set_TESTS_bases = \
 AM_TESTSUITE_SUMMARY_HEADER = ' for $(PACKAGE_STRING)'
 RECHECK_LOGS = $(TEST_LOGS)
 AM_RECURSIVE_TARGETS = check recheck
-@SMALL_TIME_T_FALSE@am__EXEEXT_7 = rfc5280time$(EXEEXT)
+@SMALL_TIME_T_FALSE@am__EXEEXT_6 = rfc5280time$(EXEEXT)
 TEST_SUITE_LOG = test-suite.log
 TEST_EXTENSIONS = @EXEEXT@ .test
 LOG_DRIVER = $(SHELL) $(top_srcdir)/test-driver
@@ -1529,9 +1587,10 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
 	-DLIBRESSL_INTERNAL -D__BEGIN_HIDDEN_DECLS= \
 	-D__END_HIDDEN_DECLS= -DLIBRESSL_CRYPTO_INTERNAL -I \
 	$(top_srcdir)/crypto/asn1 -I $(top_srcdir)/crypto/bio -I \
-	$(top_srcdir)/crypto/bn -I $(top_srcdir)/crypto/evp -I \
-	$(top_srcdir)/crypto/modes -I $(top_srcdir)/crypto/x509 -I \
-	$(top_srcdir)/ssl -I $(top_srcdir)/apps/openssl -I \
+	$(top_srcdir)/crypto/bn -I $(top_srcdir)/crypto/curve25519 -I \
+	$(top_srcdir)/crypto/evp -I $(top_srcdir)/crypto/modes -I \
+	$(top_srcdir)/crypto/x509 -I $(top_srcdir)/ssl -I \
+	$(top_srcdir)/apps/openssl -I \
 	$(top_srcdir)/apps/openssl/compat \
 	-D_PATH_SSL_CA_FILE=\"$(top_srcdir)/cert.pem\"
 LDADD = $(abs_top_builddir)/tls/.libs/libtls.a \
@@ -1542,15 +1601,14 @@ TEST_LOG_DRIVER = env AM_TAP_AWK='$(AWK)' $(SHELL) $(top_srcdir)/tap-driver.sh
 EXTRA_DIST = CMakeLists.txt aeadtest.sh aeadtests.txt \
 	aes_128_gcm_tests.txt aes_192_gcm_tests.txt \
 	aes_256_gcm_tests.txt chacha20_poly1305_tests.txt \
-	xchacha20_poly1305_tests.txt arc4randomforktest.sh dtlstest.sh \
-	evptest.sh evptests.txt keypairtest.sh ocsptest.sh \
-	ocsptest.bat pidwraptest.sh pq_test.sh pq_test.bat \
-	pq_expected.txt quictest.sh quictest.bat \
-	rfc5280time_small.test servertest.sh servertest.bat ssltest.sh \
-	ssltest.bat testssl testssl.bat ca-int-ecdsa.crl \
-	ca-int-ecdsa.pem ca-int-rsa.crl ca-int-rsa.pem \
-	ca-root-ecdsa.pem ca-root-rsa.pem ca.pem client.pem \
-	client1-ecdsa-chain.pem client1-ecdsa.pem \
+	xchacha20_poly1305_tests.txt arc4randomforktest.sh evptest.sh \
+	evptests.txt keypairtest.sh ocsptest.sh ocsptest.bat \
+	pidwraptest.sh pq_test.sh pq_test.bat pq_expected.txt \
+	quictest.sh quictest.bat rfc5280time_small.test servertest.sh \
+	servertest.bat ssltest.sh ssltest.bat testssl testssl.bat \
+	ca-int-ecdsa.crl ca-int-ecdsa.pem ca-int-rsa.crl \
+	ca-int-rsa.pem ca-root-ecdsa.pem ca-root-rsa.pem ca.pem \
+	client.pem client1-ecdsa-chain.pem client1-ecdsa.pem \
 	client1-rsa-chain.pem client1-rsa.pem client2-ecdsa-chain.pem \
 	client2-ecdsa.pem client2-rsa-chain.pem client2-rsa.pem \
 	client3-ecdsa-chain.pem client3-ecdsa.pem \
@@ -1564,6 +1622,7 @@ EXTRA_DIST = CMakeLists.txt aeadtest.sh aeadtests.txt \
 	tlstest.sh tlstest.bat
 DISTCLEANFILES = pidwraptest.txt
 aeadtest_SOURCES = aeadtest.c
+aes_test_SOURCES = aes_test.c
 aes_wrap_SOURCES = aes_wrap.c
 @HOST_WIN_FALSE@arc4randomforktest_SOURCES = arc4randomforktest.c
 asn1_string_to_utf8_SOURCES = asn1_string_to_utf8.c
@@ -1577,17 +1636,26 @@ asn1test_SOURCES = asn1test.c
 asn1time_SOURCES = asn1time.c
 asn1x509_SOURCES = asn1x509.c
 base64test_SOURCES = base64test.c
-bftest_SOURCES = bftest.c
-@ENABLE_EXTRATESTS_TRUE@biotest_SOURCES = biotest.c
-bnaddsub_SOURCES = bnaddsub.c
+bf_test_SOURCES = bf_test.c
+bio_chain_SOURCES = bio_chain.c
+@ENABLE_EXTRATESTS_TRUE@bio_host_SOURCES = bio_host.c
+bio_mem_SOURCES = bio_mem.c
+bn_add_sub_SOURCES = bn_add_sub.c
+bn_cmp_SOURCES = bn_cmp.c
 bn_isqrt_SOURCES = bn_isqrt.c
+bn_mod_exp_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
+bn_mod_exp_SOURCES = bn_mod_exp.c
+bn_mod_exp_zero_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
+bn_mod_exp_zero_SOURCES = bn_mod_exp_zero.c
 bn_mod_exp2_mont_SOURCES = bn_mod_exp2_mont.c
 bn_mod_sqrt_SOURCES = bn_mod_sqrt.c
+bn_mont_SOURCES = bn_mont.c
 bn_primes_SOURCES = bn_primes.c
 bn_rand_interval_SOURCES = bn_rand_interval.c
-bntest_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
-bntest_SOURCES = bntest.c
+bn_test_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
+bn_test_SOURCES = bn_test.c
 bn_to_string_SOURCES = bn_to_string.c
+bn_unit_SOURCES = bn_unit.c
 buffertest_SOURCES = buffertest.c
 bytestringtest_SOURCES = bytestringtest.c
 casttest_SOURCES = casttest.c
@@ -1603,21 +1671,20 @@ cts128test_SOURCES = cts128test.c
 destest_SOURCES = destest.c
 dhtest_SOURCES = dhtest.c
 dsatest_SOURCES = dsatest.c
-@HOST_WIN_FALSE@dtlstest_SOURCES = dtlstest.c
 ec_asn1_test_SOURCES = ec_asn1_test.c
 ec_point_conversion_SOURCES = ec_point_conversion.c
 ecdhtest_SOURCES = ecdhtest.c
 ecdsatest_SOURCES = ecdsatest.c
 ectest_SOURCES = ectest.c
+ed25519test_SOURCES = ed25519test.c
 enginetest_SOURCES = enginetest.c
+evp_ecx_test_SOURCES = evp_ecx_test.c
 evp_pkey_check_SOURCES = evp_pkey_check.c
 evp_pkey_cleanup_SOURCES = evp_pkey_cleanup.c
 evptest_SOURCES = evptest.c
 @HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@explicit_bzero_SOURCES =  \
 @HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	explicit_bzero.c \
-@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	$(am__append_10)
-exptest_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
-exptest_SOURCES = exptest.c
+@HOST_CYGWIN_FALSE@@HOST_WIN_FALSE@	$(am__append_8)
 freenull_SOURCES = freenull.c
 gcm128test_SOURCES = gcm128test.c
 gost2814789t_SOURCES = gost2814789t.c
@@ -1630,7 +1697,6 @@ key_schedule_SOURCES = key_schedule.c
 keypairtest_CPPFLAGS = -I $(top_srcdir)/tls $(AM_CPPFLAGS)
 keypairtest_SOURCES = keypairtest.c
 md_test_SOURCES = md_test.c
-mont_SOURCES = mont.c
 objectstest_SOURCES = objectstest.c
 @ENABLE_EXTRATESTS_TRUE@ocsp_test_SOURCES = ocsp_test.c
 optionstest_SOURCES = optionstest.c
@@ -1664,7 +1730,7 @@ string_table_SOURCES = string_table.c
 timingsafe_SOURCES = timingsafe.c
 tlsexttest_SOURCES = tlsexttest.c
 tlslegacytest_SOURCES = tlslegacytest.c
-tlstest_SOURCES = tlstest.c $(am__append_17)
+tlstest_SOURCES = tlstest.c $(am__append_15)
 tls_ext_alpn_SOURCES = tls_ext_alpn.c
 tls_prf_SOURCES = tls_prf.c
 utf8test_SOURCES = utf8test.c
@@ -1723,6 +1789,10 @@ aeadtest$(EXEEXT): $(aeadtest_OBJECTS) $(aeadtest_DEPENDENCIES) $(EXTRA_aeadtest
 	@rm -f aeadtest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(aeadtest_OBJECTS) $(aeadtest_LDADD) $(LIBS)
 
+aes_test$(EXEEXT): $(aes_test_OBJECTS) $(aes_test_DEPENDENCIES) $(EXTRA_aes_test_DEPENDENCIES) 
+	@rm -f aes_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(aes_test_OBJECTS) $(aes_test_LDADD) $(LIBS)
+
 aes_wrap$(EXEEXT): $(aes_wrap_OBJECTS) $(aes_wrap_DEPENDENCIES) $(EXTRA_aes_wrap_DEPENDENCIES) 
 	@rm -f aes_wrap$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(aes_wrap_OBJECTS) $(aes_wrap_LDADD) $(LIBS)
@@ -1775,25 +1845,53 @@ base64test$(EXEEXT): $(base64test_OBJECTS) $(base64test_DEPENDENCIES) $(EXTRA_ba
 	@rm -f base64test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(base64test_OBJECTS) $(base64test_LDADD) $(LIBS)
 
-bftest$(EXEEXT): $(bftest_OBJECTS) $(bftest_DEPENDENCIES) $(EXTRA_bftest_DEPENDENCIES) 
-	@rm -f bftest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(bftest_OBJECTS) $(bftest_LDADD) $(LIBS)
+bf_test$(EXEEXT): $(bf_test_OBJECTS) $(bf_test_DEPENDENCIES) $(EXTRA_bf_test_DEPENDENCIES) 
+	@rm -f bf_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bf_test_OBJECTS) $(bf_test_LDADD) $(LIBS)
 
-biotest$(EXEEXT): $(biotest_OBJECTS) $(biotest_DEPENDENCIES) $(EXTRA_biotest_DEPENDENCIES) 
-	@rm -f biotest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(biotest_OBJECTS) $(biotest_LDADD) $(LIBS)
+bio_chain$(EXEEXT): $(bio_chain_OBJECTS) $(bio_chain_DEPENDENCIES) $(EXTRA_bio_chain_DEPENDENCIES) 
+	@rm -f bio_chain$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bio_chain_OBJECTS) $(bio_chain_LDADD) $(LIBS)
+
+bio_host$(EXEEXT): $(bio_host_OBJECTS) $(bio_host_DEPENDENCIES) $(EXTRA_bio_host_DEPENDENCIES) 
+	@rm -f bio_host$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bio_host_OBJECTS) $(bio_host_LDADD) $(LIBS)
+
+bio_mem$(EXEEXT): $(bio_mem_OBJECTS) $(bio_mem_DEPENDENCIES) $(EXTRA_bio_mem_DEPENDENCIES) 
+	@rm -f bio_mem$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bio_mem_OBJECTS) $(bio_mem_LDADD) $(LIBS)
+
+bn_add_sub$(EXEEXT): $(bn_add_sub_OBJECTS) $(bn_add_sub_DEPENDENCIES) $(EXTRA_bn_add_sub_DEPENDENCIES) 
+	@rm -f bn_add_sub$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_add_sub_OBJECTS) $(bn_add_sub_LDADD) $(LIBS)
+
+bn_cmp$(EXEEXT): $(bn_cmp_OBJECTS) $(bn_cmp_DEPENDENCIES) $(EXTRA_bn_cmp_DEPENDENCIES) 
+	@rm -f bn_cmp$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_cmp_OBJECTS) $(bn_cmp_LDADD) $(LIBS)
 
 bn_isqrt$(EXEEXT): $(bn_isqrt_OBJECTS) $(bn_isqrt_DEPENDENCIES) $(EXTRA_bn_isqrt_DEPENDENCIES) 
 	@rm -f bn_isqrt$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bn_isqrt_OBJECTS) $(bn_isqrt_LDADD) $(LIBS)
 
+bn_mod_exp$(EXEEXT): $(bn_mod_exp_OBJECTS) $(bn_mod_exp_DEPENDENCIES) $(EXTRA_bn_mod_exp_DEPENDENCIES) 
+	@rm -f bn_mod_exp$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_mod_exp_OBJECTS) $(bn_mod_exp_LDADD) $(LIBS)
+
 bn_mod_exp2_mont$(EXEEXT): $(bn_mod_exp2_mont_OBJECTS) $(bn_mod_exp2_mont_DEPENDENCIES) $(EXTRA_bn_mod_exp2_mont_DEPENDENCIES) 
 	@rm -f bn_mod_exp2_mont$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bn_mod_exp2_mont_OBJECTS) $(bn_mod_exp2_mont_LDADD) $(LIBS)
 
+bn_mod_exp_zero$(EXEEXT): $(bn_mod_exp_zero_OBJECTS) $(bn_mod_exp_zero_DEPENDENCIES) $(EXTRA_bn_mod_exp_zero_DEPENDENCIES) 
+	@rm -f bn_mod_exp_zero$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_mod_exp_zero_OBJECTS) $(bn_mod_exp_zero_LDADD) $(LIBS)
+
 bn_mod_sqrt$(EXEEXT): $(bn_mod_sqrt_OBJECTS) $(bn_mod_sqrt_DEPENDENCIES) $(EXTRA_bn_mod_sqrt_DEPENDENCIES) 
 	@rm -f bn_mod_sqrt$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bn_mod_sqrt_OBJECTS) $(bn_mod_sqrt_LDADD) $(LIBS)
+
+bn_mont$(EXEEXT): $(bn_mont_OBJECTS) $(bn_mont_DEPENDENCIES) $(EXTRA_bn_mont_DEPENDENCIES) 
+	@rm -f bn_mont$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_mont_OBJECTS) $(bn_mont_LDADD) $(LIBS)
 
 bn_primes$(EXEEXT): $(bn_primes_OBJECTS) $(bn_primes_DEPENDENCIES) $(EXTRA_bn_primes_DEPENDENCIES) 
 	@rm -f bn_primes$(EXEEXT)
@@ -1803,17 +1901,17 @@ bn_rand_interval$(EXEEXT): $(bn_rand_interval_OBJECTS) $(bn_rand_interval_DEPEND
 	@rm -f bn_rand_interval$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bn_rand_interval_OBJECTS) $(bn_rand_interval_LDADD) $(LIBS)
 
+bn_test$(EXEEXT): $(bn_test_OBJECTS) $(bn_test_DEPENDENCIES) $(EXTRA_bn_test_DEPENDENCIES) 
+	@rm -f bn_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_test_OBJECTS) $(bn_test_LDADD) $(LIBS)
+
 bn_to_string$(EXEEXT): $(bn_to_string_OBJECTS) $(bn_to_string_DEPENDENCIES) $(EXTRA_bn_to_string_DEPENDENCIES) 
 	@rm -f bn_to_string$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(bn_to_string_OBJECTS) $(bn_to_string_LDADD) $(LIBS)
 
-bnaddsub$(EXEEXT): $(bnaddsub_OBJECTS) $(bnaddsub_DEPENDENCIES) $(EXTRA_bnaddsub_DEPENDENCIES) 
-	@rm -f bnaddsub$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(bnaddsub_OBJECTS) $(bnaddsub_LDADD) $(LIBS)
-
-bntest$(EXEEXT): $(bntest_OBJECTS) $(bntest_DEPENDENCIES) $(EXTRA_bntest_DEPENDENCIES) 
-	@rm -f bntest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(bntest_OBJECTS) $(bntest_LDADD) $(LIBS)
+bn_unit$(EXEEXT): $(bn_unit_OBJECTS) $(bn_unit_DEPENDENCIES) $(EXTRA_bn_unit_DEPENDENCIES) 
+	@rm -f bn_unit$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_unit_OBJECTS) $(bn_unit_LDADD) $(LIBS)
 
 buffertest$(EXEEXT): $(buffertest_OBJECTS) $(buffertest_DEPENDENCIES) $(EXTRA_buffertest_DEPENDENCIES) 
 	@rm -f buffertest$(EXEEXT)
@@ -1871,10 +1969,6 @@ dsatest$(EXEEXT): $(dsatest_OBJECTS) $(dsatest_DEPENDENCIES) $(EXTRA_dsatest_DEP
 	@rm -f dsatest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(dsatest_OBJECTS) $(dsatest_LDADD) $(LIBS)
 
-dtlstest$(EXEEXT): $(dtlstest_OBJECTS) $(dtlstest_DEPENDENCIES) $(EXTRA_dtlstest_DEPENDENCIES) 
-	@rm -f dtlstest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(dtlstest_OBJECTS) $(dtlstest_LDADD) $(LIBS)
-
 ec_asn1_test$(EXEEXT): $(ec_asn1_test_OBJECTS) $(ec_asn1_test_DEPENDENCIES) $(EXTRA_ec_asn1_test_DEPENDENCIES) 
 	@rm -f ec_asn1_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ec_asn1_test_OBJECTS) $(ec_asn1_test_LDADD) $(LIBS)
@@ -1895,9 +1989,17 @@ ectest$(EXEEXT): $(ectest_OBJECTS) $(ectest_DEPENDENCIES) $(EXTRA_ectest_DEPENDE
 	@rm -f ectest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ectest_OBJECTS) $(ectest_LDADD) $(LIBS)
 
+ed25519test$(EXEEXT): $(ed25519test_OBJECTS) $(ed25519test_DEPENDENCIES) $(EXTRA_ed25519test_DEPENDENCIES) 
+	@rm -f ed25519test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(ed25519test_OBJECTS) $(ed25519test_LDADD) $(LIBS)
+
 enginetest$(EXEEXT): $(enginetest_OBJECTS) $(enginetest_DEPENDENCIES) $(EXTRA_enginetest_DEPENDENCIES) 
 	@rm -f enginetest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(enginetest_OBJECTS) $(enginetest_LDADD) $(LIBS)
+
+evp_ecx_test$(EXEEXT): $(evp_ecx_test_OBJECTS) $(evp_ecx_test_DEPENDENCIES) $(EXTRA_evp_ecx_test_DEPENDENCIES) 
+	@rm -f evp_ecx_test$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(evp_ecx_test_OBJECTS) $(evp_ecx_test_LDADD) $(LIBS)
 
 evp_pkey_check$(EXEEXT): $(evp_pkey_check_OBJECTS) $(evp_pkey_check_DEPENDENCIES) $(EXTRA_evp_pkey_check_DEPENDENCIES) 
 	@rm -f evp_pkey_check$(EXEEXT)
@@ -1922,10 +2024,6 @@ compat/memmem.$(OBJEXT): compat/$(am__dirstamp) \
 explicit_bzero$(EXEEXT): $(explicit_bzero_OBJECTS) $(explicit_bzero_DEPENDENCIES) $(EXTRA_explicit_bzero_DEPENDENCIES) 
 	@rm -f explicit_bzero$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(explicit_bzero_OBJECTS) $(explicit_bzero_LDADD) $(LIBS)
-
-exptest$(EXEEXT): $(exptest_OBJECTS) $(exptest_DEPENDENCIES) $(EXTRA_exptest_DEPENDENCIES) 
-	@rm -f exptest$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(exptest_OBJECTS) $(exptest_LDADD) $(LIBS)
 
 freenull$(EXEEXT): $(freenull_OBJECTS) $(freenull_DEPENDENCIES) $(EXTRA_freenull_DEPENDENCIES) 
 	@rm -f freenull$(EXEEXT)
@@ -1970,10 +2068,6 @@ keypairtest$(EXEEXT): $(keypairtest_OBJECTS) $(keypairtest_DEPENDENCIES) $(EXTRA
 md_test$(EXEEXT): $(md_test_OBJECTS) $(md_test_DEPENDENCIES) $(EXTRA_md_test_DEPENDENCIES) 
 	@rm -f md_test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(md_test_OBJECTS) $(md_test_LDADD) $(LIBS)
-
-mont$(EXEEXT): $(mont_OBJECTS) $(mont_DEPENDENCIES) $(EXTRA_mont_DEPENDENCIES) 
-	@rm -f mont$(EXEEXT)
-	$(AM_V_CCLD)$(LINK) $(mont_OBJECTS) $(mont_LDADD) $(LIBS)
 
 objectstest$(EXEEXT): $(objectstest_OBJECTS) $(objectstest_DEPENDENCIES) $(EXTRA_objectstest_DEPENDENCIES) 
 	@rm -f objectstest$(EXEEXT)
@@ -2153,6 +2247,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aeadtest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/aes_wrap.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/arc4randomforktest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1_string_to_utf8.Po@am__quote@ # am--include-marker
@@ -2166,16 +2261,23 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1time.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1x509.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64test.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bftest.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/biotest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bf_test.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bio_chain.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bio_host.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bio_mem.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_add_sub.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_cmp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_isqrt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mod_exp-bn_mod_exp.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mod_exp2_mont.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mod_sqrt.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mont.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_primes.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_rand_interval.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_test-bn_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_to_string.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bnaddsub.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bntest-bntest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_unit.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/buffertest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bytestringtest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/casttest.Po@am__quote@ # am--include-marker
@@ -2190,18 +2292,18 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/destest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dhtest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dsatest.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dtlstest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ec_asn1_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ec_point_conversion.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ecdhtest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ecdsatest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ectest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ed25519test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/enginetest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evp_ecx_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evp_pkey_check.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evp_pkey_cleanup.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/evptest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/explicit_bzero.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exptest-exptest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/freenull.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcm128test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gost2814789t.Po@am__quote@ # am--include-marker
@@ -2213,7 +2315,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/key_schedule.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/keypairtest-keypairtest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/md_test.Po@am__quote@ # am--include-marker
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mont.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/objectstest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ocsp_test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/optionstest.Po@am__quote@ # am--include-marker
@@ -2289,33 +2390,47 @@ am--depfiles: $(am__depfiles_remade)
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(LTCOMPILE) -c -o $@ $<
 
-bntest-bntest.o: bntest.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bntest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bntest-bntest.o -MD -MP -MF $(DEPDIR)/bntest-bntest.Tpo -c -o bntest-bntest.o `test -f 'bntest.c' || echo '$(srcdir)/'`bntest.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bntest-bntest.Tpo $(DEPDIR)/bntest-bntest.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bntest.c' object='bntest-bntest.o' libtool=no @AMDEPBACKSLASH@
+bn_mod_exp-bn_mod_exp.o: bn_mod_exp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_mod_exp-bn_mod_exp.o -MD -MP -MF $(DEPDIR)/bn_mod_exp-bn_mod_exp.Tpo -c -o bn_mod_exp-bn_mod_exp.o `test -f 'bn_mod_exp.c' || echo '$(srcdir)/'`bn_mod_exp.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_mod_exp-bn_mod_exp.Tpo $(DEPDIR)/bn_mod_exp-bn_mod_exp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_mod_exp.c' object='bn_mod_exp-bn_mod_exp.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bntest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bntest-bntest.o `test -f 'bntest.c' || echo '$(srcdir)/'`bntest.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_mod_exp-bn_mod_exp.o `test -f 'bn_mod_exp.c' || echo '$(srcdir)/'`bn_mod_exp.c
 
-bntest-bntest.obj: bntest.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bntest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bntest-bntest.obj -MD -MP -MF $(DEPDIR)/bntest-bntest.Tpo -c -o bntest-bntest.obj `if test -f 'bntest.c'; then $(CYGPATH_W) 'bntest.c'; else $(CYGPATH_W) '$(srcdir)/bntest.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bntest-bntest.Tpo $(DEPDIR)/bntest-bntest.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bntest.c' object='bntest-bntest.obj' libtool=no @AMDEPBACKSLASH@
+bn_mod_exp-bn_mod_exp.obj: bn_mod_exp.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_mod_exp-bn_mod_exp.obj -MD -MP -MF $(DEPDIR)/bn_mod_exp-bn_mod_exp.Tpo -c -o bn_mod_exp-bn_mod_exp.obj `if test -f 'bn_mod_exp.c'; then $(CYGPATH_W) 'bn_mod_exp.c'; else $(CYGPATH_W) '$(srcdir)/bn_mod_exp.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_mod_exp-bn_mod_exp.Tpo $(DEPDIR)/bn_mod_exp-bn_mod_exp.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_mod_exp.c' object='bn_mod_exp-bn_mod_exp.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bntest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bntest-bntest.obj `if test -f 'bntest.c'; then $(CYGPATH_W) 'bntest.c'; else $(CYGPATH_W) '$(srcdir)/bntest.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_mod_exp-bn_mod_exp.obj `if test -f 'bn_mod_exp.c'; then $(CYGPATH_W) 'bn_mod_exp.c'; else $(CYGPATH_W) '$(srcdir)/bn_mod_exp.c'; fi`
 
-exptest-exptest.o: exptest.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(exptest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exptest-exptest.o -MD -MP -MF $(DEPDIR)/exptest-exptest.Tpo -c -o exptest-exptest.o `test -f 'exptest.c' || echo '$(srcdir)/'`exptest.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/exptest-exptest.Tpo $(DEPDIR)/exptest-exptest.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='exptest.c' object='exptest-exptest.o' libtool=no @AMDEPBACKSLASH@
+bn_mod_exp_zero-bn_mod_exp_zero.o: bn_mod_exp_zero.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_zero_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_mod_exp_zero-bn_mod_exp_zero.o -MD -MP -MF $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Tpo -c -o bn_mod_exp_zero-bn_mod_exp_zero.o `test -f 'bn_mod_exp_zero.c' || echo '$(srcdir)/'`bn_mod_exp_zero.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Tpo $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_mod_exp_zero.c' object='bn_mod_exp_zero-bn_mod_exp_zero.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(exptest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exptest-exptest.o `test -f 'exptest.c' || echo '$(srcdir)/'`exptest.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_zero_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_mod_exp_zero-bn_mod_exp_zero.o `test -f 'bn_mod_exp_zero.c' || echo '$(srcdir)/'`bn_mod_exp_zero.c
 
-exptest-exptest.obj: exptest.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(exptest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT exptest-exptest.obj -MD -MP -MF $(DEPDIR)/exptest-exptest.Tpo -c -o exptest-exptest.obj `if test -f 'exptest.c'; then $(CYGPATH_W) 'exptest.c'; else $(CYGPATH_W) '$(srcdir)/exptest.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/exptest-exptest.Tpo $(DEPDIR)/exptest-exptest.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='exptest.c' object='exptest-exptest.obj' libtool=no @AMDEPBACKSLASH@
+bn_mod_exp_zero-bn_mod_exp_zero.obj: bn_mod_exp_zero.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_zero_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_mod_exp_zero-bn_mod_exp_zero.obj -MD -MP -MF $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Tpo -c -o bn_mod_exp_zero-bn_mod_exp_zero.obj `if test -f 'bn_mod_exp_zero.c'; then $(CYGPATH_W) 'bn_mod_exp_zero.c'; else $(CYGPATH_W) '$(srcdir)/bn_mod_exp_zero.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Tpo $(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_mod_exp_zero.c' object='bn_mod_exp_zero-bn_mod_exp_zero.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(exptest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o exptest-exptest.obj `if test -f 'exptest.c'; then $(CYGPATH_W) 'exptest.c'; else $(CYGPATH_W) '$(srcdir)/exptest.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_mod_exp_zero_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_mod_exp_zero-bn_mod_exp_zero.obj `if test -f 'bn_mod_exp_zero.c'; then $(CYGPATH_W) 'bn_mod_exp_zero.c'; else $(CYGPATH_W) '$(srcdir)/bn_mod_exp_zero.c'; fi`
+
+bn_test-bn_test.o: bn_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_test-bn_test.o -MD -MP -MF $(DEPDIR)/bn_test-bn_test.Tpo -c -o bn_test-bn_test.o `test -f 'bn_test.c' || echo '$(srcdir)/'`bn_test.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_test-bn_test.Tpo $(DEPDIR)/bn_test-bn_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_test.c' object='bn_test-bn_test.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_test-bn_test.o `test -f 'bn_test.c' || echo '$(srcdir)/'`bn_test.c
+
+bn_test-bn_test.obj: bn_test.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT bn_test-bn_test.obj -MD -MP -MF $(DEPDIR)/bn_test-bn_test.Tpo -c -o bn_test-bn_test.obj `if test -f 'bn_test.c'; then $(CYGPATH_W) 'bn_test.c'; else $(CYGPATH_W) '$(srcdir)/bn_test.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/bn_test-bn_test.Tpo $(DEPDIR)/bn_test-bn_test.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='bn_test.c' object='bn_test-bn_test.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(bn_test_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o bn_test-bn_test.obj `if test -f 'bn_test.c'; then $(CYGPATH_W) 'bn_test.c'; else $(CYGPATH_W) '$(srcdir)/bn_test.c'; fi`
 
 keypairtest-keypairtest.o: keypairtest.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(keypairtest_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT keypairtest-keypairtest.o -MD -MP -MF $(DEPDIR)/keypairtest-keypairtest.Tpo -c -o keypairtest-keypairtest.o `test -f 'keypairtest.c' || echo '$(srcdir)/'`keypairtest.c
@@ -2565,6 +2680,13 @@ aeadtest.sh.log: aeadtest.sh
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+aes_test.log: aes_test$(EXEEXT)
+	@p='aes_test$(EXEEXT)'; \
+	b='aes_test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 aes_wrap.log: aes_wrap$(EXEEXT)
 	@p='aes_wrap$(EXEEXT)'; \
 	b='aes_wrap'; \
@@ -2656,23 +2778,44 @@ base64test.log: base64test$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-bftest.log: bftest$(EXEEXT)
-	@p='bftest$(EXEEXT)'; \
-	b='bftest'; \
+bf_test.log: bf_test$(EXEEXT)
+	@p='bf_test$(EXEEXT)'; \
+	b='bf_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-biotest.log: biotest$(EXEEXT)
-	@p='biotest$(EXEEXT)'; \
-	b='biotest'; \
+bio_chain.log: bio_chain$(EXEEXT)
+	@p='bio_chain$(EXEEXT)'; \
+	b='bio_chain'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-bnaddsub.log: bnaddsub$(EXEEXT)
-	@p='bnaddsub$(EXEEXT)'; \
-	b='bnaddsub'; \
+bio_host.log: bio_host$(EXEEXT)
+	@p='bio_host$(EXEEXT)'; \
+	b='bio_host'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bio_mem.log: bio_mem$(EXEEXT)
+	@p='bio_mem$(EXEEXT)'; \
+	b='bio_mem'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_add_sub.log: bn_add_sub$(EXEEXT)
+	@p='bn_add_sub$(EXEEXT)'; \
+	b='bn_add_sub'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_cmp.log: bn_cmp$(EXEEXT)
+	@p='bn_cmp$(EXEEXT)'; \
+	b='bn_cmp'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2680,6 +2823,20 @@ bnaddsub.log: bnaddsub$(EXEEXT)
 bn_isqrt.log: bn_isqrt$(EXEEXT)
 	@p='bn_isqrt$(EXEEXT)'; \
 	b='bn_isqrt'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_mod_exp.log: bn_mod_exp$(EXEEXT)
+	@p='bn_mod_exp$(EXEEXT)'; \
+	b='bn_mod_exp'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_mod_exp_zero.log: bn_mod_exp_zero$(EXEEXT)
+	@p='bn_mod_exp_zero$(EXEEXT)'; \
+	b='bn_mod_exp_zero'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2698,6 +2855,13 @@ bn_mod_sqrt.log: bn_mod_sqrt$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_mont.log: bn_mont$(EXEEXT)
+	@p='bn_mont$(EXEEXT)'; \
+	b='bn_mont'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 bn_primes.log: bn_primes$(EXEEXT)
 	@p='bn_primes$(EXEEXT)'; \
 	b='bn_primes'; \
@@ -2712,9 +2876,9 @@ bn_rand_interval.log: bn_rand_interval$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-bntest.log: bntest$(EXEEXT)
-	@p='bntest$(EXEEXT)'; \
-	b='bntest'; \
+bn_test.log: bn_test$(EXEEXT)
+	@p='bn_test$(EXEEXT)'; \
+	b='bn_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2722,6 +2886,13 @@ bntest.log: bntest$(EXEEXT)
 bn_to_string.log: bn_to_string$(EXEEXT)
 	@p='bn_to_string$(EXEEXT)'; \
 	b='bn_to_string'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_unit.log: bn_unit$(EXEEXT)
+	@p='bn_unit$(EXEEXT)'; \
+	b='bn_unit'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2824,13 +2995,6 @@ dsatest.log: dsatest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
-dtlstest.sh.log: dtlstest.sh
-	@p='dtlstest.sh'; \
-	b='dtlstest.sh'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
 ec_asn1_test.log: ec_asn1_test$(EXEEXT)
 	@p='ec_asn1_test$(EXEEXT)'; \
 	b='ec_asn1_test'; \
@@ -2866,9 +3030,23 @@ ectest.log: ectest$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+ed25519test.log: ed25519test$(EXEEXT)
+	@p='ed25519test$(EXEEXT)'; \
+	b='ed25519test'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 enginetest.log: enginetest$(EXEEXT)
 	@p='enginetest$(EXEEXT)'; \
 	b='enginetest'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+evp_ecx_test.log: evp_ecx_test$(EXEEXT)
+	@p='evp_ecx_test$(EXEEXT)'; \
+	b='evp_ecx_test'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2897,13 +3075,6 @@ evptest.sh.log: evptest.sh
 explicit_bzero.log: explicit_bzero$(EXEEXT)
 	@p='explicit_bzero$(EXEEXT)'; \
 	b='explicit_bzero'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-exptest.log: exptest$(EXEEXT)
-	@p='exptest$(EXEEXT)'; \
-	b='exptest'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2981,13 +3152,6 @@ keypairtest.sh.log: keypairtest.sh
 md_test.log: md_test$(EXEEXT)
 	@p='md_test$(EXEEXT)'; \
 	b='md_test'; \
-	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
-	--log-file $$b.log --trs-file $$b.trs \
-	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
-	"$$tst" $(AM_TESTS_FD_REDIRECT)
-mont.log: mont$(EXEEXT)
-	@p='mont$(EXEEXT)'; \
-	b='mont'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -3403,6 +3567,7 @@ clean-am: clean-checkPROGRAMS clean-generic clean-libtool \
 
 distclean: distclean-am
 		-rm -f ./$(DEPDIR)/aeadtest.Po
+	-rm -f ./$(DEPDIR)/aes_test.Po
 	-rm -f ./$(DEPDIR)/aes_wrap.Po
 	-rm -f ./$(DEPDIR)/arc4randomforktest.Po
 	-rm -f ./$(DEPDIR)/asn1_string_to_utf8.Po
@@ -3416,16 +3581,23 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/asn1time.Po
 	-rm -f ./$(DEPDIR)/asn1x509.Po
 	-rm -f ./$(DEPDIR)/base64test.Po
-	-rm -f ./$(DEPDIR)/bftest.Po
-	-rm -f ./$(DEPDIR)/biotest.Po
+	-rm -f ./$(DEPDIR)/bf_test.Po
+	-rm -f ./$(DEPDIR)/bio_chain.Po
+	-rm -f ./$(DEPDIR)/bio_host.Po
+	-rm -f ./$(DEPDIR)/bio_mem.Po
+	-rm -f ./$(DEPDIR)/bn_add_sub.Po
+	-rm -f ./$(DEPDIR)/bn_cmp.Po
 	-rm -f ./$(DEPDIR)/bn_isqrt.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp-bn_mod_exp.Po
 	-rm -f ./$(DEPDIR)/bn_mod_exp2_mont.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po
 	-rm -f ./$(DEPDIR)/bn_mod_sqrt.Po
+	-rm -f ./$(DEPDIR)/bn_mont.Po
 	-rm -f ./$(DEPDIR)/bn_primes.Po
 	-rm -f ./$(DEPDIR)/bn_rand_interval.Po
+	-rm -f ./$(DEPDIR)/bn_test-bn_test.Po
 	-rm -f ./$(DEPDIR)/bn_to_string.Po
-	-rm -f ./$(DEPDIR)/bnaddsub.Po
-	-rm -f ./$(DEPDIR)/bntest-bntest.Po
+	-rm -f ./$(DEPDIR)/bn_unit.Po
 	-rm -f ./$(DEPDIR)/buffertest.Po
 	-rm -f ./$(DEPDIR)/bytestringtest.Po
 	-rm -f ./$(DEPDIR)/casttest.Po
@@ -3440,18 +3612,18 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/destest.Po
 	-rm -f ./$(DEPDIR)/dhtest.Po
 	-rm -f ./$(DEPDIR)/dsatest.Po
-	-rm -f ./$(DEPDIR)/dtlstest.Po
 	-rm -f ./$(DEPDIR)/ec_asn1_test.Po
 	-rm -f ./$(DEPDIR)/ec_point_conversion.Po
 	-rm -f ./$(DEPDIR)/ecdhtest.Po
 	-rm -f ./$(DEPDIR)/ecdsatest.Po
 	-rm -f ./$(DEPDIR)/ectest.Po
+	-rm -f ./$(DEPDIR)/ed25519test.Po
 	-rm -f ./$(DEPDIR)/enginetest.Po
+	-rm -f ./$(DEPDIR)/evp_ecx_test.Po
 	-rm -f ./$(DEPDIR)/evp_pkey_check.Po
 	-rm -f ./$(DEPDIR)/evp_pkey_cleanup.Po
 	-rm -f ./$(DEPDIR)/evptest.Po
 	-rm -f ./$(DEPDIR)/explicit_bzero.Po
-	-rm -f ./$(DEPDIR)/exptest-exptest.Po
 	-rm -f ./$(DEPDIR)/freenull.Po
 	-rm -f ./$(DEPDIR)/gcm128test.Po
 	-rm -f ./$(DEPDIR)/gost2814789t.Po
@@ -3463,7 +3635,6 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/key_schedule.Po
 	-rm -f ./$(DEPDIR)/keypairtest-keypairtest.Po
 	-rm -f ./$(DEPDIR)/md_test.Po
-	-rm -f ./$(DEPDIR)/mont.Po
 	-rm -f ./$(DEPDIR)/objectstest.Po
 	-rm -f ./$(DEPDIR)/ocsp_test.Po
 	-rm -f ./$(DEPDIR)/optionstest.Po
@@ -3554,6 +3725,7 @@ installcheck-am:
 
 maintainer-clean: maintainer-clean-am
 		-rm -f ./$(DEPDIR)/aeadtest.Po
+	-rm -f ./$(DEPDIR)/aes_test.Po
 	-rm -f ./$(DEPDIR)/aes_wrap.Po
 	-rm -f ./$(DEPDIR)/arc4randomforktest.Po
 	-rm -f ./$(DEPDIR)/asn1_string_to_utf8.Po
@@ -3567,16 +3739,23 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/asn1time.Po
 	-rm -f ./$(DEPDIR)/asn1x509.Po
 	-rm -f ./$(DEPDIR)/base64test.Po
-	-rm -f ./$(DEPDIR)/bftest.Po
-	-rm -f ./$(DEPDIR)/biotest.Po
+	-rm -f ./$(DEPDIR)/bf_test.Po
+	-rm -f ./$(DEPDIR)/bio_chain.Po
+	-rm -f ./$(DEPDIR)/bio_host.Po
+	-rm -f ./$(DEPDIR)/bio_mem.Po
+	-rm -f ./$(DEPDIR)/bn_add_sub.Po
+	-rm -f ./$(DEPDIR)/bn_cmp.Po
 	-rm -f ./$(DEPDIR)/bn_isqrt.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp-bn_mod_exp.Po
 	-rm -f ./$(DEPDIR)/bn_mod_exp2_mont.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp_zero-bn_mod_exp_zero.Po
 	-rm -f ./$(DEPDIR)/bn_mod_sqrt.Po
+	-rm -f ./$(DEPDIR)/bn_mont.Po
 	-rm -f ./$(DEPDIR)/bn_primes.Po
 	-rm -f ./$(DEPDIR)/bn_rand_interval.Po
+	-rm -f ./$(DEPDIR)/bn_test-bn_test.Po
 	-rm -f ./$(DEPDIR)/bn_to_string.Po
-	-rm -f ./$(DEPDIR)/bnaddsub.Po
-	-rm -f ./$(DEPDIR)/bntest-bntest.Po
+	-rm -f ./$(DEPDIR)/bn_unit.Po
 	-rm -f ./$(DEPDIR)/buffertest.Po
 	-rm -f ./$(DEPDIR)/bytestringtest.Po
 	-rm -f ./$(DEPDIR)/casttest.Po
@@ -3591,18 +3770,18 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/destest.Po
 	-rm -f ./$(DEPDIR)/dhtest.Po
 	-rm -f ./$(DEPDIR)/dsatest.Po
-	-rm -f ./$(DEPDIR)/dtlstest.Po
 	-rm -f ./$(DEPDIR)/ec_asn1_test.Po
 	-rm -f ./$(DEPDIR)/ec_point_conversion.Po
 	-rm -f ./$(DEPDIR)/ecdhtest.Po
 	-rm -f ./$(DEPDIR)/ecdsatest.Po
 	-rm -f ./$(DEPDIR)/ectest.Po
+	-rm -f ./$(DEPDIR)/ed25519test.Po
 	-rm -f ./$(DEPDIR)/enginetest.Po
+	-rm -f ./$(DEPDIR)/evp_ecx_test.Po
 	-rm -f ./$(DEPDIR)/evp_pkey_check.Po
 	-rm -f ./$(DEPDIR)/evp_pkey_cleanup.Po
 	-rm -f ./$(DEPDIR)/evptest.Po
 	-rm -f ./$(DEPDIR)/explicit_bzero.Po
-	-rm -f ./$(DEPDIR)/exptest-exptest.Po
 	-rm -f ./$(DEPDIR)/freenull.Po
 	-rm -f ./$(DEPDIR)/gcm128test.Po
 	-rm -f ./$(DEPDIR)/gost2814789t.Po
@@ -3614,7 +3793,6 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/key_schedule.Po
 	-rm -f ./$(DEPDIR)/keypairtest-keypairtest.Po
 	-rm -f ./$(DEPDIR)/md_test.Po
-	-rm -f ./$(DEPDIR)/mont.Po
 	-rm -f ./$(DEPDIR)/objectstest.Po
 	-rm -f ./$(DEPDIR)/ocsp_test.Po
 	-rm -f ./$(DEPDIR)/optionstest.Po
