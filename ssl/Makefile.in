@@ -402,9 +402,11 @@ libssl_la_LDFLAGS = -version-info @LIBSSL_VERSION@ -no-undefined -export-symbols
 libssl_la_LIBADD = $(abs_top_builddir)/crypto/libcrypto.la \
 	$(PLATFORM_LDADD) libbs.la
 libbs_la_SOURCES = bs_ber.c bs_cbb.c bs_cbs.c
-noinst_HEADERS = bytestring.h srtp.h dtls_locl.h ssl_locl.h \
+noinst_HEADERS = bytestring.h hidden/ssl_namespace.h \
+	hidden/openssl/ssl.h srtp.h dtls_local.h ssl_local.h \
 	ssl_sigalgs.h ssl_tlsext.h tls_content.h tls_internal.h \
-	tls13_internal.h tls13_handshake.h tls13_record.h
+	tls12_internal.h tls13_internal.h tls13_handshake.h \
+	tls13_record.h
 libssl_la_SOURCES = bio_ssl.c d1_both.c d1_lib.c d1_pkt.c d1_srtp.c \
 	pqueue.c s3_cbc.c s3_lib.c ssl_algs.c ssl_asn1.c ssl_both.c \
 	ssl_cert.c ssl_ciph.c ssl_ciphers.c ssl_clnt.c ssl_err.c \
