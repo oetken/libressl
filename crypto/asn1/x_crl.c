@@ -1,4 +1,4 @@
-/* $OpenBSD: x_crl.c,v 1.34 2019/03/13 20:34:00 tb Exp $ */
+/* $OpenBSD: x_crl.c,v 1.36 2021/12/03 17:07:53 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,6 +66,7 @@
 #include <openssl/x509v3.h>
 
 #include "asn1_locl.h"
+#include "x509_lcl.h"
 
 static int X509_REVOKED_cmp(const X509_REVOKED * const *a,
     const X509_REVOKED * const *b);
@@ -659,14 +660,15 @@ X509_CRL_METHOD_new(int (*crl_init)(X509_CRL *crl),
 {
 	X509_CRL_METHOD *m;
 
-	m = malloc(sizeof(X509_CRL_METHOD));
-	if (!m)
+	if ((m = calloc(1, sizeof(X509_CRL_METHOD))) == NULL)
 		return NULL;
+
 	m->crl_init = crl_init;
 	m->crl_free = crl_free;
 	m->crl_lookup = crl_lookup;
 	m->crl_verify = crl_verify;
 	m->flags = X509_CRL_METHOD_DYNAMIC;
+
 	return m;
 }
 

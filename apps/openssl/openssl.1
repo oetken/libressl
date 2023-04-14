@@ -1,4 +1,4 @@
-.\" $OpenBSD: openssl.1,v 1.132 2021/09/05 06:16:30 jmc Exp $
+.\" $OpenBSD: openssl.1,v 1.136 2022/02/18 10:24:32 jsg Exp $
 .\" ====================================================================
 .\" Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
 .\"
@@ -110,7 +110,7 @@
 .\" copied and put under another distribution licence
 .\" [including the GNU Public Licence.]
 .\"
-.Dd $Mdocdate: September 5 2021 $
+.Dd $Mdocdate: February 18 2022 $
 .Dt OPENSSL 1
 .Os
 .Sh NAME
@@ -1945,7 +1945,7 @@ forms and their components printed out.
 .Nm openssl
 uses the private key format specified in
 .Dq SEC 1: Elliptic Curve Cryptography
-.Pq Lk http://www.secg.org/ .
+.Pq Lk https://www.secg.org/ .
 To convert an
 EC private key into the PKCS#8 private key format use the
 .Nm pkcs8
@@ -3332,6 +3332,7 @@ is equivalent to
 .Bl -hang -width "openssl pkey"
 .It Nm openssl pkey
 .Bk -words
+.Op Fl check
 .Op Ar cipher
 .Op Fl in Ar file
 .Op Fl inform Cm der | pem
@@ -3340,6 +3341,7 @@ is equivalent to
 .Op Fl outform Cm der | pem
 .Op Fl passin Ar arg
 .Op Fl passout Ar arg
+.Op Fl pubcheck
 .Op Fl pubin
 .Op Fl pubout
 .Op Fl text
@@ -3355,6 +3357,8 @@ and their components printed out.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl check
+Check the validity of a key pair.
 .It Ar cipher
 Encrypt the private key with the specified cipher.
 Any algorithm name accepted by
@@ -3380,6 +3384,9 @@ The output format.
 The key password source.
 .It Fl passout Ar arg
 The output file password source.
+.It Fl pubcheck
+Check the validity of a public key
+or the public component of a key pair.
 .It Fl pubin
 Read in a public key, not a private key.
 .It Fl pubout
@@ -3394,6 +3401,7 @@ even if a private key is being processed.
 .Tg pkeyparam
 .Sh PKEYPARAM
 .Cm openssl pkeyparam
+.Op Fl check
 .Op Fl in Ar file
 .Op Fl noout
 .Op Fl out Ar file
@@ -3406,6 +3414,8 @@ The key type is determined by the PEM headers.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
+.It Fl check
+check the correctness of parameters.
 .It Fl in Ar file
 The input file to read from,
 or standard input if not specified.
@@ -3649,7 +3659,6 @@ or standard output if not specified.
 .It Nm openssl req
 .Bk -words
 .Op Fl addext Ar ext
-.Op Fl asn1-kludge
 .Op Fl batch
 .Op Fl config Ar file
 .Op Fl days Ar n
@@ -3666,7 +3675,6 @@ or standard output if not specified.
 .Op Fl new
 .Op Fl newhdr
 .Op Fl newkey Ar arg
-.Op Fl no-asn1-kludge
 .Op Fl nodes
 .Op Fl noout
 .Op Fl out Ar file
@@ -3705,9 +3713,6 @@ option is present) or certificate request.
 The argument must have the form of a key=value pair as it would appear in a
 config file.
 This option can be given multiple times.
-.It Fl asn1-kludge
-Produce requests in an invalid format for certain picky CAs.
-Very few CAs still require the use of this option.
 .It Fl batch
 Non-interactive mode.
 .It Fl config Ar file
@@ -3819,9 +3824,6 @@ can be omitted,
 in which case any parameters can be specified via the
 .Fl pkeyopt
 option.
-.It Fl no-asn1-kludge
-Reverse the effect of
-.Fl asn1-kludge .
 .It Fl nodes
 Do not encrypt the private key.
 .It Fl noout
@@ -4113,7 +4115,6 @@ Any additional fields will be treated as though they were a
 .Op Fl pvk-none | pvk-strong | pvk-weak
 .Op Fl RSAPublicKey_in
 .Op Fl RSAPublicKey_out
-.Op Fl sgckey
 .Op Fl text
 .Ek
 .El
@@ -4185,9 +4186,6 @@ and
 except
 .Cm RSAPublicKey
 format is used instead.
-.It Fl sgckey
-Use the modified NET algorithm used with some versions of Microsoft IIS
-and SGC keys.
 .It Fl text
 Print the public/private key components in plain text.
 .El
