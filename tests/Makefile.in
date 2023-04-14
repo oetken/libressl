@@ -91,9 +91,10 @@ host_triplet = @host@
 @HOST_ASM_MACOSX_X86_64_TRUE@am__append_1 = $(abs_top_builddir)/crypto/.libs/libcrypto_la-cpuid-macosx-x86_64.o
 TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_2) asn1api$(EXEEXT) \
 	asn1basic$(EXEEXT) asn1complex$(EXEEXT) asn1evp$(EXEEXT) \
-	asn1string_copy$(EXEEXT) asn1test$(EXEEXT) asn1time$(EXEEXT) \
-	asn1x509$(EXEEXT) base64test$(EXEEXT) bftest$(EXEEXT) \
-	$(am__EXEEXT_2) bnaddsub$(EXEEXT) bn_rand_interval$(EXEEXT) \
+	asn1object$(EXEEXT) asn1string_copy$(EXEEXT) asn1test$(EXEEXT) \
+	asn1time$(EXEEXT) asn1x509$(EXEEXT) base64test$(EXEEXT) \
+	bftest$(EXEEXT) $(am__EXEEXT_2) bnaddsub$(EXEEXT) \
+	bn_mod_exp2_mont$(EXEEXT) bn_rand_interval$(EXEEXT) \
 	bntest$(EXEEXT) bn_to_string$(EXEEXT) buffertest$(EXEEXT) \
 	bytestringtest$(EXEEXT) casttest$(EXEEXT) chachatest$(EXEEXT) \
 	cipher_list$(EXEEXT) cipherstest$(EXEEXT) clienttest$(EXEEXT) \
@@ -117,18 +118,19 @@ TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_2) asn1api$(EXEEXT) \
 	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
 	sm3test$(EXEEXT) sm4test$(EXEEXT) \
 	ssl_get_shared_ciphers$(EXEEXT) ssl_methods$(EXEEXT) \
-	ssl_versions$(EXEEXT) ssltest.sh testdsa.sh testenc.sh \
-	testrsa.sh timingsafe$(EXEEXT) tlsexttest$(EXEEXT) \
-	tlslegacytest$(EXEEXT) tlstest.sh tls_ext_alpn$(EXEEXT) \
-	tls_prf$(EXEEXT) utf8test$(EXEEXT) \
+	ssl_versions$(EXEEXT) ssltest.sh string_table$(EXEEXT) \
+	testdsa.sh testenc.sh testrsa.sh timingsafe$(EXEEXT) \
+	tlsexttest$(EXEEXT) tlslegacytest$(EXEEXT) tlstest.sh \
+	tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) utf8test$(EXEEXT) \
 	valid_handshakes_terminate$(EXEEXT) verifytest$(EXEEXT) \
 	x25519test$(EXEEXT) x509attribute$(EXEEXT) x509_info$(EXEEXT) \
 	x509name$(EXEEXT) x509req_ext$(EXEEXT)
 check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	asn1api$(EXEEXT) asn1basic$(EXEEXT) asn1complex$(EXEEXT) \
-	asn1evp$(EXEEXT) asn1string_copy$(EXEEXT) asn1test$(EXEEXT) \
-	asn1time$(EXEEXT) asn1x509$(EXEEXT) base64test$(EXEEXT) \
-	bftest$(EXEEXT) $(am__EXEEXT_2) bnaddsub$(EXEEXT) \
+	asn1evp$(EXEEXT) asn1object$(EXEEXT) asn1string_copy$(EXEEXT) \
+	asn1test$(EXEEXT) asn1time$(EXEEXT) asn1x509$(EXEEXT) \
+	base64test$(EXEEXT) bftest$(EXEEXT) $(am__EXEEXT_2) \
+	bnaddsub$(EXEEXT) bn_mod_exp2_mont$(EXEEXT) \
 	bn_rand_interval$(EXEEXT) bntest$(EXEEXT) \
 	bn_to_string$(EXEEXT) buffertest$(EXEEXT) \
 	bytestringtest$(EXEEXT) casttest$(EXEEXT) chachatest$(EXEEXT) \
@@ -153,12 +155,12 @@ check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	servertest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
 	sha512test$(EXEEXT) sm3test$(EXEEXT) sm4test$(EXEEXT) \
 	ssl_get_shared_ciphers$(EXEEXT) ssl_methods$(EXEEXT) \
-	ssl_versions$(EXEEXT) ssltest$(EXEEXT) timingsafe$(EXEEXT) \
-	tlsexttest$(EXEEXT) tlslegacytest$(EXEEXT) tlstest$(EXEEXT) \
-	tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) utf8test$(EXEEXT) \
-	valid_handshakes_terminate$(EXEEXT) verifytest$(EXEEXT) \
-	x25519test$(EXEEXT) x509attribute$(EXEEXT) x509_info$(EXEEXT) \
-	x509name$(EXEEXT) x509req_ext$(EXEEXT)
+	ssl_versions$(EXEEXT) ssltest$(EXEEXT) string_table$(EXEEXT) \
+	timingsafe$(EXEEXT) tlsexttest$(EXEEXT) tlslegacytest$(EXEEXT) \
+	tlstest$(EXEEXT) tls_ext_alpn$(EXEEXT) tls_prf$(EXEEXT) \
+	utf8test$(EXEEXT) valid_handshakes_terminate$(EXEEXT) \
+	verifytest$(EXEEXT) x25519test$(EXEEXT) x509attribute$(EXEEXT) \
+	x509_info$(EXEEXT) x509name$(EXEEXT) x509req_ext$(EXEEXT)
 
 # arc4randomforktest
 # Windows/mingw does not have fork, but Cygwin does.
@@ -274,6 +276,13 @@ asn1evp_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_asn1object_OBJECTS = asn1object.$(OBJEXT)
+asn1object_OBJECTS = $(am_asn1object_OBJECTS)
+asn1object_LDADD = $(LDADD)
+asn1object_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_asn1string_copy_OBJECTS = asn1string_copy.$(OBJEXT)
 asn1string_copy_OBJECTS = $(am_asn1string_copy_OBJECTS)
 asn1string_copy_LDADD = $(LDADD)
@@ -321,6 +330,14 @@ am__biotest_SOURCES_DIST = biotest.c
 biotest_OBJECTS = $(am_biotest_OBJECTS)
 biotest_LDADD = $(LDADD)
 biotest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_bn_mod_exp2_mont_OBJECTS = bn_mod_exp2_mont.$(OBJEXT)
+bn_mod_exp2_mont_OBJECTS = $(am_bn_mod_exp2_mont_OBJECTS)
+bn_mod_exp2_mont_LDADD = $(LDADD)
+bn_mod_exp2_mont_DEPENDENCIES =  \
+	$(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
@@ -814,6 +831,13 @@ ssltest_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
 	$(abs_top_builddir)/ssl/.libs/libssl.a \
 	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
+am_string_table_OBJECTS = string_table.$(OBJEXT)
+string_table_OBJECTS = $(am_string_table_OBJECTS)
+string_table_LDADD = $(LDADD)
+string_table_DEPENDENCIES = $(abs_top_builddir)/tls/.libs/libtls.a \
+	$(abs_top_builddir)/ssl/.libs/libssl.a \
+	$(abs_top_builddir)/crypto/.libs/libcrypto.a \
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(am__append_1)
 am_timingsafe_OBJECTS = timingsafe.$(OBJEXT)
 timingsafe_OBJECTS = $(am_timingsafe_OBJECTS)
 timingsafe_LDADD = $(LDADD)
@@ -935,10 +959,11 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/aeadtest.Po ./$(DEPDIR)/aes_wrap.Po \
 	./$(DEPDIR)/arc4randomforktest.Po ./$(DEPDIR)/asn1api.Po \
 	./$(DEPDIR)/asn1basic.Po ./$(DEPDIR)/asn1complex.Po \
-	./$(DEPDIR)/asn1evp.Po ./$(DEPDIR)/asn1string_copy.Po \
-	./$(DEPDIR)/asn1test.Po ./$(DEPDIR)/asn1time.Po \
-	./$(DEPDIR)/asn1x509.Po ./$(DEPDIR)/base64test.Po \
-	./$(DEPDIR)/bftest.Po ./$(DEPDIR)/biotest.Po \
+	./$(DEPDIR)/asn1evp.Po ./$(DEPDIR)/asn1object.Po \
+	./$(DEPDIR)/asn1string_copy.Po ./$(DEPDIR)/asn1test.Po \
+	./$(DEPDIR)/asn1time.Po ./$(DEPDIR)/asn1x509.Po \
+	./$(DEPDIR)/base64test.Po ./$(DEPDIR)/bftest.Po \
+	./$(DEPDIR)/biotest.Po ./$(DEPDIR)/bn_mod_exp2_mont.Po \
 	./$(DEPDIR)/bn_rand_interval.Po ./$(DEPDIR)/bn_to_string.Po \
 	./$(DEPDIR)/bnaddsub.Po ./$(DEPDIR)/bntest-bntest.Po \
 	./$(DEPDIR)/buffertest.Po ./$(DEPDIR)/bytestringtest.Po \
@@ -973,10 +998,11 @@ am__depfiles_remade = ./$(DEPDIR)/aeadtest.Po ./$(DEPDIR)/aes_wrap.Po \
 	./$(DEPDIR)/sm3test.Po ./$(DEPDIR)/sm4test.Po \
 	./$(DEPDIR)/ssl_get_shared_ciphers-ssl_get_shared_ciphers.Po \
 	./$(DEPDIR)/ssl_methods.Po ./$(DEPDIR)/ssl_versions.Po \
-	./$(DEPDIR)/ssltest.Po ./$(DEPDIR)/timingsafe.Po \
-	./$(DEPDIR)/tls_ext_alpn.Po ./$(DEPDIR)/tls_prf.Po \
-	./$(DEPDIR)/tlsexttest.Po ./$(DEPDIR)/tlslegacytest.Po \
-	./$(DEPDIR)/tlstest.Po ./$(DEPDIR)/utf8test.Po \
+	./$(DEPDIR)/ssltest.Po ./$(DEPDIR)/string_table.Po \
+	./$(DEPDIR)/timingsafe.Po ./$(DEPDIR)/tls_ext_alpn.Po \
+	./$(DEPDIR)/tls_prf.Po ./$(DEPDIR)/tlsexttest.Po \
+	./$(DEPDIR)/tlslegacytest.Po ./$(DEPDIR)/tlstest.Po \
+	./$(DEPDIR)/utf8test.Po \
 	./$(DEPDIR)/valid_handshakes_terminate.Po \
 	./$(DEPDIR)/verifytest.Po ./$(DEPDIR)/x25519test.Po \
 	./$(DEPDIR)/x509_info.Po ./$(DEPDIR)/x509attribute.Po \
@@ -1004,15 +1030,15 @@ am__v_CCLD_1 =
 SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(arc4randomforktest_SOURCES) $(asn1api_SOURCES) \
 	$(asn1basic_SOURCES) $(asn1complex_SOURCES) $(asn1evp_SOURCES) \
-	$(asn1string_copy_SOURCES) $(asn1test_SOURCES) \
-	$(asn1time_SOURCES) $(asn1x509_SOURCES) $(base64test_SOURCES) \
-	$(bftest_SOURCES) $(biotest_SOURCES) \
-	$(bn_rand_interval_SOURCES) $(bn_to_string_SOURCES) \
-	$(bnaddsub_SOURCES) $(bntest_SOURCES) $(buffertest_SOURCES) \
-	$(bytestringtest_SOURCES) $(casttest_SOURCES) \
-	$(chachatest_SOURCES) $(cipher_list_SOURCES) \
-	$(cipherstest_SOURCES) $(clienttest_SOURCES) \
-	$(cmstest_SOURCES) $(configtest_SOURCES) \
+	$(asn1object_SOURCES) $(asn1string_copy_SOURCES) \
+	$(asn1test_SOURCES) $(asn1time_SOURCES) $(asn1x509_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) $(biotest_SOURCES) \
+	$(bn_mod_exp2_mont_SOURCES) $(bn_rand_interval_SOURCES) \
+	$(bn_to_string_SOURCES) $(bnaddsub_SOURCES) $(bntest_SOURCES) \
+	$(buffertest_SOURCES) $(bytestringtest_SOURCES) \
+	$(casttest_SOURCES) $(chachatest_SOURCES) \
+	$(cipher_list_SOURCES) $(cipherstest_SOURCES) \
+	$(clienttest_SOURCES) $(cmstest_SOURCES) $(configtest_SOURCES) \
 	$(constraints_SOURCES) $(cts128test_SOURCES) \
 	$(destest_SOURCES) $(dhtest_SOURCES) $(dsatest_SOURCES) \
 	$(dtlstest_SOURCES) $(ec_asn1_test_SOURCES) \
@@ -1035,20 +1061,21 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(sha256test_SOURCES) $(sha512test_SOURCES) $(sm3test_SOURCES) \
 	$(sm4test_SOURCES) $(ssl_get_shared_ciphers_SOURCES) \
 	$(ssl_methods_SOURCES) $(ssl_versions_SOURCES) \
-	$(ssltest_SOURCES) $(timingsafe_SOURCES) \
-	$(tls_ext_alpn_SOURCES) $(tls_prf_SOURCES) \
-	$(tlsexttest_SOURCES) $(tlslegacytest_SOURCES) \
-	$(tlstest_SOURCES) $(utf8test_SOURCES) \
-	$(valid_handshakes_terminate_SOURCES) $(verifytest_SOURCES) \
-	$(x25519test_SOURCES) $(x509_info_SOURCES) \
-	$(x509attribute_SOURCES) $(x509name_SOURCES) \
-	$(x509req_ext_SOURCES)
+	$(ssltest_SOURCES) $(string_table_SOURCES) \
+	$(timingsafe_SOURCES) $(tls_ext_alpn_SOURCES) \
+	$(tls_prf_SOURCES) $(tlsexttest_SOURCES) \
+	$(tlslegacytest_SOURCES) $(tlstest_SOURCES) \
+	$(utf8test_SOURCES) $(valid_handshakes_terminate_SOURCES) \
+	$(verifytest_SOURCES) $(x25519test_SOURCES) \
+	$(x509_info_SOURCES) $(x509attribute_SOURCES) \
+	$(x509name_SOURCES) $(x509req_ext_SOURCES)
 DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(am__arc4randomforktest_SOURCES_DIST) $(asn1api_SOURCES) \
 	$(asn1basic_SOURCES) $(asn1complex_SOURCES) $(asn1evp_SOURCES) \
-	$(asn1string_copy_SOURCES) $(asn1test_SOURCES) \
-	$(asn1time_SOURCES) $(asn1x509_SOURCES) $(base64test_SOURCES) \
-	$(bftest_SOURCES) $(am__biotest_SOURCES_DIST) \
+	$(asn1object_SOURCES) $(asn1string_copy_SOURCES) \
+	$(asn1test_SOURCES) $(asn1time_SOURCES) $(asn1x509_SOURCES) \
+	$(base64test_SOURCES) $(bftest_SOURCES) \
+	$(am__biotest_SOURCES_DIST) $(bn_mod_exp2_mont_SOURCES) \
 	$(bn_rand_interval_SOURCES) $(bn_to_string_SOURCES) \
 	$(bnaddsub_SOURCES) $(bntest_SOURCES) $(buffertest_SOURCES) \
 	$(bytestringtest_SOURCES) $(casttest_SOURCES) \
@@ -1078,14 +1105,14 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(sha256test_SOURCES) $(sha512test_SOURCES) $(sm3test_SOURCES) \
 	$(sm4test_SOURCES) $(ssl_get_shared_ciphers_SOURCES) \
 	$(ssl_methods_SOURCES) $(ssl_versions_SOURCES) \
-	$(ssltest_SOURCES) $(timingsafe_SOURCES) \
-	$(tls_ext_alpn_SOURCES) $(tls_prf_SOURCES) \
-	$(tlsexttest_SOURCES) $(tlslegacytest_SOURCES) \
-	$(am__tlstest_SOURCES_DIST) $(utf8test_SOURCES) \
-	$(valid_handshakes_terminate_SOURCES) $(verifytest_SOURCES) \
-	$(x25519test_SOURCES) $(x509_info_SOURCES) \
-	$(x509attribute_SOURCES) $(x509name_SOURCES) \
-	$(x509req_ext_SOURCES)
+	$(ssltest_SOURCES) $(string_table_SOURCES) \
+	$(timingsafe_SOURCES) $(tls_ext_alpn_SOURCES) \
+	$(tls_prf_SOURCES) $(tlsexttest_SOURCES) \
+	$(tlslegacytest_SOURCES) $(am__tlstest_SOURCES_DIST) \
+	$(utf8test_SOURCES) $(valid_handshakes_terminate_SOURCES) \
+	$(verifytest_SOURCES) $(x25519test_SOURCES) \
+	$(x509_info_SOURCES) $(x509attribute_SOURCES) \
+	$(x509name_SOURCES) $(x509req_ext_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -1474,6 +1501,7 @@ asn1api_SOURCES = asn1api.c
 asn1basic_SOURCES = asn1basic.c
 asn1complex_SOURCES = asn1complex.c
 asn1evp_SOURCES = asn1evp.c
+asn1object_SOURCES = asn1object.c
 asn1string_copy_SOURCES = asn1string_copy.c
 asn1test_SOURCES = asn1test.c
 asn1time_SOURCES = asn1time.c
@@ -1482,6 +1510,7 @@ base64test_SOURCES = base64test.c
 bftest_SOURCES = bftest.c
 @ENABLE_EXTRATESTS_TRUE@biotest_SOURCES = biotest.c
 bnaddsub_SOURCES = bnaddsub.c
+bn_mod_exp2_mont_SOURCES = bn_mod_exp2_mont.c
 bn_rand_interval_SOURCES = bn_rand_interval.c
 bntest_CPPFLAGS = $(AM_CPPFLAGS) -ULIBRESSL_INTERNAL
 bntest_SOURCES = bntest.c
@@ -1557,6 +1586,7 @@ ssl_get_shared_ciphers_SOURCES = ssl_get_shared_ciphers.c
 ssl_methods_SOURCES = ssl_methods.c
 ssl_versions_SOURCES = ssl_versions.c
 ssltest_SOURCES = ssltest.c
+string_table_SOURCES = string_table.c
 timingsafe_SOURCES = timingsafe.c
 tlsexttest_SOURCES = tlsexttest.c
 tlslegacytest_SOURCES = tlslegacytest.c
@@ -1643,6 +1673,10 @@ asn1evp$(EXEEXT): $(asn1evp_OBJECTS) $(asn1evp_DEPENDENCIES) $(EXTRA_asn1evp_DEP
 	@rm -f asn1evp$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(asn1evp_OBJECTS) $(asn1evp_LDADD) $(LIBS)
 
+asn1object$(EXEEXT): $(asn1object_OBJECTS) $(asn1object_DEPENDENCIES) $(EXTRA_asn1object_DEPENDENCIES) 
+	@rm -f asn1object$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(asn1object_OBJECTS) $(asn1object_LDADD) $(LIBS)
+
 asn1string_copy$(EXEEXT): $(asn1string_copy_OBJECTS) $(asn1string_copy_DEPENDENCIES) $(EXTRA_asn1string_copy_DEPENDENCIES) 
 	@rm -f asn1string_copy$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(asn1string_copy_OBJECTS) $(asn1string_copy_LDADD) $(LIBS)
@@ -1670,6 +1704,10 @@ bftest$(EXEEXT): $(bftest_OBJECTS) $(bftest_DEPENDENCIES) $(EXTRA_bftest_DEPENDE
 biotest$(EXEEXT): $(biotest_OBJECTS) $(biotest_DEPENDENCIES) $(EXTRA_biotest_DEPENDENCIES) 
 	@rm -f biotest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(biotest_OBJECTS) $(biotest_LDADD) $(LIBS)
+
+bn_mod_exp2_mont$(EXEEXT): $(bn_mod_exp2_mont_OBJECTS) $(bn_mod_exp2_mont_DEPENDENCIES) $(EXTRA_bn_mod_exp2_mont_DEPENDENCIES) 
+	@rm -f bn_mod_exp2_mont$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(bn_mod_exp2_mont_OBJECTS) $(bn_mod_exp2_mont_LDADD) $(LIBS)
 
 bn_rand_interval$(EXEEXT): $(bn_rand_interval_OBJECTS) $(bn_rand_interval_DEPENDENCIES) $(EXTRA_bn_rand_interval_DEPENDENCIES) 
 	@rm -f bn_rand_interval$(EXEEXT)
@@ -1951,6 +1989,10 @@ ssltest$(EXEEXT): $(ssltest_OBJECTS) $(ssltest_DEPENDENCIES) $(EXTRA_ssltest_DEP
 	@rm -f ssltest$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(ssltest_OBJECTS) $(ssltest_LDADD) $(LIBS)
 
+string_table$(EXEEXT): $(string_table_OBJECTS) $(string_table_DEPENDENCIES) $(EXTRA_string_table_DEPENDENCIES) 
+	@rm -f string_table$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(string_table_OBJECTS) $(string_table_LDADD) $(LIBS)
+
 timingsafe$(EXEEXT): $(timingsafe_OBJECTS) $(timingsafe_DEPENDENCIES) $(EXTRA_timingsafe_DEPENDENCIES) 
 	@rm -f timingsafe$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(timingsafe_OBJECTS) $(timingsafe_LDADD) $(LIBS)
@@ -2023,6 +2065,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1basic.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1complex.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1evp.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1object.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1string_copy.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1time.Po@am__quote@ # am--include-marker
@@ -2030,6 +2073,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/base64test.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bftest.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/biotest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_mod_exp2_mont.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_rand_interval.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bn_to_string.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bnaddsub.Po@am__quote@ # am--include-marker
@@ -2098,6 +2142,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssl_methods.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssl_versions.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssltest.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/string_table.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timingsafe.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_ext_alpn.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_prf.Po@am__quote@ # am--include-marker
@@ -2463,6 +2508,13 @@ asn1evp.log: asn1evp$(EXEEXT)
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+asn1object.log: asn1object$(EXEEXT)
+	@p='asn1object$(EXEEXT)'; \
+	b='asn1object'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 asn1string_copy.log: asn1string_copy$(EXEEXT)
 	@p='asn1string_copy$(EXEEXT)'; \
 	b='asn1string_copy'; \
@@ -2515,6 +2567,13 @@ biotest.log: biotest$(EXEEXT)
 bnaddsub.log: bnaddsub$(EXEEXT)
 	@p='bnaddsub$(EXEEXT)'; \
 	b='bnaddsub'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+bn_mod_exp2_mont.log: bn_mod_exp2_mont$(EXEEXT)
+	@p='bn_mod_exp2_mont$(EXEEXT)'; \
+	b='bn_mod_exp2_mont'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
@@ -2988,6 +3047,13 @@ ssltest.sh.log: ssltest.sh
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
 	"$$tst" $(AM_TESTS_FD_REDIRECT)
+string_table.log: string_table$(EXEEXT)
+	@p='string_table$(EXEEXT)'; \
+	b='string_table'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
 testdsa.sh.log: testdsa.sh
 	@p='testdsa.sh'; \
 	b='testdsa.sh'; \
@@ -3210,6 +3276,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/asn1basic.Po
 	-rm -f ./$(DEPDIR)/asn1complex.Po
 	-rm -f ./$(DEPDIR)/asn1evp.Po
+	-rm -f ./$(DEPDIR)/asn1object.Po
 	-rm -f ./$(DEPDIR)/asn1string_copy.Po
 	-rm -f ./$(DEPDIR)/asn1test.Po
 	-rm -f ./$(DEPDIR)/asn1time.Po
@@ -3217,6 +3284,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/base64test.Po
 	-rm -f ./$(DEPDIR)/bftest.Po
 	-rm -f ./$(DEPDIR)/biotest.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp2_mont.Po
 	-rm -f ./$(DEPDIR)/bn_rand_interval.Po
 	-rm -f ./$(DEPDIR)/bn_to_string.Po
 	-rm -f ./$(DEPDIR)/bnaddsub.Po
@@ -3285,6 +3353,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/ssl_methods.Po
 	-rm -f ./$(DEPDIR)/ssl_versions.Po
 	-rm -f ./$(DEPDIR)/ssltest.Po
+	-rm -f ./$(DEPDIR)/string_table.Po
 	-rm -f ./$(DEPDIR)/timingsafe.Po
 	-rm -f ./$(DEPDIR)/tls_ext_alpn.Po
 	-rm -f ./$(DEPDIR)/tls_prf.Po
@@ -3353,6 +3422,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/asn1basic.Po
 	-rm -f ./$(DEPDIR)/asn1complex.Po
 	-rm -f ./$(DEPDIR)/asn1evp.Po
+	-rm -f ./$(DEPDIR)/asn1object.Po
 	-rm -f ./$(DEPDIR)/asn1string_copy.Po
 	-rm -f ./$(DEPDIR)/asn1test.Po
 	-rm -f ./$(DEPDIR)/asn1time.Po
@@ -3360,6 +3430,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/base64test.Po
 	-rm -f ./$(DEPDIR)/bftest.Po
 	-rm -f ./$(DEPDIR)/biotest.Po
+	-rm -f ./$(DEPDIR)/bn_mod_exp2_mont.Po
 	-rm -f ./$(DEPDIR)/bn_rand_interval.Po
 	-rm -f ./$(DEPDIR)/bn_to_string.Po
 	-rm -f ./$(DEPDIR)/bnaddsub.Po
@@ -3428,6 +3499,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/ssl_methods.Po
 	-rm -f ./$(DEPDIR)/ssl_versions.Po
 	-rm -f ./$(DEPDIR)/ssltest.Po
+	-rm -f ./$(DEPDIR)/string_table.Po
 	-rm -f ./$(DEPDIR)/timingsafe.Po
 	-rm -f ./$(DEPDIR)/tls_ext_alpn.Po
 	-rm -f ./$(DEPDIR)/tls_prf.Po
