@@ -4,6 +4,7 @@ include_directories(
 	.
 	../crypto/asn1
 	../crypto/bio
+	../crypto/evp
 	../crypto/modes
 	../crypto/x509
 	../ssl
@@ -107,6 +108,11 @@ add_test(bnaddsub bnaddsub)
 add_executable(bn_mod_exp2_mont bn_mod_exp2_mont.c)
 target_link_libraries(bn_mod_exp2_mont ${OPENSSL_TEST_LIBS})
 add_test(bn_mod_exp2_mont bn_mod_exp2_mont)
+
+# bn_mod_sqrt
+add_executable(bn_mod_sqrt bn_mod_sqrt.c)
+target_link_libraries(bn_mod_sqrt ${OPENSSL_TEST_LIBS})
+add_test(bn_mod_sqrt bn_mod_sqrt)
 
 # bn_rand_interval
 add_executable(bn_rand_interval bn_rand_interval.c)
@@ -238,6 +244,11 @@ add_executable(evp_pkey_check evp_pkey_check.c)
 target_link_libraries(evp_pkey_check ${OPENSSL_TEST_LIBS})
 add_test(evp_pkey_check evp_pkey_check)
 
+# evp_pkey_cleanup
+add_executable(evp_pkey_cleanup evp_pkey_cleanup.c)
+target_link_libraries(evp_pkey_cleanup ${OPENSSL_TEST_LIBS})
+add_test(evp_pkey_cleanup evp_pkey_cleanup)
+
 # evptest
 add_executable(evptest evptest.c)
 target_link_libraries(evptest ${OPENSSL_TEST_LIBS})
@@ -329,6 +340,11 @@ add_test(md5test md5test)
 add_executable(mont mont.c)
 target_link_libraries(mont ${OPENSSL_TEST_LIBS})
 add_test(mont mont)
+
+# objectstest
+add_executable(objectstest objectstest.c)
+target_link_libraries(objectstest ${OPENSSL_TEST_LIBS})
+add_test(objectstest objectstest)
 
 # ocsp_test
 if(ENABLE_EXTRATESTS)

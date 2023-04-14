@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_locl.h,v 1.386 2022/02/21 18:22:20 jsing Exp $ */
+/* $OpenBSD: ssl_locl.h,v 1.388 2022/03/17 17:22:16 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -1334,6 +1334,7 @@ void ssl_force_want_read(SSL *s);
 
 int ssl3_dispatch_alert(SSL *s);
 int ssl3_read_alert(SSL *s);
+int ssl3_read_change_cipher_spec(SSL *s);
 int ssl3_read_bytes(SSL *s, int type, unsigned char *buf, int len, int peek);
 int ssl3_write_bytes(SSL *s, int type, const void *buf, int len);
 int ssl3_output_cert_chain(SSL *s, CBB *cbb, SSL_CERT_PKEY *cpk);
@@ -1433,7 +1434,7 @@ void ssl_free_wbio_buffer(SSL *s);
 
 int tls1_transcript_hash_init(SSL *s);
 int tls1_transcript_hash_update(SSL *s, const unsigned char *buf, size_t len);
-int tls1_transcript_hash_value(SSL *s, const unsigned char *out, size_t len,
+int tls1_transcript_hash_value(SSL *s, unsigned char *out, size_t len,
     size_t *outlen);
 void tls1_transcript_hash_free(SSL *s);
 
