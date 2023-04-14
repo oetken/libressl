@@ -49,7 +49,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "MINGW")
 	set(BUILD_NC false)
 endif()
 
-if(MSVC)
+if(WIN32)
 	set(BUILD_NC false)
 endif()
 
@@ -80,14 +80,17 @@ if (CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
 	add_definitions(-Wno-pointer-sign)
 endif()
 
-if(MSVC)
-	add_definitions(-Dinline=__inline)
+if(WIN32)
 	add_definitions(-Drestrict)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 	add_definitions(-D_CRT_DEPRECATED_NO_WARNINGS)
 	add_definitions(-D_REENTRANT -D_POSIX_THREAD_SAFE_FUNCTIONS)
 	add_definitions(-DWIN32_LEAN_AND_MEAN -D_WIN32_WINNT=0x0501)
 	add_definitions(-DCPPFLAGS -DOPENSSL_NO_SPEED -DNO_SYSLOG -DNO_CRYPT)
+endif()
+
+if(MSVC)
+	add_definitions(-Dinline=__inline)
 
 	set(MSVC_DISABLED_WARNINGS_LIST
 		"C4057" # C4057: 'initializing' : 'unsigned char *' differs in
@@ -98,6 +101,8 @@ if(MSVC)
 		        # possible loss of data
 		"C4244" # 'function' : conversion from 'int' to 'uint8_t',
 		        # possible loss of data
+		"C4267" # conversion from 'size_t' to 'some type that is almost
+		        # certainly safe to convert a size_t to'.
 		"C4706" # assignment within conditional expression
 		"C4820" # 'bytes' bytes padding added after construct 'member_name'
 		"C4996" # 'read': The POSIX name for this item is deprecated. Instead,
@@ -105,7 +110,8 @@ if(MSVC)
 	)
 	string(REPLACE "C" " -wd" MSVC_DISABLED_WARNINGS_STR
 		${MSVC_DISABLED_WARNINGS_LIST})
-	set(CMAKE_C_FLAGS  "-MP -W4 ${MSVC_DISABLED_WARNINGS_STR}")
+	string(REGEX REPLACE "[/-]W[1234][ ]?" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -MP -W4 ${MSVC_DISABLED_WARNINGS_STR}")
 endif()
 
 check_function_exists(asprintf HAVE_ASPRINTF)
@@ -143,7 +149,7 @@ if(HAVE_STRNDUP)
 	add_definitions(-DHAVE_STRNDUP)
 endif()
 
-if(MSVC)
+if(WIN32)
 	set(HAVE_STRNLEN true)
 	add_definitions(-DHAVE_STRNLEN)
 else()
@@ -220,7 +226,24 @@ if(ENABLE_ASM)
 	endif()
 endif()
 
-set(OPENSSL_LIBS ssl crypto)
+if(NOT (CMAKE_SYSTEM_NAME MATCHES "(Darwin|CYGWIN)"))
+	set(BUILD_SHARED true)
+endif()
+
+# USE_SHARED builds applications (e.g. openssl) using shared LibreSSL.
+# By default, applications use LibreSSL static library to avoid dependencies.
+# USE_SHARED isn't set by default; use -DUSE_SHARED=ON with CMake to enable.
+# Can be helpful for debugging; don't use for public releases.
+if(NOT BUILD_SHARED)
+	set(USE_SHARED off)
+endif()
+
+if(USE_SHARED)
+	set(OPENSSL_LIBS ssl-shared crypto-shared)
+else()
+	set(OPENSSL_LIBS ssl crypto)
+endif()
+
 if(CMAKE_HOST_WIN32)
 	set(OPENSSL_LIBS ${OPENSSL_LIBS} ws2_32)
 endif()
@@ -235,10 +258,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "HP-UX")
 endif()
 if(CMAKE_SYSTEM_NAME MATCHES "SunOS")
 	set(OPENSSL_LIBS ${OPENSSL_LIBS} nsl socket)
-endif()
-
-if(NOT (CMAKE_SYSTEM_NAME MATCHES "(Darwin|MINGW|CYGWIN)" OR MSVC))
-	set(BUILD_SHARED true)
 endif()
 
 check_type_size(time_t SIZEOF_TIME_T)

@@ -105,7 +105,8 @@ TESTS = aeadtest.sh aes_wrap$(EXEEXT) $(am__append_1) \
 	$(am__append_12) $(am__EXEEXT_6) rmdtest$(EXEEXT) \
 	sha1test$(EXEEXT) sha256test$(EXEEXT) sha512test$(EXEEXT) \
 	ssltest.sh testdsa.sh testenc.sh testrsa.sh \
-	timingsafe$(EXEEXT) utf8test$(EXEEXT) verifytest$(EXEEXT)
+	timingsafe$(EXEEXT) tls_ext_alpn$(EXEEXT) utf8test$(EXEEXT) \
+	verifytest$(EXEEXT)
 check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	asn1test$(EXEEXT) asn1time$(EXEEXT) base64test$(EXEEXT) \
 	bftest$(EXEEXT) $(am__EXEEXT_2) bntest$(EXEEXT) \
@@ -123,7 +124,7 @@ check_PROGRAMS = aeadtest$(EXEEXT) aes_wrap$(EXEEXT) $(am__EXEEXT_1) \
 	rc2test$(EXEEXT) rc4test$(EXEEXT) rfc5280time$(EXEEXT) \
 	rmdtest$(EXEEXT) sha1test$(EXEEXT) sha256test$(EXEEXT) \
 	sha512test$(EXEEXT) ssltest$(EXEEXT) timingsafe$(EXEEXT) \
-	utf8test$(EXEEXT) verifytest$(EXEEXT)
+	tls_ext_alpn$(EXEEXT) utf8test$(EXEEXT) verifytest$(EXEEXT)
 
 # arc4randomforktest
 # Windows/mingw does not have fork, but Cygwin does.
@@ -546,6 +547,13 @@ timingsafe_DEPENDENCIES = $(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
 	$(abs_top_builddir)/ssl/libssl.la \
 	$(abs_top_builddir)/crypto/libcrypto.la \
 	$(abs_top_builddir)/tls/libtls.la
+am_tls_ext_alpn_OBJECTS = tls_ext_alpn.$(OBJEXT)
+tls_ext_alpn_OBJECTS = $(am_tls_ext_alpn_OBJECTS)
+tls_ext_alpn_LDADD = $(LDADD)
+tls_ext_alpn_DEPENDENCIES = $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(abs_top_builddir)/ssl/libssl.la \
+	$(abs_top_builddir)/crypto/libcrypto.la \
+	$(abs_top_builddir)/tls/libtls.la
 am_utf8test_OBJECTS = utf8test.$(OBJEXT)
 utf8test_OBJECTS = $(am_utf8test_OBJECTS)
 utf8test_LDADD = $(LDADD)
@@ -614,7 +622,8 @@ SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(rc2test_SOURCES) $(rc4test_SOURCES) $(rfc5280time_SOURCES) \
 	$(rmdtest_SOURCES) $(sha1test_SOURCES) $(sha256test_SOURCES) \
 	$(sha512test_SOURCES) $(ssltest_SOURCES) $(timingsafe_SOURCES) \
-	$(utf8test_SOURCES) $(verifytest_SOURCES)
+	$(tls_ext_alpn_SOURCES) $(utf8test_SOURCES) \
+	$(verifytest_SOURCES)
 DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(am__arc4randomforktest_SOURCES_DIST) $(asn1test_SOURCES) \
 	$(asn1time_SOURCES) $(base64test_SOURCES) $(bftest_SOURCES) \
@@ -636,7 +645,8 @@ DIST_SOURCES = $(aeadtest_SOURCES) $(aes_wrap_SOURCES) \
 	$(rc4test_SOURCES) $(rfc5280time_SOURCES) $(rmdtest_SOURCES) \
 	$(sha1test_SOURCES) $(sha256test_SOURCES) \
 	$(sha512test_SOURCES) $(ssltest_SOURCES) $(timingsafe_SOURCES) \
-	$(utf8test_SOURCES) $(verifytest_SOURCES)
+	$(tls_ext_alpn_SOURCES) $(utf8test_SOURCES) \
+	$(verifytest_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -998,7 +1008,8 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat \
 	-DLIBRESSL_INTERNAL -I $(top_srcdir)/crypto/modes -I \
 	$(top_srcdir)/crypto/asn1 -I $(top_srcdir)/ssl -I \
 	$(top_srcdir)/apps/openssl -I \
-	$(top_srcdir)/apps/openssl/compat
+	$(top_srcdir)/apps/openssl/compat \
+	-D_PATH_SSL_CA_FILE=\"$(top_srcdir)/apps/openssl/cert.pem\"
 LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) \
 	$(abs_top_builddir)/ssl/libssl.la \
 	$(abs_top_builddir)/crypto/libcrypto.la \
@@ -1064,6 +1075,7 @@ sha256test_SOURCES = sha256test.c
 sha512test_SOURCES = sha512test.c
 ssltest_SOURCES = ssltest.c
 timingsafe_SOURCES = timingsafe.c
+tls_ext_alpn_SOURCES = tls_ext_alpn.c
 utf8test_SOURCES = utf8test.c
 verifytest_SOURCES = verifytest.c
 all: all-am
@@ -1314,6 +1326,10 @@ timingsafe$(EXEEXT): $(timingsafe_OBJECTS) $(timingsafe_DEPENDENCIES) $(EXTRA_ti
 	@rm -f timingsafe$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(timingsafe_OBJECTS) $(timingsafe_LDADD) $(LIBS)
 
+tls_ext_alpn$(EXEEXT): $(tls_ext_alpn_OBJECTS) $(tls_ext_alpn_DEPENDENCIES) $(EXTRA_tls_ext_alpn_DEPENDENCIES) 
+	@rm -f tls_ext_alpn$(EXEEXT)
+	$(AM_V_CCLD)$(LINK) $(tls_ext_alpn_OBJECTS) $(tls_ext_alpn_LDADD) $(LIBS)
+
 utf8test$(EXEEXT): $(utf8test_OBJECTS) $(utf8test_DEPENDENCIES) $(EXTRA_utf8test_DEPENDENCIES) 
 	@rm -f utf8test$(EXEEXT)
 	$(AM_V_CCLD)$(LINK) $(utf8test_OBJECTS) $(utf8test_LDADD) $(LIBS)
@@ -1380,6 +1396,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sha512test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ssltest.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/timingsafe.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tls_ext_alpn.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/utf8test.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/verifytest.Po@am__quote@
 
@@ -1980,6 +1997,13 @@ testrsa.sh.log: testrsa.sh
 timingsafe.log: timingsafe$(EXEEXT)
 	@p='timingsafe$(EXEEXT)'; \
 	b='timingsafe'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+tls_ext_alpn.log: tls_ext_alpn$(EXEEXT)
+	@p='tls_ext_alpn$(EXEEXT)'; \
+	b='tls_ext_alpn'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
