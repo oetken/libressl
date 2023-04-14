@@ -3,7 +3,6 @@ include $(top_srcdir)/Makefile.am.common
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/evp
 AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
-AM_CPPFLAGS += -I$(top_srcdir)/crypto
 
 lib_LTLIBRARIES = libcrypto.la
 
@@ -129,7 +128,6 @@ libcrypto_la_SOURCES += mem_dbg.c
 libcrypto_la_SOURCES += o_init.c
 libcrypto_la_SOURCES += o_str.c
 libcrypto_la_SOURCES += o_time.c
-noinst_HEADERS += constant_time_locl.h
 noinst_HEADERS += cryptlib.h
 noinst_HEADERS += md32_common.h
 noinst_HEADERS += o_time.h

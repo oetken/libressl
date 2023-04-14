@@ -82,7 +82,6 @@
  * OTHERWISE.
  */
 
-#include <inttypes.h>
 #include <stdio.h>
 
 #include <openssl/buffer.h>
@@ -164,7 +163,7 @@ SSL_SESSION_print(BIO *bp, const SSL_SESSION *x)
 	}
 
 	if (x->time != 0) {
-		if (BIO_printf(bp, "\n    Start Time: %"PRId64, (int64_t)x->time) <= 0)
+		if (BIO_printf(bp, "\n    Start Time: %lld", (long long)x->time) <= 0)
 			goto err;
 	}
 	if (x->timeout != 0L) {
