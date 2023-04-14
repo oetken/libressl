@@ -42,7 +42,6 @@ set(
 	asn1/a_digest.c
 	asn1/a_dup.c
 	asn1/a_enum.c
-	asn1/a_gentm.c
 	asn1/a_i2d_fp.c
 	asn1/a_int.c
 	asn1/a_mbstr.c
@@ -54,8 +53,8 @@ set(
 	asn1/a_strex.c
 	asn1/a_strnid.c
 	asn1/a_time.c
+	asn1/a_time_tm.c
 	asn1/a_type.c
-	asn1/a_utctm.c
 	asn1/a_utf8.c
 	asn1/a_verify.c
 	asn1/ameth_lib.c
@@ -593,6 +592,10 @@ if(NOT HAVE_STRNDUP)
 	if(NOT HAVE_STRNLEN)
 		set(CRYPTO_SRC ${CRYPTO_SRC} compat/strnlen.c)
 	endif()
+endif()
+
+if(NOT HAVE_TIMEGM)
+	set(CRYPTO_SRC ${CRYPTO_SRC} compat/timegm.c)
 endif()
 
 if(NOT HAVE_EXPLICIT_BZERO)

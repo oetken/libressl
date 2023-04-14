@@ -91,8 +91,8 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = openssl$(EXEEXT)
 @BUILD_CERTHASH_TRUE@am__append_1 = certhash.c
-@BUILD_CERTHASH_FALSE@am__append_2 = compat/certhash_win.c
-@HOST_WIN_TRUE@am__append_3 = compat/apps_win.c
+@BUILD_CERTHASH_FALSE@am__append_2 = certhash_win.c
+@HOST_WIN_TRUE@am__append_3 = apps_win.c
 @HOST_WIN_FALSE@am__append_4 = apps_posix.c
 @HAVE_POLL_FALSE@@HOST_WIN_TRUE@am__append_5 = compat/poll_win.c
 @HAVE_STRTONUM_FALSE@am__append_6 = compat/strtonum.c
@@ -121,13 +121,13 @@ am__openssl_SOURCES_DIST = apps.c asn1pars.c ca.c ciphers.c cms.c \
 	pkey.c pkeyparam.c pkeyutl.c prime.c rand.c req.c rsa.c \
 	rsautl.c s_cb.c s_client.c s_server.c s_socket.c s_time.c \
 	sess_id.c smime.c speed.c spkac.c ts.c verify.c version.c \
-	x509.c certhash.c compat/certhash_win.c compat/apps_win.c \
-	apps_posix.c compat/poll_win.c compat/strtonum.c
+	x509.c certhash.c certhash_win.c apps_win.c apps_posix.c \
+	compat/poll_win.c compat/strtonum.c
 @BUILD_CERTHASH_TRUE@am__objects_1 = certhash.$(OBJEXT)
-am__dirstamp = $(am__leading_dot)dirstamp
-@BUILD_CERTHASH_FALSE@am__objects_2 = compat/certhash_win.$(OBJEXT)
-@HOST_WIN_TRUE@am__objects_3 = compat/apps_win.$(OBJEXT)
+@BUILD_CERTHASH_FALSE@am__objects_2 = certhash_win.$(OBJEXT)
+@HOST_WIN_TRUE@am__objects_3 = apps_win.$(OBJEXT)
 @HOST_WIN_FALSE@am__objects_4 = apps_posix.$(OBJEXT)
+am__dirstamp = $(am__leading_dot)dirstamp
 @HAVE_POLL_FALSE@@HOST_WIN_TRUE@am__objects_5 =  \
 @HAVE_POLL_FALSE@@HOST_WIN_TRUE@	compat/poll_win.$(OBJEXT)
 @HAVE_STRTONUM_FALSE@am__objects_6 = compat/strtonum.$(OBJEXT)
@@ -374,8 +374,8 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat
-AM_CPPFLAGS = -DLIBRESSL_INTERNAL
+AM_CFLAGS = 
+AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/include/compat -DLIBRESSL_INTERNAL
 dist_man_MANS = openssl.1
 openssl_LDADD = $(PLATFORM_LDADD) $(PROG_LDADD) \
 	$(top_builddir)/ssl/libssl.la \
@@ -481,10 +481,6 @@ compat/$(am__dirstamp):
 compat/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) compat/$(DEPDIR)
 	@: > compat/$(DEPDIR)/$(am__dirstamp)
-compat/certhash_win.$(OBJEXT): compat/$(am__dirstamp) \
-	compat/$(DEPDIR)/$(am__dirstamp)
-compat/apps_win.$(OBJEXT): compat/$(am__dirstamp) \
-	compat/$(DEPDIR)/$(am__dirstamp)
 compat/poll_win.$(OBJEXT): compat/$(am__dirstamp) \
 	compat/$(DEPDIR)/$(am__dirstamp)
 compat/strtonum.$(OBJEXT): compat/$(am__dirstamp) \
@@ -503,9 +499,11 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apps.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apps_posix.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/apps_win.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asn1pars.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ca.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/certhash.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/certhash_win.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ciphers.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cms.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/crl.Po@am__quote@
@@ -551,8 +549,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/verify.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/version.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/x509.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/apps_win.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/certhash_win.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/poll_win.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@compat/$(DEPDIR)/strtonum.Po@am__quote@
 

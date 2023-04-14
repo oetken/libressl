@@ -1,4 +1,4 @@
-/* $OpenBSD: ssl_lib.c,v 1.111 2015/09/12 16:10:07 doug Exp $ */
+/* $OpenBSD: ssl_lib.c,v 1.115 2015/10/19 17:59:39 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -359,15 +359,10 @@ SSL_new(SSL_CTX *ctx)
 
 	CRYPTO_new_ex_data(CRYPTO_EX_INDEX_SSL, s, &s->ex_data);
 
-
 	return (s);
+
 err:
-	if (s != NULL) {
-		if (s->cert != NULL)
-			ssl_cert_free(s->cert);
-		SSL_CTX_free(s->ctx); /* decrement reference count */
-		free(s);
-	}
+	SSL_free(s);
 	SSLerr(SSL_F_SSL_NEW, ERR_R_MALLOC_FAILURE);
 	return (NULL);
 }
@@ -507,10 +502,10 @@ SSL_free(SSL *s)
 		BIO_free(s->bbio);
 		s->bbio = NULL;
 	}
-	if (s->rbio != NULL)
+
+	if (s->rbio != s->wbio)
 		BIO_free_all(s->rbio);
-	if ((s->wbio != NULL) && (s->wbio != s->rbio))
-		BIO_free_all(s->wbio);
+	BIO_free_all(s->wbio);
 
 	if (s->init_buf != NULL)
 		BUF_MEM_free(s->init_buf);
@@ -576,9 +571,10 @@ SSL_set_bio(SSL *s, BIO *rbio, BIO *wbio)
 			s->bbio->next_bio = NULL;
 		}
 	}
-	if ((s->rbio != NULL) && (s->rbio != rbio))
+
+	if (s->rbio != rbio && s->rbio != s->wbio)
 		BIO_free_all(s->rbio);
-	if ((s->wbio != NULL) && (s->wbio != wbio) && (s->rbio != s->wbio))
+	if (s->wbio != wbio)
 		BIO_free_all(s->wbio);
 	s->rbio = rbio;
 	s->wbio = wbio;
@@ -1903,9 +1899,6 @@ SSL_CTX_new(const SSL_METHOD *meth)
 	 * deployed might change this.
 	 */
 	ret->options |= SSL_OP_LEGACY_SERVER_CONNECT;
-
-	/* Disable SSLv3 by default. */
-	ret->options |= SSL_OP_NO_SSLv3;
 
 	return (ret);
 err:

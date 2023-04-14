@@ -1,4 +1,4 @@
-/* $OpenBSD: x509.c,v 1.7 2015/09/21 13:13:06 bcook Exp $ */
+/* $OpenBSD: x509.c,v 1.11 2015/10/17 07:51:10 semarie Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -198,6 +198,13 @@ x509_main(int argc, char **argv)
 	unsigned long nmflag = 0, certflag = 0;
 	const char *errstr = NULL;
 
+	if (single_execution) {
+		if (pledge("stdio rpath wpath cpath tty", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
+	}
+
 	reqfile = 0;
 
 	STDout = BIO_new_fp(stdout, BIO_NOCLOSE);
@@ -295,7 +302,7 @@ x509_main(int argc, char **argv)
 		} else if (strcmp(*argv, "-set_serial") == 0) {
 			if (--argc < 1)
 				goto bad;
-			M_ASN1_INTEGER_free(sno);
+			ASN1_INTEGER_free(sno);
 			if (!(sno = s2i_ASN1_INTEGER(NULL, *(++argv))))
 				goto bad;
 		} else if (strcmp(*argv, "-addtrust") == 0) {

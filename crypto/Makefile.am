@@ -1,8 +1,8 @@
 include $(top_srcdir)/Makefile.am.common
 
-AM_CFLAGS += -I$(top_srcdir)/crypto/asn1
-AM_CFLAGS += -I$(top_srcdir)/crypto/evp
-AM_CFLAGS += -I$(top_srcdir)/crypto/modes
+AM_CPPFLAGS += -I$(top_srcdir)/crypto/asn1
+AM_CPPFLAGS += -I$(top_srcdir)/crypto/evp
+AM_CPPFLAGS += -I$(top_srcdir)/crypto/modes
 
 lib_LTLIBRARIES = libcrypto.la
 
@@ -14,7 +14,8 @@ EXTRA_DIST += compat/strcasecmp.c
 
 libcrypto_la_LDFLAGS = -version-info @LIBCRYPTO_VERSION@ -no-undefined
 libcrypto_la_LIBADD = libcompat.la libcompatnoopt.la
-libcrypto_la_CPPFLAGS = -DLIBRESSL_INTERNAL
+libcrypto_la_CPPFLAGS = $(AM_CPPFLAGS)
+libcrypto_la_CPPFLAGS += -DLIBRESSL_INTERNAL
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_HW_PADLOCK
 if OPENSSL_NO_ASM
 libcrypto_la_CPPFLAGS += -DOPENSSL_NO_ASM
@@ -70,6 +71,10 @@ endif
 
 if !HAVE_INET_PTON
 libcompat_la_SOURCES += compat/inet_pton.c
+endif
+
+if !HAVE_TIMEGM
+libcompat_la_SOURCES += compat/timegm.c
 endif
 
 if !HAVE_REALLOCARRAY
@@ -140,7 +145,6 @@ libcrypto_la_SOURCES += asn1/a_d2i_fp.c
 libcrypto_la_SOURCES += asn1/a_digest.c
 libcrypto_la_SOURCES += asn1/a_dup.c
 libcrypto_la_SOURCES += asn1/a_enum.c
-libcrypto_la_SOURCES += asn1/a_gentm.c
 libcrypto_la_SOURCES += asn1/a_i2d_fp.c
 libcrypto_la_SOURCES += asn1/a_int.c
 libcrypto_la_SOURCES += asn1/a_mbstr.c
@@ -152,8 +156,8 @@ libcrypto_la_SOURCES += asn1/a_sign.c
 libcrypto_la_SOURCES += asn1/a_strex.c
 libcrypto_la_SOURCES += asn1/a_strnid.c
 libcrypto_la_SOURCES += asn1/a_time.c
+libcrypto_la_SOURCES += asn1/a_time_tm.c
 libcrypto_la_SOURCES += asn1/a_type.c
-libcrypto_la_SOURCES += asn1/a_utctm.c
 libcrypto_la_SOURCES += asn1/a_utf8.c
 libcrypto_la_SOURCES += asn1/a_verify.c
 libcrypto_la_SOURCES += asn1/ameth_lib.c
