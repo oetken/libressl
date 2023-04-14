@@ -1,4 +1,4 @@
-/* $OpenBSD: t1_enc.c,v 1.66 2014/07/10 08:51:15 tedu Exp $ */
+/* $OpenBSD: t1_enc.c,v 1.67 2014/07/10 10:09:54 jsing Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *

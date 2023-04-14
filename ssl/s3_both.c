@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_both.c,v 1.25 2014/06/19 21:29:51 tedu Exp $ */
+/* $OpenBSD: s3_both.c,v 1.26 2014/07/10 08:51:14 tedu Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
