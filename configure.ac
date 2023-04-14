@@ -1,4 +1,4 @@
-AC_INIT([libressl], [2.0.1])
+AC_INIT([libressl], [2.0.2])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_MACRO_DIR([m4])
@@ -16,7 +16,6 @@ case $target_os in
 	*linux*)
 		TARGET_OS=linux;
 		CFLAGS="$CFLAGS -D_BSD_SOURCE -D_POSIX_SOURCE -D_GNU_SOURCE"
-		AC_SUBST([PLATFORM_LDADD], ['-lrt'])
 		;;
 	*solaris*)
 		TARGET_OS=solaris;
@@ -32,6 +31,9 @@ esac
 AM_CONDITIONAL(TARGET_DARWIN, test x$TARGET_OS = xdarwin)
 AM_CONDITIONAL(TARGET_LINUX, test x$TARGET_OS = xlinux)
 AM_CONDITIONAL(TARGET_SOLARIS, test x$TARGET_OS = xsolaris)
+
+AC_CHECK_FUNC([clock_gettime],,
+	[AC_SEARCH_LIBS([clock_gettime],[rt posix4])])
 
 AC_PROG_CC
 AC_PROG_LIBTOOL
@@ -98,12 +100,12 @@ AC_CHECK_HEADER(sys/sysctl.h, AC_DEFINE(HAVE_SYS_SYSCTL_H))
 AC_ARG_WITH([openssldir],
 	AS_HELP_STRING([--with-openssldir], [Set the default openssl directory]),
 	AC_DEFINE_UNQUOTED(OPENSSLDIR, "$withval")
-])
+)
 
 AC_ARG_WITH([enginesdir],
 	AS_HELP_STRING([--with-enginesdir], [Set the default engines directory (use with openssldir)]),
 	AC_DEFINE_UNQUOTED(ENGINESDIR, "$withval")
-])
+)
 
 LT_INIT
 

@@ -133,7 +133,7 @@
 .\" ========================================================================
 .\"
 .IX Title "ecdsa 3"
-.TH ecdsa 3 "2014-07-13" "LibreSSL " "LibreSSL"
+.TH ecdsa 3 "2014-07-15" "LibreSSL " "LibreSSL"
 .\" For nroff, turn off justification.  Always turn off hyphenation; it makes
 .\" way too many mistakes in technical documents.
 .if n .ad l
@@ -297,7 +297,7 @@ or using \fBECDSA_sign\fR
 \& int buf_len;
 \&
 \& buf_len = ECDSA_size(eckey);
-\& buffer  = OPENSSL_malloc(buf_len);
+\& buffer  = malloc(buf_len);
 \& pp = buffer;
 \& if (!ECDSA_sign(0, dgst, dgstlen, pp, &buf_len, eckey) {
 \&        /* error */
