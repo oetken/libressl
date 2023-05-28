@@ -1,4 +1,4 @@
-/* $OpenBSD: xcbc_enc.c,v 1.10 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: xcbc_enc.c,v 1.9 2015/02/07 13:19:15 doug Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -56,7 +56,7 @@
  * [including the GNU Public Licence.]
  */
 
-#include "des_local.h"
+#include "des_locl.h"
 
 /* RSA's DESX */
 

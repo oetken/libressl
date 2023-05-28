@@ -1,4 +1,4 @@
-/* $OpenBSD: p12_mutl.c,v 1.35 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: p12_mutl.c,v 1.32 2022/08/20 09:16:18 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -68,17 +68,16 @@
 #include <openssl/hmac.h>
 #include <openssl/pkcs12.h>
 
-#include "evp_local.h"
+#include "evp_locl.h"
 #include "hmac_local.h"
 #include "pkcs12_local.h"
-#include "x509_local.h"
+#include "x509_lcl.h"
 
 int
 PKCS12_mac_present(const PKCS12 *p12)
 {
 	return p12->mac != NULL;
 }
-LCRYPTO_ALIAS(PKCS12_mac_present);
 
 void
 PKCS12_get0_mac(const ASN1_OCTET_STRING **pmac, const X509_ALGOR **pmacalg,
@@ -106,7 +105,6 @@ PKCS12_get0_mac(const ASN1_OCTET_STRING **pmac, const X509_ALGOR **pmacalg,
 	if (piter != NULL)
 		*piter = p12->mac->iter;
 }
-LCRYPTO_ALIAS(PKCS12_get0_mac);
 
 /* Generate a MAC */
 int
@@ -169,7 +167,6 @@ PKCS12_gen_mac(PKCS12 *p12, const char *pass, int passlen,
 
 	return ret;
 }
-LCRYPTO_ALIAS(PKCS12_gen_mac);
 
 /* Verify the mac */
 int
@@ -191,7 +188,6 @@ PKCS12_verify_mac(PKCS12 *p12, const char *pass, int passlen)
 		return 0;
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_verify_mac);
 
 /* Set a mac */
 
@@ -219,7 +215,6 @@ PKCS12_set_mac(PKCS12 *p12, const char *pass, int passlen, unsigned char *salt,
 	}
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_set_mac);
 
 /* Set up a mac structure */
 int
@@ -259,5 +254,4 @@ PKCS12_setup_mac(PKCS12 *p12, int iter, unsigned char *salt, int saltlen,
 
 	return 1;
 }
-LCRYPTO_ALIAS(PKCS12_setup_mac);
 #endif

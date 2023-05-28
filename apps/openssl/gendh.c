@@ -1,4 +1,4 @@
-/* $OpenBSD: gendh.c,v 1.14 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: gendh.c,v 1.12 2021/11/20 18:10:48 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -89,7 +89,7 @@ static int dh_cb(int p, int n, BN_GENCB *cb);
 static struct {
 	int g;
 	char *outfile;
-} cfg;
+} gendh_config;
 
 static const struct option gendh_options[] = {
 	{
@@ -98,21 +98,21 @@ static const struct option gendh_options[] = {
 		    "(default)",
 		.type = OPTION_VALUE,
 		.value = 2,
-		.opt.value = &cfg.g,
+		.opt.value = &gendh_config.g,
 	},
 	{
 		.name = "5",
 		.desc = "Generate DH parameters with a generator value of 5",
 		.type = OPTION_VALUE,
 		.value = 5,
-		.opt.value = &cfg.g,
+		.opt.value = &gendh_config.g,
 	},
 	{
 		.name = "out",
 		.argname = "file",
 		.desc = "Output file (default stdout)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.outfile,
+		.opt.arg = &gendh_config.outfile,
 	},
 	{ NULL },
 };
@@ -134,9 +134,11 @@ gendh_main(int argc, char **argv)
 	BIO *out = NULL;
 	char *strbits = NULL;
 
-	if (pledge("stdio cpath wpath rpath", NULL) == -1) {
-		perror("pledge");
-		exit(1);
+	if (single_execution) {
+		if (pledge("stdio cpath wpath rpath", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
 	}
 
 	if ((cb = BN_GENCB_new()) == NULL) {
@@ -146,9 +148,9 @@ gendh_main(int argc, char **argv)
 
 	BN_GENCB_set(cb, dh_cb, bio_err);
 
-	memset(&cfg, 0, sizeof(cfg));
+	memset(&gendh_config, 0, sizeof(gendh_config));
 
-	cfg.g = 2;
+	gendh_config.g = 2;
 
 	if (options_parse(argc, argv, gendh_options, &strbits, NULL) != 0) {
 		gendh_usage();
@@ -169,21 +171,21 @@ gendh_main(int argc, char **argv)
 		ERR_print_errors(bio_err);
 		goto end;
 	}
-	if (cfg.outfile == NULL) {
+	if (gendh_config.outfile == NULL) {
 		BIO_set_fp(out, stdout, BIO_NOCLOSE);
 	} else {
-		if (BIO_write_filename(out, cfg.outfile) <= 0) {
-			perror(cfg.outfile);
+		if (BIO_write_filename(out, gendh_config.outfile) <= 0) {
+			perror(gendh_config.outfile);
 			goto end;
 		}
 	}
 
 	BIO_printf(bio_err, "Generating DH parameters, %d bit long safe prime,"
-	    " generator %d\n", numbits, cfg.g);
+	    " generator %d\n", numbits, gendh_config.g);
 	BIO_printf(bio_err, "This is going to take a long time\n");
 
 	if (((dh = DH_new()) == NULL) ||
-	    !DH_generate_parameters_ex(dh, numbits, cfg.g, cb))
+	    !DH_generate_parameters_ex(dh, numbits, gendh_config.g, cb))
 		goto end;
 
 	if (!PEM_write_bio_DHparams(out, dh))

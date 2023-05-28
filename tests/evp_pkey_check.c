@@ -1,4 +1,4 @@
-/*	$OpenBSD: evp_pkey_check.c,v 1.4 2023/03/02 20:18:40 tb Exp $ */
+/*	$OpenBSD: evp_pkey_check.c,v 1.2 2022/01/11 19:27:35 tb Exp $ */
 /*
  * Copyright (c) 2021-2022 Theo Buehler <tb@openbsd.org>
  *
@@ -130,11 +130,14 @@ evp_pkey_check_rsa(void)
 		fail_soft = 1;
 	}
 
-	if (ERR_peek_error() == 0) {
-		fprintf(stderr, "%s: expected some RSA errors\n", __func__);
-		fail_soft = 1;
-	}
+	/*
+	 * Spew some garbage to stderr.
+	 */
+
+	fprintf(stderr, "We should see some errors about RSA d:\n");
+	ERR_print_errors_fp(stderr);
 	ERR_clear_error();
+	fprintf(stderr, "EVP_PKEY_check test for RSA done.\n");
 
 	failed = 0;
 
@@ -269,10 +272,12 @@ evp_pkey_check_ec(void)
 		fail_soft = 1;
 	}
 
-	if (ERR_peek_error() == 0) {
-		fprintf(stderr, "%s: expected a private key error\n", __func__);
-		fail_soft = 1;
-	}
+	/*
+	 * Spew some garbage to stderr.
+	 */
+
+	fprintf(stderr, "We should see an error about the EC private key:\n");
+	ERR_print_errors_fp(stderr);
 	ERR_clear_error();
 
 	/* EVP_PKEY_public_check checks the private key (sigh), so we fail. */
@@ -368,11 +373,11 @@ evp_pkey_check_ec(void)
 		fail_soft = 1;
 	}
 
-	if (ERR_peek_error() == 0) {
-		fprintf(stderr, "%s: expected a group order error\n", __func__);
-		fail_soft = 1;
-	}
+	fprintf(stderr, "We should see an error on invalid group order\n");
+	ERR_print_errors_fp(stderr);
 	ERR_clear_error();
+
+	fprintf(stderr, "EVP_PKEY_check test for EC done.\n");
 
 	failed = 0;
 
@@ -392,6 +397,8 @@ main(void)
 
 	failed |= evp_pkey_check_rsa();
 	failed |= evp_pkey_check_ec();
+
+	printf("%s\n", failed ? "FAILED" : "SUCCESS");
 
 	return failed;
 }

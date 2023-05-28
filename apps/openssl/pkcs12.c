@@ -1,4 +1,4 @@
-/* $OpenBSD: pkcs12.c,v 1.25 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: pkcs12.c,v 1.23 2022/09/14 16:31:36 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -118,16 +118,16 @@ static struct {
 	char *passargin;
 	char *passargout;
 	int twopass;
-} cfg;
+} pkcs12_config;
 
 static int
 pkcs12_opt_canames(char *arg)
 {
-	if (cfg.canames == NULL &&
-	    (cfg.canames = sk_OPENSSL_STRING_new_null()) == NULL)
+	if (pkcs12_config.canames == NULL &&
+	    (pkcs12_config.canames = sk_OPENSSL_STRING_new_null()) == NULL)
 		return (1);
 
-	if (!sk_OPENSSL_STRING_push(cfg.canames, arg))
+	if (!sk_OPENSSL_STRING_push(pkcs12_config.canames, arg))
 		return (1);
 
 	return (0);
@@ -136,20 +136,20 @@ pkcs12_opt_canames(char *arg)
 static int
 pkcs12_opt_cert_pbe(char *arg)
 {
-	return (!set_pbe(bio_err, &cfg.cert_pbe, arg));
+	return (!set_pbe(bio_err, &pkcs12_config.cert_pbe, arg));
 }
 
 static int
 pkcs12_opt_key_pbe(char *arg)
 {
-	return (!set_pbe(bio_err, &cfg.key_pbe, arg));
+	return (!set_pbe(bio_err, &pkcs12_config.key_pbe, arg));
 }
 
 static int
 pkcs12_opt_passarg(char *arg)
 {
-	cfg.passarg = arg;
-	cfg.noprompt = 1;
+	pkcs12_config.passarg = arg;
+	pkcs12_config.noprompt = 1;
 	return (0);
 }
 
@@ -196,8 +196,8 @@ pkcs12_opt_enc(int argc, char **argv, int *argsused)
 		return (1);
 
 	if (strcmp(name, "nodes") == 0)
-		cfg.enc = NULL;
-	else if ((cfg.enc = get_cipher_by_name(name)) == NULL)
+		pkcs12_config.enc = NULL;
+	else if ((pkcs12_config.enc = get_cipher_by_name(name)) == NULL)
 		return (1);
 
 	*argsused = 1;
@@ -269,7 +269,7 @@ static const struct option pkcs12_options[] = {
 		.name = "cacerts",
 		.desc = "Only output CA certificates",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = CACERTS,
 	},
 	{
@@ -277,7 +277,7 @@ static const struct option pkcs12_options[] = {
 		.argname = "file",
 		.desc = "PEM format file of CA certificates",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.CAfile,
+		.opt.arg = &pkcs12_config.CAfile,
 	},
 	{
 		.name = "caname",
@@ -291,14 +291,14 @@ static const struct option pkcs12_options[] = {
 		.argname = "directory",
 		.desc = "PEM format directory of CA certificates",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.CApath,
+		.opt.arg = &pkcs12_config.CApath,
 	},
 	{
 		.name = "certfile",
 		.argname = "file",
 		.desc = "Add all certs in file",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.certfile,
+		.opt.arg = &pkcs12_config.certfile,
 	},
 	{
 		.name = "certpbe",
@@ -311,13 +311,13 @@ static const struct option pkcs12_options[] = {
 		.name = "chain",
 		.desc = "Add certificate chain",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.chain,
+		.opt.flag = &pkcs12_config.chain,
 	},
 	{
 		.name = "clcerts",
 		.desc = "Only output client certificates",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = CLCERTS,
 	},
 	{
@@ -325,33 +325,33 @@ static const struct option pkcs12_options[] = {
 		.argname = "name",
 		.desc = "Microsoft CSP name",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.csp_name,
+		.opt.arg = &pkcs12_config.csp_name,
 	},
 	{
 		.name = "descert",
 		.desc = "Encrypt PKCS#12 certificates with triple DES (default RC2-40)",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.cert_pbe,
+		.opt.value = &pkcs12_config.cert_pbe,
 		.value = NID_pbe_WithSHA1And3_Key_TripleDES_CBC,
 	},
 	{
 		.name = "export",
 		.desc = "Output PKCS#12 file",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.export_cert,
+		.opt.flag = &pkcs12_config.export_cert,
 	},
 	{
 		.name = "in",
 		.argname = "file",
 		.desc = "Input filename",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.infile,
+		.opt.arg = &pkcs12_config.infile,
 	},
 	{
 		.name = "info",
 		.desc = "Give info about PKCS#12 structure",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = INFO,
 	},
 	{
@@ -359,13 +359,13 @@ static const struct option pkcs12_options[] = {
 		.argname = "file",
 		.desc = "Private key if not infile",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.keyname,
+		.opt.arg = &pkcs12_config.keyname,
 	},
 	{
 		.name = "keyex",
 		.desc = "Set MS key exchange type",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.keytype,
+		.opt.value = &pkcs12_config.keytype,
 		.value = KEY_EX,
 	},
 	{
@@ -379,27 +379,27 @@ static const struct option pkcs12_options[] = {
 		.name = "keysig",
 		.desc = "Set MS key signature type",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.keytype,
+		.opt.value = &pkcs12_config.keytype,
 		.value = KEY_SIG,
 	},
 	{
 		.name = "LMK",
 		.desc = "Add local machine keyset attribute to private key",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.add_lmk,
+		.opt.flag = &pkcs12_config.add_lmk,
 	},
 	{
 		.name = "macalg",
 		.argname = "alg",
 		.desc = "Digest algorithm used in MAC (default SHA1)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.macalg,
+		.opt.arg = &pkcs12_config.macalg,
 	},
 	{
 		.name = "maciter",
 		.desc = "Use MAC iteration",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.maciter,
+		.opt.value = &pkcs12_config.maciter,
 		.value = PKCS12_DEFAULT_ITER,
 	},
 	{
@@ -407,13 +407,13 @@ static const struct option pkcs12_options[] = {
 		.argname = "name",
 		.desc = "Use name as friendly name",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.name,
+		.opt.arg = &pkcs12_config.name,
 	},
 	{
 		.name = "nocerts",
 		.desc = "Don't output certificates",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = NOCERTS,
 	},
 	{
@@ -426,42 +426,42 @@ static const struct option pkcs12_options[] = {
 		.name = "noiter",
 		.desc = "Don't use encryption iteration",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.iter,
+		.opt.value = &pkcs12_config.iter,
 		.value = 1,
 	},
 	{
 		.name = "nokeys",
 		.desc = "Don't output private keys",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = NOKEYS,
 	},
 	{
 		.name = "nomac",
 		.desc = "Don't generate MAC",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.maciter,
+		.opt.value = &pkcs12_config.maciter,
 		.value = -1,
 	},
 	{
 		.name = "nomaciter",
 		.desc = "Don't use MAC iteration",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.maciter,
+		.opt.value = &pkcs12_config.maciter,
 		.value = 1,
 	},
 	{
 		.name = "nomacver",
 		.desc = "Don't verify MAC",
 		.type = OPTION_VALUE,
-		.opt.value = &cfg.macver,
+		.opt.value = &pkcs12_config.macver,
 		.value = 0,
 	},
 	{
 		.name = "noout",
 		.desc = "Don't output anything, just verify",
 		.type = OPTION_VALUE_OR,
-		.opt.value = &cfg.options,
+		.opt.value = &pkcs12_config.options,
 		.value = (NOKEYS | NOCERTS),
 	},
 	{
@@ -469,21 +469,21 @@ static const struct option pkcs12_options[] = {
 		.argname = "file",
 		.desc = "Output filename",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.outfile,
+		.opt.arg = &pkcs12_config.outfile,
 	},
 	{
 		.name = "passin",
 		.argname = "arg",
 		.desc = "Input file passphrase source",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.passargin,
+		.opt.arg = &pkcs12_config.passargin,
 	},
 	{
 		.name = "passout",
 		.argname = "arg",
 		.desc = "Output file passphrase source",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.passargout,
+		.opt.arg = &pkcs12_config.passargout,
 	},
 	{
 		.name = "password",
@@ -496,7 +496,7 @@ static const struct option pkcs12_options[] = {
 		.name = "twopass",
 		.desc = "Separate MAC, encryption passwords",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.twopass,
+		.opt.flag = &pkcs12_config.twopass,
 	},
 	{ NULL },
 };
@@ -536,78 +536,80 @@ pkcs12_main(int argc, char **argv)
 	char *cpass = NULL, *mpass = NULL;
 	char *passin = NULL, *passout = NULL;
 
-	if (pledge("stdio cpath wpath rpath tty", NULL) == -1) {
-		perror("pledge");
-		exit(1);
+	if (single_execution) {
+		if (pledge("stdio cpath wpath rpath tty", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
 	}
 
-	memset(&cfg, 0, sizeof(cfg));
-	cfg.cert_pbe = NID_pbe_WithSHA1And40BitRC2_CBC;
-	cfg.enc = EVP_des_ede3_cbc();
-	cfg.iter = PKCS12_DEFAULT_ITER;
-	cfg.key_pbe = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;
-	cfg.maciter = PKCS12_DEFAULT_ITER;
-	cfg.macver = 1;
+	memset(&pkcs12_config, 0, sizeof(pkcs12_config));
+	pkcs12_config.cert_pbe = NID_pbe_WithSHA1And40BitRC2_CBC;
+	pkcs12_config.enc = EVP_des_ede3_cbc();
+	pkcs12_config.iter = PKCS12_DEFAULT_ITER;
+	pkcs12_config.key_pbe = NID_pbe_WithSHA1And3_Key_TripleDES_CBC;
+	pkcs12_config.maciter = PKCS12_DEFAULT_ITER;
+	pkcs12_config.macver = 1;
 
 	if (options_parse(argc, argv, pkcs12_options, NULL, NULL) != 0) {
 		pkcs12_usage();
 		goto end;
 	}
 
-	if (cfg.passarg != NULL) {
-		if (cfg.export_cert)
-			cfg.passargout = cfg.passarg;
+	if (pkcs12_config.passarg != NULL) {
+		if (pkcs12_config.export_cert)
+			pkcs12_config.passargout = pkcs12_config.passarg;
 		else
-			cfg.passargin = cfg.passarg;
+			pkcs12_config.passargin = pkcs12_config.passarg;
 	}
-	if (!app_passwd(bio_err, cfg.passargin,
-	    cfg.passargout, &passin, &passout)) {
+	if (!app_passwd(bio_err, pkcs12_config.passargin,
+	    pkcs12_config.passargout, &passin, &passout)) {
 		BIO_printf(bio_err, "Error getting passwords\n");
 		goto end;
 	}
 	if (cpass == NULL) {
-		if (cfg.export_cert)
+		if (pkcs12_config.export_cert)
 			cpass = passout;
 		else
 			cpass = passin;
 	}
 	if (cpass != NULL) {
 		mpass = cpass;
-		cfg.noprompt = 1;
+		pkcs12_config.noprompt = 1;
 	} else {
 		cpass = pass;
 		mpass = macpass;
 	}
 
-	if (cfg.infile == NULL)
+	if (pkcs12_config.infile == NULL)
 		in = BIO_new_fp(stdin, BIO_NOCLOSE);
 	else
-		in = BIO_new_file(cfg.infile, "rb");
+		in = BIO_new_file(pkcs12_config.infile, "rb");
 	if (in == NULL) {
 		BIO_printf(bio_err, "Error opening input file %s\n",
-		    cfg.infile ? cfg.infile : "<stdin>");
-		perror(cfg.infile);
+		    pkcs12_config.infile ? pkcs12_config.infile : "<stdin>");
+		perror(pkcs12_config.infile);
 		goto end;
 	}
 
-	if (cfg.outfile == NULL) {
+	if (pkcs12_config.outfile == NULL) {
 		out = BIO_new_fp(stdout, BIO_NOCLOSE);
 	} else
-		out = BIO_new_file(cfg.outfile, "wb");
+		out = BIO_new_file(pkcs12_config.outfile, "wb");
 	if (out == NULL) {
 		BIO_printf(bio_err, "Error opening output file %s\n",
-		    cfg.outfile ? cfg.outfile : "<stdout>");
-		perror(cfg.outfile);
+		    pkcs12_config.outfile ? pkcs12_config.outfile : "<stdout>");
+		perror(pkcs12_config.outfile);
 		goto end;
 	}
-	if (cfg.twopass) {
+	if (pkcs12_config.twopass) {
 		if (EVP_read_pw_string(macpass, sizeof macpass,
-		    "Enter MAC Password:", cfg.export_cert)) {
+		    "Enter MAC Password:", pkcs12_config.export_cert)) {
 			BIO_printf(bio_err, "Can't read Password\n");
 			goto end;
 		}
 	}
-	if (cfg.export_cert) {
+	if (pkcs12_config.export_cert) {
 		EVP_PKEY *key = NULL;
 		X509 *ucert = NULL, *x = NULL;
 		STACK_OF(X509) *certs = NULL;
@@ -615,25 +617,25 @@ pkcs12_main(int argc, char **argv)
 		unsigned char *catmp = NULL;
 		int i;
 
-		if ((cfg.options & (NOCERTS | NOKEYS)) ==
+		if ((pkcs12_config.options & (NOCERTS | NOKEYS)) ==
 		    (NOCERTS | NOKEYS)) {
 			BIO_printf(bio_err, "Nothing to do!\n");
 			goto export_end;
 		}
-		if (cfg.options & NOCERTS)
-			cfg.chain = 0;
+		if (pkcs12_config.options & NOCERTS)
+			pkcs12_config.chain = 0;
 
-		if (!(cfg.options & NOKEYS)) {
-			key = load_key(bio_err, cfg.keyname ?
-			    cfg.keyname : cfg.infile,
+		if (!(pkcs12_config.options & NOKEYS)) {
+			key = load_key(bio_err, pkcs12_config.keyname ?
+			    pkcs12_config.keyname : pkcs12_config.infile,
 			    FORMAT_PEM, 1, passin, "private key");
 			if (!key)
 				goto export_end;
 		}
 
 		/* Load in all certs in input file */
-		if (!(cfg.options & NOCERTS)) {
-			certs = load_certs(bio_err, cfg.infile,
+		if (!(pkcs12_config.options & NOCERTS)) {
+			certs = load_certs(bio_err, pkcs12_config.infile,
 			    FORMAT_PEM, NULL, "certificates");
 			if (certs == NULL)
 				goto export_end;
@@ -661,10 +663,10 @@ pkcs12_main(int argc, char **argv)
 		}
 
 		/* Add any more certificates asked for */
-		if (cfg.certfile != NULL) {
+		if (pkcs12_config.certfile != NULL) {
 			STACK_OF(X509) *morecerts = NULL;
 			if ((morecerts = load_certs(bio_err,
-			    cfg.certfile, FORMAT_PEM, NULL,
+			    pkcs12_config.certfile, FORMAT_PEM, NULL,
 			    "certificates from certfile")) == NULL)
 				goto export_end;
 			while (sk_X509_num(morecerts) > 0)
@@ -674,7 +676,7 @@ pkcs12_main(int argc, char **argv)
 
 
 		/* If chaining get chain from user cert */
-		if (cfg.chain) {
+		if (pkcs12_config.chain) {
 			int vret;
 			STACK_OF(X509) *chain2;
 			X509_STORE *store = X509_STORE_new();
@@ -684,7 +686,7 @@ pkcs12_main(int argc, char **argv)
 				goto export_end;
 			}
 			if (!X509_STORE_load_locations(store,
-			    cfg.CAfile, cfg.CApath))
+			    pkcs12_config.CAfile, pkcs12_config.CApath))
 				X509_STORE_set_default_paths(store);
 
 			vret = get_cert_chain(ucert, store, &chain2);
@@ -711,51 +713,51 @@ pkcs12_main(int argc, char **argv)
 		}
 		/* Add any CA names */
 
-		for (i = 0; i < sk_OPENSSL_STRING_num(cfg.canames);
+		for (i = 0; i < sk_OPENSSL_STRING_num(pkcs12_config.canames);
 		    i++) {
 			catmp = (unsigned char *) sk_OPENSSL_STRING_value(
-			    cfg.canames, i);
+			    pkcs12_config.canames, i);
 			X509_alias_set1(sk_X509_value(certs, i), catmp, -1);
 		}
 
-		if (cfg.csp_name != NULL && key != NULL)
+		if (pkcs12_config.csp_name != NULL && key != NULL)
 			EVP_PKEY_add1_attr_by_NID(key, NID_ms_csp_name,
 			    MBSTRING_ASC,
-			    (unsigned char *) cfg.csp_name, -1);
+			    (unsigned char *) pkcs12_config.csp_name, -1);
 
-		if (cfg.add_lmk && key != NULL)
+		if (pkcs12_config.add_lmk && key != NULL)
 			EVP_PKEY_add1_attr_by_NID(key, NID_LocalKeySet, 0, NULL,
 			    -1);
 
-		if (!cfg.noprompt &&
+		if (!pkcs12_config.noprompt &&
 		    EVP_read_pw_string(pass, sizeof pass,
 		    "Enter Export Password:", 1)) {
 			BIO_printf(bio_err, "Can't read Password\n");
 			goto export_end;
 		}
-		if (!cfg.twopass)
+		if (!pkcs12_config.twopass)
 			strlcpy(macpass, pass, sizeof macpass);
 
 
-		p12 = PKCS12_create(cpass, cfg.name, key, ucert,
-		    certs, cfg.key_pbe, cfg.cert_pbe,
-		    cfg.iter, -1, cfg.keytype);
+		p12 = PKCS12_create(cpass, pkcs12_config.name, key, ucert,
+		    certs, pkcs12_config.key_pbe, pkcs12_config.cert_pbe,
+		    pkcs12_config.iter, -1, pkcs12_config.keytype);
 
 		if (p12 == NULL) {
 			ERR_print_errors(bio_err);
 			goto export_end;
 		}
-		if (cfg.macalg != NULL) {
-			macmd = EVP_get_digestbyname(cfg.macalg);
+		if (pkcs12_config.macalg != NULL) {
+			macmd = EVP_get_digestbyname(pkcs12_config.macalg);
 			if (macmd == NULL) {
 				BIO_printf(bio_err,
 				    "Unknown digest algorithm %s\n",
-				    cfg.macalg);
+				    pkcs12_config.macalg);
 			}
 		}
-		if (cfg.maciter != -1)
+		if (pkcs12_config.maciter != -1)
 			PKCS12_set_mac(p12, mpass, -1, NULL, 0,
-			    cfg.maciter, macmd);
+			    pkcs12_config.maciter, macmd);
 
 		i2d_PKCS12_bio(out, p12);
 
@@ -773,27 +775,27 @@ pkcs12_main(int argc, char **argv)
 		ERR_print_errors(bio_err);
 		goto end;
 	}
-	if (!cfg.noprompt && EVP_read_pw_string(pass, sizeof pass,
+	if (!pkcs12_config.noprompt && EVP_read_pw_string(pass, sizeof pass,
 	    "Enter Import Password:", 0)) {
 		BIO_printf(bio_err, "Can't read Password\n");
 		goto end;
 	}
 
-	if (!cfg.twopass)
+	if (!pkcs12_config.twopass)
 		strlcpy(macpass, pass, sizeof macpass);
 
-	if ((cfg.options & INFO) != 0 && PKCS12_mac_present(p12)) {
+	if ((pkcs12_config.options & INFO) != 0 && PKCS12_mac_present(p12)) {
 		const ASN1_INTEGER *iter;
 
 		PKCS12_get0_mac(NULL, NULL, NULL, &iter, p12);
 		BIO_printf(bio_err, "MAC Iteration %ld\n",
 		    iter != NULL ? ASN1_INTEGER_get(iter) : 1);
 	}
-	if (cfg.macver) {
+	if (pkcs12_config.macver) {
 		/* If we enter empty password try no password first */
 		if (!mpass[0] && PKCS12_verify_mac(p12, NULL, 0)) {
 			/* If mac and crypto pass the same set it to NULL too */
-			if (!cfg.twopass)
+			if (!pkcs12_config.twopass)
 				cpass = NULL;
 		} else if (!PKCS12_verify_mac(p12, mpass, -1)) {
 			BIO_printf(bio_err,
@@ -803,7 +805,7 @@ pkcs12_main(int argc, char **argv)
 		}
 		BIO_printf(bio_err, "MAC verified OK\n");
 	}
-	if (!dump_certs_keys_p12(out, p12, cpass, -1, cfg.options,
+	if (!dump_certs_keys_p12(out, p12, cpass, -1, pkcs12_config.options,
 	    passout)) {
 		BIO_printf(bio_err, "Error outputting keys and certificates\n");
 		ERR_print_errors(bio_err);
@@ -814,7 +816,7 @@ pkcs12_main(int argc, char **argv)
 	PKCS12_free(p12);
 	BIO_free(in);
 	BIO_free_all(out);
-	sk_OPENSSL_STRING_free(cfg.canames);
+	sk_OPENSSL_STRING_free(pkcs12_config.canames);
 	free(passin);
 	free(passout);
 
@@ -907,7 +909,7 @@ dump_certs_pkeys_bag(BIO *out, PKCS12_SAFEBAG *bag, char *pass, int passlen,
 		if ((pkey = EVP_PKCS82PKEY(p8)) == NULL)
 			return 0;
 		print_attribs(out, PKCS8_pkey_get0_attrs(p8), "Key Attributes");
-		PEM_write_bio_PrivateKey(out, pkey, cfg.enc, NULL, 0,
+		PEM_write_bio_PrivateKey(out, pkey, pkcs12_config.enc, NULL, 0,
 		    NULL, pempass);
 		EVP_PKEY_free(pkey);
 		break;
@@ -938,7 +940,7 @@ dump_certs_pkeys_bag(BIO *out, PKCS12_SAFEBAG *bag, char *pass, int passlen,
 		}
 		print_attribs(out, PKCS8_pkey_get0_attrs(p8), "Key Attributes");
 		PKCS8_PRIV_KEY_INFO_free(p8);
-		PEM_write_bio_PrivateKey(out, pkey, cfg.enc, NULL, 0,
+		PEM_write_bio_PrivateKey(out, pkey, pkcs12_config.enc, NULL, 0,
 		    NULL, pempass);
 		EVP_PKEY_free(pkey);
 		break;

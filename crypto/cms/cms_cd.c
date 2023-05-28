@@ -1,4 +1,4 @@
-/* $OpenBSD: cms_cd.c,v 1.16 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: cms_cd.c,v 1.15 2019/08/11 11:04:18 jsing Exp $ */
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -60,7 +60,7 @@
 #include <openssl/cms.h>
 #include <openssl/bio.h>
 #include <openssl/comp.h>
-#include "cms_local.h"
+#include "cms_lcl.h"
 
 #ifdef ZLIB
 

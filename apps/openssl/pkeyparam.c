@@ -1,4 +1,4 @@
-/* $OpenBSD: pkeyparam.c,v 1.17 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: pkeyparam.c,v 1.14 2022/01/14 10:17:30 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006
  */
@@ -65,46 +65,46 @@
 #include <openssl/evp.h>
 #include <openssl/pem.h>
 
-static struct {
+struct {
 	int check;
 	char *infile;
 	int noout;
 	char *outfile;
 	int text;
-} cfg;
+} pkeyparam_config;
 
 static const struct option pkeyparam_options[] = {
 	{
 		.name = "check",
 		.desc = "Check validity of key parameters",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.check,
+		.opt.flag = &pkeyparam_config.check,
 	},
 	{
 		.name = "in",
 		.argname = "file",
 		.desc = "Input file (default stdin)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.infile,
+		.opt.arg = &pkeyparam_config.infile,
 	},
 	{
 		.name = "noout",
 		.desc = "Do not print encoded version of the parameters",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.noout,
+		.opt.flag = &pkeyparam_config.noout,
 	},
 	{
 		.name = "out",
 		.argname = "file",
 		.desc = "Output file (default stdout)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.outfile,
+		.opt.arg = &pkeyparam_config.outfile,
 	},
 	{
 		.name = "text",
 		.desc = "Print out the parameters in plain text",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.text,
+		.opt.flag = &pkeyparam_config.text,
 	},
 	{ NULL },
 };
@@ -125,31 +125,33 @@ pkeyparam_main(int argc, char **argv)
 	EVP_PKEY *pkey = NULL;
 	int ret = 1;
 
-	if (pledge("stdio cpath wpath rpath", NULL) == -1) {
-		perror("pledge");
-		exit(1);
+	if (single_execution) {
+		if (pledge("stdio cpath wpath rpath", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
 	}
 
-	memset(&cfg, 0, sizeof(cfg));
+	memset(&pkeyparam_config, 0, sizeof(pkeyparam_config));
 
 	if (options_parse(argc, argv, pkeyparam_options, NULL, NULL) != 0) {
 		pkeyparam_usage();
 		return (1);
 	}
 
-	if (cfg.infile) {
-		if (!(in = BIO_new_file(cfg.infile, "r"))) {
+	if (pkeyparam_config.infile) {
+		if (!(in = BIO_new_file(pkeyparam_config.infile, "r"))) {
 			BIO_printf(bio_err, "Can't open input file %s\n",
-			    cfg.infile);
+			    pkeyparam_config.infile);
 			goto end;
 		}
 	} else
 		in = BIO_new_fp(stdin, BIO_NOCLOSE);
 
-	if (cfg.outfile) {
-		if (!(out = BIO_new_file(cfg.outfile, "w"))) {
+	if (pkeyparam_config.outfile) {
+		if (!(out = BIO_new_file(pkeyparam_config.outfile, "w"))) {
 			BIO_printf(bio_err, "Can't open output file %s\n",
-			    cfg.outfile);
+			    pkeyparam_config.outfile);
 			goto end;
 		}
 	} else {
@@ -163,15 +165,15 @@ pkeyparam_main(int argc, char **argv)
 		goto end;
 	}
 
-	if (cfg.check) {
+	if (pkeyparam_config.check) {
 		if (!pkey_check(out, pkey, EVP_PKEY_param_check, "Parameters"))
 			goto end;
 	}
 
-	if (!cfg.noout)
+	if (!pkeyparam_config.noout)
 		PEM_write_bio_Parameters(out, pkey);
 
-	if (cfg.text)
+	if (pkeyparam_config.text)
 		EVP_PKEY_print_params(out, pkey, 0, NULL);
 
 	ret = 0;

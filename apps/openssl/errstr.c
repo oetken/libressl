@@ -1,4 +1,4 @@
-/* $OpenBSD: errstr.c,v 1.10 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: errstr.c,v 1.7 2019/07/14 03:30:45 guenther Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -68,16 +68,16 @@
 #include <openssl/lhash.h>
 #include <openssl/ssl.h>
 
-static struct {
+struct {
 	int stats;
-} cfg;
+} errstr_config;
 
 static const struct option errstr_options[] = {
 	{
 		.name = "stats",
 		.desc = "Print debugging statistics for the hash table",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.stats,
+		.opt.flag = &errstr_config.stats,
 	},
 	{ NULL },
 };
@@ -98,19 +98,21 @@ errstr_main(int argc, char **argv)
 	char buf[256];
 	int ret = 0;
 
-	if (pledge("stdio rpath", NULL) == -1) {
-		perror("pledge");
-		exit(1);
+	if (single_execution) {
+		if (pledge("stdio rpath", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
 	}
 
-	memset(&cfg, 0, sizeof(cfg));
+	memset(&errstr_config, 0, sizeof(errstr_config));
 
 	if (options_parse(argc, argv, errstr_options, NULL, &argsused) != 0) {
 		errstr_usage();
 		return (1);
 	}
 
-	if (cfg.stats) {
+	if (errstr_config.stats) {
 		BIO *out;
 
 		if ((out = BIO_new_fp(stdout, BIO_NOCLOSE)) == NULL) {

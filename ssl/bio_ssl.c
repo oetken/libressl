@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_ssl.c,v 1.38 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: bio_ssl.c,v 1.33 2022/01/14 09:12:53 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -67,7 +67,7 @@
 #include <openssl/ssl.h>
 
 #include "bio_local.h"
-#include "ssl_local.h"
+#include "ssl_locl.h"
 
 static int ssl_write(BIO *h, const char *buf, int num);
 static int ssl_read(BIO *h, char *buf, int size);
@@ -103,7 +103,6 @@ BIO_f_ssl(void)
 {
 	return (&methods_sslp);
 }
-LSSL_ALIAS(BIO_f_ssl);
 
 static int
 ssl_new(BIO *bi)
@@ -295,9 +294,11 @@ ssl_ctrl(BIO *b, int cmd, long num, void *ptr)
 	case BIO_CTRL_RESET:
 		SSL_shutdown(ssl);
 
-		if (ssl->handshake_func == ssl->method->ssl_connect)
+		if (ssl->internal->handshake_func ==
+		    ssl->method->ssl_connect)
 			SSL_set_connect_state(ssl);
-		else if (ssl->handshake_func == ssl->method->ssl_accept)
+		else if (ssl->internal->handshake_func ==
+		    ssl->method->ssl_accept)
 			SSL_set_accept_state(ssl);
 
 		SSL_clear(ssl);
@@ -533,7 +534,6 @@ BIO_new_ssl_connect(SSL_CTX *ctx)
 	BIO_free(ssl);
 	return (NULL);
 }
-LSSL_ALIAS(BIO_new_ssl_connect);
 
 BIO *
 BIO_new_ssl(SSL_CTX *ctx, int client)
@@ -558,7 +558,6 @@ BIO_new_ssl(SSL_CTX *ctx, int client)
 	BIO_free(ret);
 	return (NULL);
 }
-LSSL_ALIAS(BIO_new_ssl);
 
 int
 BIO_ssl_copy_session_id(BIO *t, BIO *f)

@@ -1,4 +1,4 @@
-/* $OpenBSD: fcrypt_b.c,v 1.10 2022/11/26 16:08:51 tb Exp $ */
+/* $OpenBSD: fcrypt_b.c,v 1.9 2014/10/28 07:35:58 jsg Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -65,7 +65,7 @@
  */
 
 #define DES_FCRYPT
-#include "des_local.h"
+#include "des_locl.h"
 #undef DES_FCRYPT
 
 #ifndef OPENBSD_DES_ASM

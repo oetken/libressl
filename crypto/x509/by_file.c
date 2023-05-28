@@ -1,4 +1,4 @@
-/* $OpenBSD: by_file.c,v 1.28 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: by_file.c,v 1.25 2021/11/10 13:57:42 schwarze Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,7 +66,7 @@
 #include <openssl/pem.h>
 #include <openssl/x509.h>
 
-#include "x509_local.h"
+#include "x509_lcl.h"
 
 static int by_file_ctrl(X509_LOOKUP *ctx, int cmd, const char *argc,
     long argl, char **ret);
@@ -89,7 +89,6 @@ X509_LOOKUP_file(void)
 {
 	return &x509_file_lookup;
 }
-LCRYPTO_ALIAS(X509_LOOKUP_file);
 
 static int
 by_file_ctrl(X509_LOOKUP *ctx, int cmd, const char *argp, long argl,
@@ -174,7 +173,6 @@ err:
 	BIO_free(in);
 	return ret;
 }
-LCRYPTO_ALIAS(X509_load_cert_file);
 
 int
 X509_load_crl_file(X509_LOOKUP *ctx, const char *file, int type)
@@ -231,7 +229,6 @@ err:
 	BIO_free(in);
 	return ret;
 }
-LCRYPTO_ALIAS(X509_load_crl_file);
 
 int
 X509_load_cert_crl_file(X509_LOOKUP *ctx, const char *file, int type)
@@ -270,4 +267,4 @@ X509_load_cert_crl_file(X509_LOOKUP *ctx, const char *file, int type)
 	sk_X509_INFO_pop_free(inf, X509_INFO_free);
 	return count;
 }
-LCRYPTO_ALIAS(X509_load_cert_crl_file);
+

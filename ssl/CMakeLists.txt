@@ -65,7 +65,6 @@ add_library(ssl_obj OBJECT ${SSL_SRC})
 target_include_directories(ssl_obj
 	PRIVATE
 		.
-		hidden
 		../crypto/bio
 		../include/compat
 	PUBLIC
@@ -80,7 +79,7 @@ target_include_directories(bs_obj
 if(BUILD_SHARED_LIBS)
 	add_library(ssl $<TARGET_OBJECTS:ssl_obj> $<TARGET_OBJECTS:bs_obj>)
 else()
-	add_library(ssl $<TARGET_OBJECTS:ssl_obj> empty.c)
+	add_library(ssl $<TARGET_OBJECTS:ssl_obj>)
 endif()
 
 export_symbol(ssl ${CMAKE_CURRENT_SOURCE_DIR}/ssl.sym)

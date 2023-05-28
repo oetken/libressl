@@ -1,4 +1,4 @@
-/* $OpenBSD: b_sock.c,v 1.70 2022/12/22 20:13:45 schwarze Exp $ */
+/* $OpenBSD: b_sock.c,v 1.69 2018/02/07 00:52:05 bluhm Exp $ */
 /*
  * Copyright (c) 2017 Bob Beck <beck@openbsd.org>
  *
@@ -47,7 +47,6 @@ BIO_get_host_ip(const char *str, unsigned char *ip)
 	int error;
 
 	if (str == NULL) {
-		BIOerror(BIO_R_BAD_HOSTNAME_LOOKUP);
 		ERR_asprintf_error_data("NULL host provided");
 		return (0);
 	}
@@ -80,7 +79,6 @@ BIO_get_port(const char *str, unsigned short *port_ptr)
 	}
 
 	if ((error = getaddrinfo(NULL, str, &hints, &res)) != 0) {
-		BIOerror(BIO_R_INVALID_ARGUMENT);
 		ERR_asprintf_error_data("getaddrinfo: service='%s' : %s'", str,
 		    gai_strerror(error));
 		return (0);
@@ -131,14 +129,8 @@ BIO_get_accept_socket(char *host, int bind_mode)
 	char *h, *p, *str = NULL;
 	int error, ret = 0, s = -1;
 
-	if (host == NULL) {
-		BIOerror(BIO_R_NO_PORT_SPECIFIED);
+	if (host == NULL || (str = strdup(host)) == NULL)
 		return (-1);
-	}
-	if ((str = strdup(host)) == NULL) {
-		BIOerror(ERR_R_MALLOC_FAILURE);
-		return (-1);
-	}
 	p = NULL;
 	h = str;
 	if ((p = strrchr(str, ':')) == NULL) {
@@ -156,7 +148,6 @@ BIO_get_accept_socket(char *host, int bind_mode)
 	}
 
 	if ((error = getaddrinfo(h, p, &hints, &res)) != 0) {
-		BIOerror(BIO_R_BAD_HOSTNAME_LOOKUP);
 		ERR_asprintf_error_data("getaddrinfo: '%s:%s': %s'", h, p,
 		    gai_strerror(error));
 		goto err;
@@ -212,10 +203,9 @@ BIO_accept(int sock, char **addr)
 	socklen_t sin_len = sizeof(sin);
 	int ret = -1;
 
-	if (addr == NULL) {
-		BIOerror(BIO_R_NULL_PARAMETER);
+	if (addr == NULL)
 		goto end;
-	}
+
 	ret = accept(sock, (struct sockaddr *)&sin, &sin_len);
 	if (ret == -1) {
 		if (BIO_sock_should_retry(ret))

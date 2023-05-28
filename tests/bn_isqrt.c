@@ -1,4 +1,4 @@
-/*	$OpenBSD: bn_isqrt.c,v 1.3 2023/03/08 06:28:08 tb Exp $ */
+/*	$OpenBSD: bn_isqrt.c,v 1.6 2022/08/12 16:13:40 tb Exp $ */
 /*
  * Copyright (c) 2022 Theo Buehler <tb@openbsd.org>
  *
@@ -16,17 +16,14 @@
  */
 
 #include <err.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
 #include <openssl/bn.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
-#define N_TESTS		100
+#define N_TESTS		400
 
 /* Sample squares between 2^128 and 2^4096. */
 #define LOWER_BITS	128
@@ -151,7 +148,9 @@ validate_tables(void)
 				    fill[i]);
 				failed |= 1;
 			}
+
 		}
+
 	}
 
 	return failed;
@@ -252,8 +251,7 @@ isqrt_test(void)
 		if (!bn_isqrt(isqrt, &is_perfect_square, testcase, ctx))
 			errx(1, "bn_isqrt testcase");
 
-		if ((cmp = BN_cmp(n, isqrt)) != 0 ||
-		    (is_perfect_square && BN_cmp(n_sqr, testcase) != 0)) {
+		if ((cmp = BN_cmp(n, isqrt)) != 0 || is_perfect_square) {
 			fprintf(stderr, "n = ");
 			BN_print_fp(stderr, n);
 			fprintf(stderr, "\ntestcase = ");
@@ -327,6 +325,9 @@ main(int argc, char *argv[])
 
 	failed |= check_tables(0);
 	failed |= validate_tables();
+
+	if (!failed)
+		printf("SUCCESS\n");
 
 	return failed;
 }

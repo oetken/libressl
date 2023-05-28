@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.242 2022/11/26 16:08:55 tb Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.238.2.1 2023/05/26 08:48:38 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -159,11 +159,10 @@
 #include <openssl/opensslconf.h>
 
 #include "bytestring.h"
-#include "dtls_local.h"
-#include "ssl_local.h"
+#include "dtls_locl.h"
+#include "ssl_locl.h"
 #include "ssl_sigalgs.h"
 #include "ssl_tlsext.h"
-#include "tls_content.h"
 
 #define SSL3_NUM_CIPHERS	(sizeof(ssl3_ciphers) / sizeof(SSL_CIPHER))
 
@@ -1442,12 +1441,11 @@ ssl3_cipher_get_value(const SSL_CIPHER *c)
 int
 ssl3_pending(const SSL *s)
 {
-	if (s->s3->rcontent == NULL)
-		return 0;
-	if (tls_content_type(s->s3->rcontent) != SSL3_RT_APPLICATION_DATA)
+	if (s->internal->rstate == SSL_ST_READ_BODY)
 		return 0;
 
-	return tls_content_remaining(s->s3->rcontent);
+	return (s->s3->rrec.type == SSL3_RT_APPLICATION_DATA) ?
+	    s->s3->rrec.length : 0;
 }
 
 int
@@ -1495,13 +1493,13 @@ ssl3_handshake_msg_finish(SSL *s, CBB *handshake)
 	if (outlen > INT_MAX)
 		goto err;
 
-	if (!BUF_MEM_grow_clean(s->init_buf, outlen))
+	if (!BUF_MEM_grow_clean(s->internal->init_buf, outlen))
 		goto err;
 
-	memcpy(s->init_buf->data, data, outlen);
+	memcpy(s->internal->init_buf->data, data, outlen);
 
-	s->init_num = (int)outlen;
-	s->init_off = 0;
+	s->internal->init_num = (int)outlen;
+	s->internal->init_off = 0;
 
 	if (SSL_is_dtls(s)) {
 		unsigned long len;
@@ -1562,11 +1560,6 @@ ssl3_free(SSL *s)
 	ssl3_release_read_buffer(s);
 	ssl3_release_write_buffer(s);
 
-	tls_content_free(s->s3->rcontent);
-
-	tls_buffer_free(s->s3->alert_fragment);
-	tls_buffer_free(s->s3->handshake_fragment);
-
 	freezero(s->s3->hs.sigalgs, s->s3->hs.sigalgs_len);
 	sk_X509_pop_free(s->s3->hs.peer_certs, X509_free);
 	sk_X509_pop_free(s->s3->hs.peer_certs_no_leaf, X509_free);
@@ -1579,7 +1572,8 @@ ssl3_free(SSL *s)
 	tls_buffer_free(s->s3->hs.tls13.quic_read_buffer);
 
 	sk_X509_NAME_pop_free(s->s3->hs.tls12.ca_names, X509_NAME_free);
-	sk_X509_pop_free(s->verified_chain, X509_free);
+	sk_X509_pop_free(s->internal->verified_chain, X509_free);
+	s->internal->verified_chain = NULL;
 
 	tls1_transcript_free(s);
 	tls1_transcript_hash_free(s);
@@ -1602,13 +1596,8 @@ ssl3_clear(SSL *s)
 
 	tls1_cleanup_key_block(s);
 	sk_X509_NAME_pop_free(s->s3->hs.tls12.ca_names, X509_NAME_free);
-	sk_X509_pop_free(s->verified_chain, X509_free);
-	s->verified_chain = NULL;
-
-	tls_buffer_free(s->s3->alert_fragment);
-	s->s3->alert_fragment = NULL;
-	tls_buffer_free(s->s3->handshake_fragment);
-	s->s3->handshake_fragment = NULL;
+	sk_X509_pop_free(s->internal->verified_chain, X509_free);
+	s->internal->verified_chain = NULL;
 
 	freezero(s->s3->hs.sigalgs, s->s3->hs.sigalgs_len);
 	s->s3->hs.sigalgs = NULL;
@@ -1641,9 +1630,6 @@ ssl3_clear(SSL *s)
 	rlen = s->s3->rbuf.len;
 	wlen = s->s3->wbuf.len;
 
-	tls_content_free(s->s3->rcontent);
-	s->s3->rcontent = NULL;
-
 	tls1_transcript_free(s);
 	tls1_transcript_hash_free(s);
 
@@ -1671,7 +1657,7 @@ ssl3_clear(SSL *s)
 	s->s3->num_renegotiations = 0;
 	s->s3->in_read_app_data = 0;
 
-	s->packet_length = 0;
+	s->internal->packet_length = 0;
 	s->version = TLS1_VERSION;
 
 	s->s3->hs.state = SSL_ST_BEFORE|((s->server) ? SSL_ST_ACCEPT : SSL_ST_CONNECT);
@@ -1740,7 +1726,7 @@ _SSL_get_peer_tmp_key(SSL *s, EVP_PKEY **key)
 static int
 _SSL_session_reused(SSL *s)
 {
-	return s->hit;
+	return s->internal->hit;
 }
 
 static int
@@ -1849,7 +1835,7 @@ _SSL_set_tlsext_host_name(SSL *s, const char *name)
 static int
 _SSL_set_tlsext_debug_arg(SSL *s, void *arg)
 {
-	s->tlsext_debug_arg = arg;
+	s->internal->tlsext_debug_arg = arg;
 	return 1;
 }
 
@@ -1869,7 +1855,7 @@ _SSL_set_tlsext_status_type(SSL *s, int type)
 static int
 _SSL_get_tlsext_status_exts(SSL *s, STACK_OF(X509_EXTENSION) **exts)
 {
-	*exts = s->tlsext_ocsp_exts;
+	*exts = s->internal->tlsext_ocsp_exts;
 	return 1;
 }
 
@@ -1877,14 +1863,14 @@ static int
 _SSL_set_tlsext_status_exts(SSL *s, STACK_OF(X509_EXTENSION) *exts)
 {
 	/* XXX - leak... */
-	s->tlsext_ocsp_exts = exts;
+	s->internal->tlsext_ocsp_exts = exts;
 	return 1;
 }
 
 static int
 _SSL_get_tlsext_status_ids(SSL *s, STACK_OF(OCSP_RESPID) **ids)
 {
-	*ids = s->tlsext_ocsp_ids;
+	*ids = s->internal->tlsext_ocsp_ids;
 	return 1;
 }
 
@@ -1892,17 +1878,17 @@ static int
 _SSL_set_tlsext_status_ids(SSL *s, STACK_OF(OCSP_RESPID) *ids)
 {
 	/* XXX - leak... */
-	s->tlsext_ocsp_ids = ids;
+	s->internal->tlsext_ocsp_ids = ids;
 	return 1;
 }
 
 static int
 _SSL_get_tlsext_status_ocsp_resp(SSL *s, unsigned char **resp)
 {
-	if (s->tlsext_ocsp_resp != NULL &&
-	    s->tlsext_ocsp_resp_len < INT_MAX) {
-		*resp = s->tlsext_ocsp_resp;
-		return (int)s->tlsext_ocsp_resp_len;
+	if (s->internal->tlsext_ocsp_resp != NULL &&
+	    s->internal->tlsext_ocsp_resp_len < INT_MAX) {
+		*resp = s->internal->tlsext_ocsp_resp;
+		return (int)s->internal->tlsext_ocsp_resp_len;
 	}
 
 	*resp = NULL;
@@ -1913,15 +1899,15 @@ _SSL_get_tlsext_status_ocsp_resp(SSL *s, unsigned char **resp)
 static int
 _SSL_set_tlsext_status_ocsp_resp(SSL *s, unsigned char *resp, int resp_len)
 {
-	free(s->tlsext_ocsp_resp);
-	s->tlsext_ocsp_resp = NULL;
-	s->tlsext_ocsp_resp_len = 0;
+	free(s->internal->tlsext_ocsp_resp);
+	s->internal->tlsext_ocsp_resp = NULL;
+	s->internal->tlsext_ocsp_resp_len = 0;
 
 	if (resp_len < 0)
 		return 0;
 
-	s->tlsext_ocsp_resp = resp;
-	s->tlsext_ocsp_resp_len = (size_t)resp_len;
+	s->internal->tlsext_ocsp_resp = resp;
+	s->internal->tlsext_ocsp_resp_len = (size_t)resp_len;
 
 	return 1;
 }
@@ -1970,15 +1956,15 @@ SSL_clear_chain_certs(SSL *ssl)
 int
 SSL_set1_groups(SSL *s, const int *groups, size_t groups_len)
 {
-	return tls1_set_groups(&s->tlsext_supportedgroups,
-	    &s->tlsext_supportedgroups_length, groups, groups_len);
+	return tls1_set_groups(&s->internal->tlsext_supportedgroups,
+	    &s->internal->tlsext_supportedgroups_length, groups, groups_len);
 }
 
 int
 SSL_set1_groups_list(SSL *s, const char *groups)
 {
-	return tls1_set_group_list(&s->tlsext_supportedgroups,
-	    &s->tlsext_supportedgroups_length, groups);
+	return tls1_set_group_list(&s->internal->tlsext_supportedgroups,
+	    &s->internal->tlsext_supportedgroups_length, groups);
 }
 
 static int
@@ -2198,7 +2184,7 @@ ssl3_callback_ctrl(SSL *s, int cmd, void (*fp)(void))
 		return 1;
 
 	case SSL_CTRL_SET_TLSEXT_DEBUG_CB:
-		s->tlsext_debug_cb = (void (*)(SSL *, int , int,
+		s->internal->tlsext_debug_cb = (void (*)(SSL *, int , int,
 		    unsigned char *, int, void *))fp;
 		return 1;
 	}
@@ -2226,8 +2212,8 @@ _SSL_CTX_set_tmp_dh(SSL_CTX *ctx, DH *dh)
 		return 0;
 	}
 
-	DH_free(ctx->cert->dhe_params);
-	ctx->cert->dhe_params = dhe_params;
+	DH_free(ctx->internal->cert->dhe_params);
+	ctx->internal->cert->dhe_params = dhe_params;
 
 	return 1;
 }
@@ -2235,7 +2221,7 @@ _SSL_CTX_set_tmp_dh(SSL_CTX *ctx, DH *dh)
 static int
 _SSL_CTX_set_dh_auto(SSL_CTX *ctx, int state)
 {
-	ctx->cert->dhe_params_auto = state;
+	ctx->internal->cert->dhe_params_auto = state;
 	return 1;
 }
 
@@ -2263,7 +2249,7 @@ _SSL_CTX_set_ecdh_auto(SSL_CTX *ctx, int state)
 static int
 _SSL_CTX_set_tlsext_servername_arg(SSL_CTX *ctx, void *arg)
 {
-	ctx->tlsext_servername_arg = arg;
+	ctx->internal->tlsext_servername_arg = arg;
 	return 1;
 }
 
@@ -2278,9 +2264,9 @@ _SSL_CTX_get_tlsext_ticket_keys(SSL_CTX *ctx, unsigned char *keys, int keys_len)
 		return 0;
 	}
 
-	memcpy(keys, ctx->tlsext_tick_key_name, 16);
-	memcpy(keys + 16, ctx->tlsext_tick_hmac_key, 16);
-	memcpy(keys + 32, ctx->tlsext_tick_aes_key, 16);
+	memcpy(keys, ctx->internal->tlsext_tick_key_name, 16);
+	memcpy(keys + 16, ctx->internal->tlsext_tick_hmac_key, 16);
+	memcpy(keys + 32, ctx->internal->tlsext_tick_aes_key, 16);
 
 	return 1;
 }
@@ -2296,9 +2282,9 @@ _SSL_CTX_set_tlsext_ticket_keys(SSL_CTX *ctx, unsigned char *keys, int keys_len)
 		return 0;
 	}
 
-	memcpy(ctx->tlsext_tick_key_name, keys, 16);
-	memcpy(ctx->tlsext_tick_hmac_key, keys + 16, 16);
-	memcpy(ctx->tlsext_tick_aes_key, keys + 32, 16);
+	memcpy(ctx->internal->tlsext_tick_key_name, keys, 16);
+	memcpy(ctx->internal->tlsext_tick_hmac_key, keys + 16, 16);
+	memcpy(ctx->internal->tlsext_tick_aes_key, keys + 32, 16);
 
 	return 1;
 }
@@ -2306,14 +2292,14 @@ _SSL_CTX_set_tlsext_ticket_keys(SSL_CTX *ctx, unsigned char *keys, int keys_len)
 static int
 _SSL_CTX_get_tlsext_status_arg(SSL_CTX *ctx, void **arg)
 {
-	*arg = ctx->tlsext_status_arg;
+	*arg = ctx->internal->tlsext_status_arg;
 	return 1;
 }
 
 static int
 _SSL_CTX_set_tlsext_status_arg(SSL_CTX *ctx, void *arg)
 {
-	ctx->tlsext_status_arg = arg;
+	ctx->internal->tlsext_status_arg = arg;
 	return 1;
 }
 
@@ -2346,8 +2332,8 @@ SSL_CTX_get0_chain_certs(const SSL_CTX *ctx, STACK_OF(X509) **out_chain)
 {
 	*out_chain = NULL;
 
-	if (ctx->cert->key != NULL)
-		*out_chain = ctx->cert->key->chain;
+	if (ctx->internal->cert->key != NULL)
+		*out_chain = ctx->internal->cert->key->chain;
 
 	return 1;
 }
@@ -2376,7 +2362,7 @@ _SSL_CTX_get_extra_chain_certs(SSL_CTX *ctx, STACK_OF(X509) **certs)
 {
 	*certs = ctx->extra_certs;
 	if (*certs == NULL)
-		*certs = ctx->cert->key->chain;
+		*certs = ctx->internal->cert->key->chain;
 
 	return 1;
 }
@@ -2399,15 +2385,15 @@ _SSL_CTX_clear_extra_chain_certs(SSL_CTX *ctx)
 int
 SSL_CTX_set1_groups(SSL_CTX *ctx, const int *groups, size_t groups_len)
 {
-	return tls1_set_groups(&ctx->tlsext_supportedgroups,
-	    &ctx->tlsext_supportedgroups_length, groups, groups_len);
+	return tls1_set_groups(&ctx->internal->tlsext_supportedgroups,
+	    &ctx->internal->tlsext_supportedgroups_length, groups, groups_len);
 }
 
 int
 SSL_CTX_set1_groups_list(SSL_CTX *ctx, const char *groups)
 {
-	return tls1_set_group_list(&ctx->tlsext_supportedgroups,
-	    &ctx->tlsext_supportedgroups_length, groups);
+	return tls1_set_group_list(&ctx->internal->tlsext_supportedgroups,
+	    &ctx->internal->tlsext_supportedgroups_length, groups);
 }
 
 long
@@ -2522,7 +2508,7 @@ ssl3_ctx_callback_ctrl(SSL_CTX *ctx, int cmd, void (*fp)(void))
 		return 0;
 
 	case SSL_CTRL_SET_TMP_DH_CB:
-		ctx->cert->dhe_params_cb =
+		ctx->internal->cert->dhe_params_cb =
 		    (DH *(*)(SSL *, int, int))fp;
 		return 1;
 
@@ -2530,20 +2516,20 @@ ssl3_ctx_callback_ctrl(SSL_CTX *ctx, int cmd, void (*fp)(void))
 		return 1;
 
 	case SSL_CTRL_SET_TLSEXT_SERVERNAME_CB:
-		ctx->tlsext_servername_callback =
+		ctx->internal->tlsext_servername_callback =
 		    (int (*)(SSL *, int *, void *))fp;
 		return 1;
 
 	case SSL_CTRL_GET_TLSEXT_STATUS_REQ_CB:
-		*(int (**)(SSL *, void *))fp = ctx->tlsext_status_cb;
+		*(int (**)(SSL *, void *))fp = ctx->internal->tlsext_status_cb;
 		return 1;
 
 	case SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB:
-		ctx->tlsext_status_cb = (int (*)(SSL *, void *))fp;
+		ctx->internal->tlsext_status_cb = (int (*)(SSL *, void *))fp;
 		return 1;
 
 	case SSL_CTRL_SET_TLSEXT_TICKET_KEY_CB:
-		ctx->tlsext_ticket_key_cb = (int (*)(SSL *, unsigned char  *,
+		ctx->internal->tlsext_ticket_key_cb = (int (*)(SSL *, unsigned char  *,
 		    unsigned char *, EVP_CIPHER_CTX *, HMAC_CTX *, int))fp;
 		return 1;
 	}
@@ -2574,7 +2560,7 @@ ssl3_choose_cipher(SSL *s, STACK_OF(SSL_CIPHER) *clnt,
 	 * but would have to pay with the price of sk_SSL_CIPHER_dup().
 	 */
 
-	if (s->options & SSL_OP_CIPHER_SERVER_PREFERENCE) {
+	if (s->internal->options & SSL_OP_CIPHER_SERVER_PREFERENCE) {
 		prio = srvr;
 		allow = clnt;
 	} else {
@@ -2685,13 +2671,13 @@ ssl3_shutdown(SSL *s)
 	 * Don't do anything much if we have not done the handshake or
 	 * we don't want to send messages :-)
 	 */
-	if ((s->quiet_shutdown) || (s->s3->hs.state == SSL_ST_BEFORE)) {
-		s->shutdown = (SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN);
+	if ((s->internal->quiet_shutdown) || (s->s3->hs.state == SSL_ST_BEFORE)) {
+		s->internal->shutdown = (SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN);
 		return (1);
 	}
 
-	if (!(s->shutdown & SSL_SENT_SHUTDOWN)) {
-		s->shutdown|=SSL_SENT_SHUTDOWN;
+	if (!(s->internal->shutdown & SSL_SENT_SHUTDOWN)) {
+		s->internal->shutdown|=SSL_SENT_SHUTDOWN;
 		ssl3_send_alert(s, SSL3_AL_WARNING, SSL_AD_CLOSE_NOTIFY);
 		/*
 		 * Our shutdown alert has been sent now, and if it still needs
@@ -2711,15 +2697,15 @@ ssl3_shutdown(SSL *s)
 			 */
 			return (ret);
 		}
-	} else if (!(s->shutdown & SSL_RECEIVED_SHUTDOWN)) {
+	} else if (!(s->internal->shutdown & SSL_RECEIVED_SHUTDOWN)) {
 		/* If we are waiting for a close from our peer, we are closed */
 		s->method->ssl_read_bytes(s, 0, NULL, 0, 0);
-		if (!(s->shutdown & SSL_RECEIVED_SHUTDOWN)) {
+		if (!(s->internal->shutdown & SSL_RECEIVED_SHUTDOWN)) {
 			return (-1);	/* return WANT_READ */
 		}
 	}
 
-	if ((s->shutdown == (SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN)) &&
+	if ((s->internal->shutdown == (SSL_SENT_SHUTDOWN|SSL_RECEIVED_SHUTDOWN)) &&
 	    !s->s3->alert_dispatch)
 		return (1);
 	else
@@ -2752,16 +2738,16 @@ ssl3_read_internal(SSL *s, void *buf, int len, int peek)
 	    peek);
 	if ((ret == -1) && (s->s3->in_read_app_data == 2)) {
 		/*
-		 * ssl3_read_bytes decided to call s->handshake_func,
+		 * ssl3_read_bytes decided to call s->internal->handshake_func,
 		 * which called ssl3_read_bytes to read handshake data.
 		 * However, ssl3_read_bytes actually found application data
 		 * and thinks that application data makes sense here; so disable
 		 * handshake processing and try to read application data again.
 		 */
-		s->in_handshake++;
+		s->internal->in_handshake++;
 		ret = s->method->ssl_read_bytes(s, SSL3_RT_APPLICATION_DATA,
 		    buf, len, peek);
-		s->in_handshake--;
+		s->internal->in_handshake--;
 	} else
 		s->s3->in_read_app_data = 0;
 
@@ -2783,7 +2769,7 @@ ssl3_peek(SSL *s, void *buf, int len)
 int
 ssl3_renegotiate(SSL *s)
 {
-	if (s->handshake_func == NULL)
+	if (s->internal->handshake_func == NULL)
 		return 1;
 
 	if (s->s3->flags & SSL3_FLAGS_NO_RENEGOTIATE_CIPHERS)

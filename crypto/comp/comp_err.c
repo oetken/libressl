@@ -1,7 +1,6 @@
-/* $OpenBSD: comp_err.c,v 1.13 2022/12/23 23:23:02 schwarze Exp $ */
+/* $OpenBSD: comp_err.c,v 1.12 2022/07/12 14:42:48 kn Exp $ */
 /* ====================================================================
- * This file was written by Dr. Stephen Henson <steve@openssl.org>.
- * Copyright (c) 1999, 2005, 2008 The OpenSSL Project.  All rights reserved.
+ * Copyright (c) 1999-2007 The OpenSSL Project.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions

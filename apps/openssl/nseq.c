@@ -1,4 +1,4 @@
-/* $OpenBSD: nseq.c,v 1.11 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: nseq.c,v 1.9 2019/07/14 03:30:46 guenther Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 1999.
  */
@@ -68,7 +68,7 @@ static struct {
 	char *infile;
 	char *outfile;
 	int toseq;
-} cfg;
+} nseq_config;
 
 static const struct option nseq_options[] = {
 	{
@@ -76,20 +76,20 @@ static const struct option nseq_options[] = {
 		.argname = "file",
 		.desc = "Input file to read from (default stdin)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.infile,
+		.opt.arg = &nseq_config.infile,
 	},
 	{
 		.name = "out",
 		.argname = "file",
 		.desc = "Output file to write to (default stdout)",
 		.type = OPTION_ARG,
-		.opt.arg = &cfg.outfile,
+		.opt.arg = &nseq_config.outfile,
 	},
 	{
 		.name = "toseq",
 		.desc = "Convert certificates to Netscape certificate sequence",
 		.type = OPTION_FLAG,
-		.opt.flag = &cfg.toseq,
+		.opt.flag = &nseq_config.toseq,
 	},
 	{ NULL },
 };
@@ -109,44 +109,46 @@ nseq_main(int argc, char **argv)
 	NETSCAPE_CERT_SEQUENCE *seq = NULL;
 	int i, ret = 1;
 
-	if (pledge("stdio cpath wpath rpath", NULL) == -1) {
-		perror("pledge");
-		exit(1);
+	if (single_execution) {
+		if (pledge("stdio cpath wpath rpath", NULL) == -1) {
+			perror("pledge");
+			exit(1);
+		}
 	}
 
-	memset(&cfg, 0, sizeof(cfg));
+	memset(&nseq_config, 0, sizeof(nseq_config));
 
 	if (options_parse(argc, argv, nseq_options, NULL, NULL) != 0) {
 		nseq_usage();
 		return (1);
 	}
 
-	if (cfg.infile) {
-		if (!(in = BIO_new_file(cfg.infile, "r"))) {
+	if (nseq_config.infile) {
+		if (!(in = BIO_new_file(nseq_config.infile, "r"))) {
 			BIO_printf(bio_err,
-			    "Can't open input file %s\n", cfg.infile);
+			    "Can't open input file %s\n", nseq_config.infile);
 			goto end;
 		}
 	} else
 		in = BIO_new_fp(stdin, BIO_NOCLOSE);
 
-	if (cfg.outfile) {
-		if (!(out = BIO_new_file(cfg.outfile, "w"))) {
+	if (nseq_config.outfile) {
+		if (!(out = BIO_new_file(nseq_config.outfile, "w"))) {
 			BIO_printf(bio_err,
-			    "Can't open output file %s\n", cfg.outfile);
+			    "Can't open output file %s\n", nseq_config.outfile);
 			goto end;
 		}
 	} else {
 		out = BIO_new_fp(stdout, BIO_NOCLOSE);
 	}
-	if (cfg.toseq) {
+	if (nseq_config.toseq) {
 		seq = NETSCAPE_CERT_SEQUENCE_new();
 		seq->certs = sk_X509_new_null();
 		while ((x509 = PEM_read_bio_X509(in, NULL, NULL, NULL)))
 			sk_X509_push(seq->certs, x509);
 
 		if (!sk_X509_num(seq->certs)) {
-			BIO_printf(bio_err, "Error reading certs file %s\n", cfg.infile);
+			BIO_printf(bio_err, "Error reading certs file %s\n", nseq_config.infile);
 			ERR_print_errors(bio_err);
 			goto end;
 		}
@@ -155,7 +157,7 @@ nseq_main(int argc, char **argv)
 		goto end;
 	}
 	if (!(seq = PEM_read_bio_NETSCAPE_CERT_SEQUENCE(in, NULL, NULL, NULL))) {
-		BIO_printf(bio_err, "Error reading sequence file %s\n", cfg.infile);
+		BIO_printf(bio_err, "Error reading sequence file %s\n", nseq_config.infile);
 		ERR_print_errors(bio_err);
 		goto end;
 	}

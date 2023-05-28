@@ -1,4 +1,4 @@
-/*	$OpenBSD: bn_isqrt.c,v 1.6 2022/12/17 15:56:25 jsing Exp $ */
+/*	$OpenBSD: bn_isqrt.c,v 1.2 2022/07/13 11:20:00 tb Exp $ */
 /*
  * Copyright (c) 2022 Theo Buehler <tb@openbsd.org>
  *
@@ -21,7 +21,7 @@
 #include <openssl/bn.h>
 #include <openssl/err.h>
 
-#include "bn_local.h"
+#include "bn_lcl.h"
 
 #define CTASSERT(x)	extern char  _ctassert[(x) ? 1 : -1 ]   \
 			    __attribute__((__unused__))
@@ -74,7 +74,8 @@ bn_isqrt(BIGNUM *out_sqrt, int *out_perfect, const BIGNUM *n, BN_CTX *in_ctx)
 
 	if (BN_is_zero(n)) {
 		perfect = 1;
-		BN_zero(a);
+		if (!BN_zero(a))
+			goto err;
 		goto done;
 	}
 

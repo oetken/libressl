@@ -1,4 +1,4 @@
-/* $OpenBSD: dsa_prn.c,v 1.9 2022/11/19 06:33:00 tb Exp $ */
+/* $OpenBSD: dsa_prn.c,v 1.6 2017/01/29 17:49:22 beck Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -10,7 +10,7 @@
  * are met:
  *
  * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
+ *    notice, this list of conditions and the following disclaimer. 
  *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in
@@ -98,16 +98,12 @@ int
 DSA_print(BIO *bp, const DSA *x, int off)
 {
 	EVP_PKEY *pk;
-	int ret = 0;
+	int ret;
 
-	if ((pk = EVP_PKEY_new()) == NULL)
-		goto err;
-
-	if (!EVP_PKEY_set1_DSA(pk, (DSA *)x))
-		goto err;
-
+	pk = EVP_PKEY_new();
+	if (!pk || !EVP_PKEY_set1_DSA(pk, (DSA *)x))
+		return 0;
 	ret = EVP_PKEY_print_private(bp, pk, off, NULL);
- err:
 	EVP_PKEY_free(pk);
 	return ret;
 }
@@ -116,16 +112,12 @@ int
 DSAparams_print(BIO *bp, const DSA *x)
 {
 	EVP_PKEY *pk;
-	int ret = 0;
+	int ret;
 
-	if ((pk = EVP_PKEY_new()) == NULL)
-		goto err;
-
-	if (!EVP_PKEY_set1_DSA(pk, (DSA *)x))
-		goto err;
-
+	pk = EVP_PKEY_new();
+	if (!pk || !EVP_PKEY_set1_DSA(pk, (DSA *)x))
+		return 0;
 	ret = EVP_PKEY_print_params(bp, pk, 4, NULL);
- err:
 	EVP_PKEY_free(pk);
 	return ret;
 }
