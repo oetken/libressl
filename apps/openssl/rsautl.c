@@ -1,4 +1,4 @@
-/* $OpenBSD: rsautl.c,v 1.21 2023/03/06 14:32:06 tb Exp $ */
+/* $OpenBSD: rsautl.c,v 1.23 2023/05/05 18:01:27 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2000.
  */

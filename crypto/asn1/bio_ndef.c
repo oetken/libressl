@@ -1,4 +1,4 @@
-/* $OpenBSD: bio_ndef.c,v 1.20 2023/03/15 06:30:21 tb Exp $ */
+/* $OpenBSD: bio_ndef.c,v 1.22 2023/04/25 19:08:30 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
  */
@@ -52,12 +52,14 @@
  *
  */
 
+#include <stdio.h>
+
 #include <openssl/asn1.h>
 #include <openssl/asn1t.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
 
-#include <stdio.h>
+#include "asn1_local.h"
 
 /* Experimental NDEF ASN1 BIO support routines */
 
@@ -161,6 +163,7 @@ BIO_new_NDEF(BIO *out, ASN1_VALUE *val, const ASN1_ITEM *it)
  err:
 	BIO_pop(pop_bio);
 	BIO_free(asn_bio);
+
 	return NULL;
 }
 

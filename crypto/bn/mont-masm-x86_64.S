@@ -85,6 +85,7 @@ $L$SEH_begin_bn_mul_mont::
 	mov	r9,QWORD PTR[48+rsp]
 
 
+	endbr64
 	test	r9d,3
 	jnz	$L$mul_enter
 	cmp	r9d,8
@@ -307,6 +308,7 @@ $L$SEH_begin_bn_mul4x_mont::
 
 
 $L$mul4x_enter::
+	endbr64
 	push	rbx
 	push	rbp
 	push	r12
@@ -720,6 +722,7 @@ $L$SEH_begin_bn_sqr4x_mont::
 
 
 $L$sqr4x_enter::
+	endbr64
 	push	rbx
 	push	rbp
 	push	r12

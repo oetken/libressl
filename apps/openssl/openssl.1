@@ -1,4 +1,4 @@
-.\" $OpenBSD: openssl.1,v 1.140 2022/12/22 19:53:23 kn Exp $
+.\" $OpenBSD: openssl.1,v 1.146 2023/05/20 15:57:40 tb Exp $
 .\" ====================================================================
 .\" Copyright (c) 1998-2002 The OpenSSL Project.  All rights reserved.
 .\"
@@ -110,7 +110,7 @@
 .\" copied and put under another distribution licence
 .\" [including the GNU Public Licence.]
 .\"
-.Dd $Mdocdate: December 22 2022 $
+.Dd $Mdocdate: May 20 2023 $
 .Dt OPENSSL 1
 .Os
 .Sh NAME
@@ -2541,37 +2541,6 @@ The output file password source.
 The size of the private key to generate in bits.
 This must be the last option specified.
 The default is 2048.
-.El
-.Tg nseq
-.Sh NSEQ
-.Nm openssl nseq
-.Op Fl in Ar file
-.Op Fl out Ar file
-.Op Fl toseq
-.Pp
-The
-.Nm nseq
-command takes a file containing a Netscape certificate sequence
-(an alternative to the standard PKCS#7 format)
-and prints out the certificates contained in it,
-or takes a file of certificates
-and converts it into a Netscape certificate sequence.
-.Pp
-The options are as follows:
-.Bl -tag -width Ds
-.It Fl in Ar file
-The input file to read from,
-or standard input if not specified.
-.It Fl out Ar file
-The output file to write to,
-or standard output if not specified.
-.It Fl toseq
-Normally, a Netscape certificate sequence will be input and the output
-is the certificates contained in it.
-With the
-.Fl toseq
-option the situation is reversed:
-a Netscape certificate sequence is created from a file of certificates.
 .El
 .Tg ocsp
 .Sh OCSP
@@ -5423,6 +5392,7 @@ An error occurred writing certificates.
 .Op Fl evp Ar algorithm
 .Op Fl mr
 .Op Fl multi Ar number
+.Op Fl unaligned Ar number
 .Ek
 .El
 .Pp
@@ -5449,6 +5419,13 @@ Produce machine readable output.
 Run
 .Ar number
 benchmarks in parallel.
+.It Fl unaligned Ar number
+Use allocated buffers with an offset of
+.Ar number
+bytes from the alignment provided by
+.Xr malloc 3 .
+.Ar number
+should be between 0 and 16.
 .El
 .Tg spkac
 .Sh SPKAC
@@ -6531,6 +6508,9 @@ uses a linefeed character for the RDN separator and a spaced
 .Sq +
 for the AVA separator,
 as well as indenting the fields by four characters.
+If no field separator is specified then
+.Cm sep_comma_plus_space
+is used by default.
 .It Cm show_type
 Show the type of the ASN.1 character string.
 The type precedes the field contents.

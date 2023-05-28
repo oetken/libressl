@@ -6,7 +6,9 @@
 .globl	_RC4
 
 .p2align	4
-_RC4:	orq	%rsi,%rsi
+_RC4:
+	
+	orq	%rsi,%rsi
 	jne	L$entry
 	retq
 L$entry:
@@ -523,6 +525,7 @@ L$epilogue:
 
 .p2align	4
 _RC4_set_key:
+	
 	leaq	8(%rdi),%rdi
 	leaq	(%rdx,%rsi,1),%rdx
 	negq	%rsi
@@ -595,6 +598,7 @@ L$exit_key:
 
 .p2align	4
 _RC4_options:
+	
 	leaq	L$opts(%rip),%rax
 	movl	_OPENSSL_ia32cap_P(%rip),%edx
 	btl	$IA32CAP_BIT0_INTELP4,%edx

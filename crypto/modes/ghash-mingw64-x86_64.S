@@ -679,6 +679,7 @@ gcm_ghash_4bit:
 .def	gcm_init_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_init_clmul:
+	endbr64
 	movdqu	(%rdx),%xmm2
 	pshufd	$78,%xmm2,%xmm2
 
@@ -744,6 +745,7 @@ gcm_init_clmul:
 .def	gcm_gmult_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_gmult_clmul:
+	endbr64
 	movdqu	(%rcx),%xmm0
 	movdqa	.Lbswap_mask(%rip),%xmm5
 	movdqu	(%rdx),%xmm2
@@ -794,6 +796,7 @@ gcm_gmult_clmul:
 .def	gcm_ghash_clmul;	.scl 2;	.type 32;	.endef
 .p2align	4
 gcm_ghash_clmul:
+	endbr64
 .LSEH_begin_gcm_ghash_clmul:
 
 .byte	0x48,0x83,0xec,0x58		
@@ -1063,6 +1066,7 @@ gcm_ghash_clmul:
 .def	se_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 se_handler:
+	endbr64
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx

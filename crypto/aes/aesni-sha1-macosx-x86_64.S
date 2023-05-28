@@ -7,6 +7,7 @@
 
 .p2align	4
 _aesni_cbc_sha1_enc:
+	
 
 	movl	_OPENSSL_ia32cap_P+0(%rip),%r10d
 	movl	_OPENSSL_ia32cap_P+4(%rip),%r11d
@@ -16,6 +17,7 @@ _aesni_cbc_sha1_enc:
 
 .p2align	4
 aesni_cbc_sha1_enc_ssse3:
+	
 	movq	8(%rsp),%r10
 
 

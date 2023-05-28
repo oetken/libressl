@@ -74,6 +74,7 @@ PUBLIC	Camellia_EncryptBlock
 
 ALIGN	16
 Camellia_EncryptBlock	PROC PUBLIC
+	endbr64
 	mov	eax,128
 	sub	eax,edi
 	mov	edi,3
@@ -96,6 +97,7 @@ $L$SEH_begin_Camellia_EncryptBlock_Rounds::
 	mov	rcx,r9
 
 
+	endbr64
 	push	rbx
 	push	rbp
 	push	r13
@@ -147,6 +149,7 @@ Camellia_EncryptBlock_Rounds	ENDP
 
 ALIGN	16
 _x86_64_Camellia_encrypt	PROC PRIVATE
+	endbr64
 	xor	r9d,DWORD PTR[r14]
 	xor	r8d,DWORD PTR[4+r14]
 	xor	r11d,DWORD PTR[8+r14]
@@ -356,6 +359,7 @@ PUBLIC	Camellia_DecryptBlock
 
 ALIGN	16
 Camellia_DecryptBlock	PROC PUBLIC
+	endbr64
 	mov	eax,128
 	sub	eax,edi
 	mov	edi,3
@@ -378,6 +382,7 @@ $L$SEH_begin_Camellia_DecryptBlock_Rounds::
 	mov	rcx,r9
 
 
+	endbr64
 	push	rbx
 	push	rbp
 	push	r13
@@ -429,6 +434,7 @@ Camellia_DecryptBlock_Rounds	ENDP
 
 ALIGN	16
 _x86_64_Camellia_decrypt	PROC PRIVATE
+	endbr64
 	xor	r9d,DWORD PTR[r14]
 	xor	r8d,DWORD PTR[4+r14]
 	xor	r11d,DWORD PTR[8+r14]
@@ -646,6 +652,7 @@ $L$SEH_begin_Camellia_Ekeygen::
 	mov	rdx,r8
 
 
+	endbr64
 	push	rbx
 	push	rbp
 	push	r13
@@ -1728,6 +1735,7 @@ $L$SEH_begin_Camellia_cbc_encrypt::
 	mov	r9,QWORD PTR[48+rsp]
 
 
+	endbr64
 	cmp	rdx,0
 	je	$L$cbc_abort
 	push	rbx

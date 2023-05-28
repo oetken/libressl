@@ -82,6 +82,7 @@ $L$SEH_begin_whirlpool_block::
 	mov	rdx,r8
 
 
+	endbr64
 	push	rbx
 	push	rbp
 	push	r12

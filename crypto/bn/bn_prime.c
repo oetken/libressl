@@ -1,4 +1,4 @@
-/* $OpenBSD: bn_prime.c,v 1.30 2023/01/28 17:13:26 jsing Exp $ */
+/* $OpenBSD: bn_prime.c,v 1.32 2023/05/10 12:21:55 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -151,35 +151,6 @@ BN_GENCB_call(BN_GENCB *cb, int a, int b)
 	return 0;
 }
 
-#ifndef OPENSSL_NO_DEPRECATED
-BIGNUM *
-BN_generate_prime(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
-    const BIGNUM *rem, void (*callback)(int, int, void *), void *cb_arg)
-{
-	BN_GENCB cb;
-	BIGNUM *rnd = NULL;
-	int found = 0;
-
-	BN_GENCB_set_old(&cb, callback, cb_arg);
-
-	if (ret == NULL) {
-		if ((rnd = BN_new()) == NULL)
-			goto err;
-	} else
-		rnd = ret;
-	if (!BN_generate_prime_ex(rnd, bits, safe, add, rem, &cb))
-		goto err;
-
-	/* we have a prime :-) */
-	found = 1;
-
-err:
-	if (!found && (ret == NULL) && (rnd != NULL))
-		BN_free(rnd);
-	return (found ? rnd : NULL);
-}
-#endif
-
 int
 BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
     const BIGNUM *rem, BN_GENCB *cb)
@@ -224,12 +195,12 @@ BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
 		goto err;
 
 	if (!safe) {
-		if (!bn_is_prime_bpsw(&is_prime, ret, ctx))
+		if (!bn_is_prime_bpsw(&is_prime, ret, ctx, 1))
 			goto err;
 		if (!is_prime)
 			goto loop;
 	} else {
-		if (!bn_is_prime_bpsw(&is_prime, ret, ctx))
+		if (!bn_is_prime_bpsw(&is_prime, ret, ctx, 1))
 			goto err;
 		if (!is_prime)
 			goto loop;
@@ -242,7 +213,7 @@ BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
 		if (!BN_rshift1(p, ret))
 			goto err;
 
-		if (!bn_is_prime_bpsw(&is_prime, p, ctx))
+		if (!bn_is_prime_bpsw(&is_prime, p, ctx, 1))
 			goto err;
 		if (!is_prime)
 			goto loop;
@@ -260,37 +231,11 @@ BN_generate_prime_ex(BIGNUM *ret, int bits, int safe, const BIGNUM *add,
 	return found;
 }
 
-#ifndef OPENSSL_NO_DEPRECATED
-int
-BN_is_prime(const BIGNUM *a, int checks, void (*callback)(int, int, void *),
-    BN_CTX *ctx_passed, void *cb_arg)
-{
-	BN_GENCB cb;
-
-	BN_GENCB_set_old(&cb, callback, cb_arg);
-	return BN_is_prime_ex(a, checks, ctx_passed, &cb);
-}
-#endif
-
 int
 BN_is_prime_ex(const BIGNUM *a, int checks, BN_CTX *ctx_passed, BN_GENCB *cb)
 {
 	return BN_is_prime_fasttest_ex(a, checks, ctx_passed, 0, cb);
 }
-
-#ifndef OPENSSL_NO_DEPRECATED
-int
-BN_is_prime_fasttest(const BIGNUM *a, int checks,
-    void (*callback)(int, int, void *), BN_CTX *ctx_passed, void *cb_arg,
-    int do_trial_division)
-{
-	BN_GENCB cb;
-
-	BN_GENCB_set_old(&cb, callback, cb_arg);
-	return BN_is_prime_fasttest_ex(a, checks, ctx_passed,
-	    do_trial_division, &cb);
-}
-#endif
 
 int
 BN_is_prime_fasttest_ex(const BIGNUM *a, int checks, BN_CTX *ctx_passed,
@@ -298,8 +243,14 @@ BN_is_prime_fasttest_ex(const BIGNUM *a, int checks, BN_CTX *ctx_passed,
 {
 	int is_prime;
 
+	if (checks < 0)
+		return -1;
+
+	if (checks == BN_prime_checks)
+		checks = BN_prime_checks_for_size(BN_num_bits(a));
+
 	/* XXX - tickle BN_GENCB in bn_is_prime_bpsw(). */
-	if (!bn_is_prime_bpsw(&is_prime, a, ctx_passed))
+	if (!bn_is_prime_bpsw(&is_prime, a, ctx_passed, checks))
 		return -1;
 
 	return is_prime;

@@ -40,6 +40,13 @@ add_executable(aes_wrap aes_wrap.c)
 target_link_libraries(aes_wrap ${OPENSSL_TEST_LIBS})
 add_test(aes_wrap aes_wrap)
 
+# apitest
+add_executable(apitest apitest.c)
+target_link_libraries(apitest ${OPENSSL_TEST_LIBS})
+set_source_files_properties(apitest.c PROPERTIES COMPILE_FLAGS
+	-DCERTSDIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
+add_test(apitest apitest)
+
 # arc4randomforktest
 # Windows/mingw does not have fork, but Cygwin does.
 if(NOT (WIN32 OR (CMAKE_SYSTEM_NAME MATCHES "MINGW")))
@@ -72,6 +79,11 @@ add_test(asn1evp asn1evp)
 add_executable(asn1object asn1object.c)
 target_link_libraries(asn1object ${OPENSSL_TEST_LIBS})
 add_test(asn1object asn1object)
+
+# asn1oct
+add_executable(asn1oct asn1oct.c)
+target_link_libraries(asn1oct ${OPENSSL_TEST_LIBS})
+add_test(asn1oct asn1oct)
 
 # asn1string_copy
 add_executable(asn1string_copy asn1string_copy.c)
@@ -108,6 +120,11 @@ add_executable(bf_test bf_test.c)
 target_link_libraries(bf_test ${OPENSSL_TEST_LIBS})
 add_test(bf_test bf_test)
 
+# bio_asn1
+add_executable(bio_asn1 bio_asn1.c)
+target_link_libraries(bio_asn1 ${OPENSSL_TEST_LIBS})
+add_test(bio_asn1 bio_asn1)
+
 # bio_chain
 add_executable(bio_chain bio_chain.c)
 target_link_libraries(bio_chain ${OPENSSL_TEST_LIBS})
@@ -136,6 +153,13 @@ add_executable(bn_cmp bn_cmp.c)
 target_link_libraries(bn_cmp ${OPENSSL_TEST_LIBS})
 add_test(bn_cmp bn_cmp)
 
+# bn_gcd
+add_executable(bn_gcd bn_cmp.c)
+target_link_libraries(bn_gcd ${OPENSSL_TEST_LIBS})
+add_test(bn_gcd bn_gcd)
+
+# bn_general is a benchmark
+
 # bn_isqrt
 add_executable(bn_isqrt bn_isqrt.c)
 target_link_libraries(bn_isqrt ${OPENSSL_TEST_LIBS})
@@ -147,11 +171,6 @@ set_source_files_properties(bn_mod_exp.c PROPERTIES COMPILE_FLAGS
 	-ULIBRESSL_INTERNAL)
 target_link_libraries(bn_mod_exp ${OPENSSL_TEST_LIBS})
 add_test(bn_mod_exp bn_mod_exp)
-
-# bn_mod_exp2_mont
-add_executable(bn_mod_exp2_mont bn_mod_exp2_mont.c)
-target_link_libraries(bn_mod_exp2_mont ${OPENSSL_TEST_LIBS})
-add_test(bn_mod_exp2_mont bn_mod_exp2_mont)
 
 # bn_mod_sqrt
 add_executable(bn_mod_sqrt bn_mod_sqrt.c)
@@ -210,6 +229,9 @@ add_executable(bytestringtest bytestringtest.c)
 target_link_libraries(bytestringtest ${OPENSSL_TEST_LIBS})
 add_test(bytestringtest bytestringtest)
 
+# callback
+# callbackfailures
+
 # casttest
 add_executable(casttest casttest.c)
 target_link_libraries(casttest ${OPENSSL_TEST_LIBS})
@@ -250,10 +272,12 @@ add_executable(constraints constraints.c)
 target_link_libraries(constraints ${OPENSSL_TEST_LIBS})
 add_test(constraints constraints)
 
-# cts128test
-add_executable(cts128test cts128test.c)
-target_link_libraries(cts128test ${OPENSSL_TEST_LIBS})
-add_test(cts128test cts128test)
+# cttest
+add_executable(cttest cttest.c)
+target_link_libraries(cttest ${OPENSSL_TEST_LIBS})
+set_source_files_properties(cttest.c PROPERTIES COMPILE_FLAGS
+	-DCTPATH=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
+add_test(cttest cttest)
 
 # destest
 add_executable(destest destest.c)
@@ -334,6 +358,13 @@ add_executable(evptest evptest.c)
 target_link_libraries(evptest ${OPENSSL_TEST_LIBS})
 add_test(evptest evptest ${CMAKE_CURRENT_SOURCE_DIR}/evptests.txt)
 
+# evp_test
+add_executable(evp_test evp_test.c)
+target_link_libraries(evp_test ${OPENSSL_TEST_LIBS})
+add_test(evp_test evp_test)
+
+# expirecallback.c
+
 # explicit_bzero
 # explicit_bzero relies on SA_ONSTACK, which is unavailable on Windows
 if(NOT WIN32)
@@ -345,6 +376,11 @@ if(NOT WIN32)
 	target_link_libraries(explicit_bzero ${OPENSSL_TEST_LIBS})
 	add_test(explicit_bzero explicit_bzero)
 endif()
+
+# exportertest
+add_executable(exportertest exportertest.c)
+target_link_libraries(exportertest ${OPENSSL_TEST_LIBS})
+add_test(exportertest exportertest)
 
 # freenull
 add_executable(freenull freenull.c)
@@ -388,11 +424,14 @@ add_executable(igetest igetest.c)
 target_link_libraries(igetest ${OPENSSL_TEST_LIBS})
 add_test(igetest igetest)
 
-# keypairtest
+# init_pledge
+
+# key_schedule
 add_executable(key_schedule key_schedule.c)
 target_link_libraries(key_schedule ${OPENSSL_TEST_LIBS})
 add_test(key_schedule key_schedule)
 
+# keypair
 add_executable(keypairtest keypairtest.c)
 target_link_libraries(keypairtest ${LIBTLS_TEST_LIBS})
 target_include_directories(keypairtest BEFORE PUBLIC ../tls)
@@ -451,6 +490,13 @@ add_executable(poly1305test poly1305test.c)
 target_link_libraries(poly1305test ${OPENSSL_TEST_LIBS})
 add_test(poly1305test poly1305test)
 
+# policy
+add_executable(policy policy.c)
+set_source_files_properties(policy.c PROPERTIES COMPILE_FLAGS
+	-DCERTSDIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
+target_link_libraries(policy ${OPENSSL_TEST_LIBS})
+add_test(policy policy)
+
 # pq_test
 add_executable(pq_test pq_test.c)
 target_link_libraries(pq_test ${OPENSSL_TEST_LIBS})
@@ -500,7 +546,6 @@ add_test(record_layer_test record_layer_test)
 
 # rfc3779
 add_executable(rfc3779 rfc3779.c)
-set_source_files_properties(rfc3779.c PROPERTIES COMPILE_FLAGS -D__unused=)
 target_link_libraries(rfc3779 ${OPENSSL_TEST_LIBS})
 add_test(rfc3779 rfc3779)
 
@@ -523,6 +568,8 @@ add_executable(rsa_test rsa_test.c)
 target_link_libraries(rsa_test ${OPENSSL_TEST_LIBS})
 add_test(rsa_test rsa_test)
 
+# server.c
+
 # servertest
 add_executable(servertest servertest.c)
 target_link_libraries(servertest ${OPENSSL_TEST_LIBS})
@@ -537,6 +584,19 @@ set_tests_properties(servertest PROPERTIES ENVIRONMENT "srcdir=${TEST_SOURCE_DIR
 add_executable(sha_test sha_test.c)
 target_link_libraries(sha_test ${OPENSSL_TEST_LIBS})
 add_test(sha_test sha_test)
+
+# XXX HAVE_SOCKETPAIR
+# signertest
+# add_executable(signertest signertest.c)
+# target_link_libraries(signertest ${LIBTLS_TEST_LIBS})
+# target_include_directories(signertest BEFORE PUBLIC ../tls)
+# set_source_files_properties(signertest.c PROPERTIES COMPILE_FLAGS
+#	-DCERTSDIR=\\"${CMAKE_CURRENT_SOURCE_DIR}\\")
+# add_test(signertest signertest)
+
+# sm2crypttest
+# sm2evptest
+# sm2sigtest
 
 # sm3test
 add_executable(sm3test sm3test.c)
@@ -564,6 +624,11 @@ add_test(ssl_methods ssl_methods)
 add_executable(ssl_set_alpn_protos ssl_set_alpn_protos.c)
 target_link_libraries(ssl_set_alpn_protos ${OPENSSL_TEST_LIBS})
 add_test(ssl_set_alpn_protos ssl_set_alpn_protos)
+
+# ssl_verify_param
+add_executable(ssl_verify_param ssl_verify_param.c)
+target_link_libraries(ssl_verify_param ${OPENSSL_TEST_LIBS})
+add_test(ssl_verify_param ssl_verify_param)
 
 # ssl_versions
 add_executable(ssl_versions ssl_versions.c)
@@ -678,6 +743,11 @@ add_test(x25519test x25519test)
 add_executable(x509attribute x509attribute.c)
 target_link_libraries(x509attribute ${OPENSSL_TEST_LIBS})
 add_test(x509attribute x509attribute)
+
+# x509_asn1
+add_executable(x509_asn1 x509_asn1.c)
+target_link_libraries(x509_asn1 ${OPENSSL_TEST_LIBS})
+add_test(x509_asn1 x509_asn1)
 
 # x509_info
 add_executable(x509_info x509_info.c)

@@ -6,7 +6,9 @@
 .globl	RC4
 .type	RC4,@function
 .align	16
-RC4:	orq	%rsi,%rsi
+RC4:
+	endbr64
+	orq	%rsi,%rsi
 	jne	.Lentry
 	retq
 .Lentry:
@@ -523,6 +525,7 @@ RC4:	orq	%rsi,%rsi
 .type	RC4_set_key,@function
 .align	16
 RC4_set_key:
+	endbr64
 	leaq	8(%rdi),%rdi
 	leaq	(%rdx,%rsi,1),%rdx
 	negq	%rsi
@@ -595,6 +598,7 @@ RC4_set_key:
 .type	RC4_options,@function
 .align	16
 RC4_options:
+	endbr64
 	leaq	.Lopts(%rip),%rax
 	movl	OPENSSL_ia32cap_P(%rip),%edx
 	btl	$IA32CAP_BIT0_INTELP4,%edx

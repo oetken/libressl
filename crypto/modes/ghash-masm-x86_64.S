@@ -751,6 +751,7 @@ PUBLIC	gcm_init_clmul
 
 ALIGN	16
 gcm_init_clmul	PROC PUBLIC
+	endbr64
 	movdqu	xmm2,XMMWORD PTR[rdx]
 	pshufd	xmm2,xmm2,78
 
@@ -816,6 +817,7 @@ PUBLIC	gcm_gmult_clmul
 
 ALIGN	16
 gcm_gmult_clmul	PROC PUBLIC
+	endbr64
 	movdqu	xmm0,XMMWORD PTR[rcx]
 	movdqa	xmm5,XMMWORD PTR[$L$bswap_mask]
 	movdqu	xmm2,XMMWORD PTR[rdx]
@@ -866,6 +868,7 @@ PUBLIC	gcm_ghash_clmul
 
 ALIGN	16
 gcm_ghash_clmul	PROC PUBLIC
+	endbr64
 $L$SEH_begin_gcm_ghash_clmul::
 
 DB	048h,083h,0ech,058h		
@@ -1137,6 +1140,7 @@ EXTERN	__imp_RtlVirtualUnwind:NEAR
 
 ALIGN	16
 se_handler	PROC PRIVATE
+	endbr64
 	push	rsi
 	push	rdi
 	push	rbx

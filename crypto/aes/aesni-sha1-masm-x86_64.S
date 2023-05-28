@@ -75,6 +75,7 @@ PUBLIC	aesni_cbc_sha1_enc
 
 ALIGN	16
 aesni_cbc_sha1_enc	PROC PUBLIC
+	endbr64
 
 	mov	r10d,DWORD PTR[((OPENSSL_ia32cap_P+0))]
 	mov	r11d,DWORD PTR[((OPENSSL_ia32cap_P+4))]
@@ -96,6 +97,7 @@ $L$SEH_begin_aesni_cbc_sha1_enc_ssse3::
 	mov	r9,QWORD PTR[48+rsp]
 
 
+	endbr64
 	mov	r10,QWORD PTR[56+rsp]
 
 
@@ -1506,6 +1508,7 @@ EXTERN	__imp_RtlVirtualUnwind:NEAR
 
 ALIGN	16
 ssse3_handler	PROC PRIVATE
+	endbr64
 	push	rsi
 	push	rdi
 	push	rbx

@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_eay.c,v 1.56 2022/12/26 07:18:52 jmc Exp $ */
+/* $OpenBSD: rsa_eay.c,v 1.60 2023/05/05 12:21:44 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -226,10 +226,11 @@ RSA_eay_public_encrypt(int flen, const unsigned char *from, unsigned char *to,
 		goto err;
 	}
 
-	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC)
+	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC) {
 		if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
 		    CRYPTO_LOCK_RSA, rsa->n, ctx))
 			goto err;
+	}
 
 	if (!rsa->meth->bn_mod_exp(ret, f, rsa->e, rsa->n, ctx,
 	    rsa->_method_mod_n))
@@ -403,6 +404,12 @@ RSA_eay_private_encrypt(int flen, const unsigned char *from, unsigned char *to,
 		goto err;
 	}
 
+	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC) {
+		if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
+		    CRYPTO_LOCK_RSA, rsa->n, ctx))
+			goto err;
+	}
+
 	if (!(rsa->flags & RSA_FLAG_NO_BLINDING)) {
 		blinding = rsa_get_blinding(rsa, &local_blinding, ctx);
 		if (blinding == NULL) {
@@ -430,11 +437,6 @@ RSA_eay_private_encrypt(int flen, const unsigned char *from, unsigned char *to,
 
 		BN_init(&d);
 		BN_with_flags(&d, rsa->d, BN_FLG_CONSTTIME);
-
-		if (rsa->flags & RSA_FLAG_CACHE_PUBLIC)
-			if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
-			    CRYPTO_LOCK_RSA, rsa->n, ctx))
-				goto err;
 
 		if (!rsa->meth->bn_mod_exp(ret, f, &d, rsa->n, ctx,
 		    rsa->_method_mod_n)) {
@@ -521,6 +523,12 @@ RSA_eay_private_decrypt(int flen, const unsigned char *from, unsigned char *to,
 		goto err;
 	}
 
+	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC) {
+		if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
+		    CRYPTO_LOCK_RSA, rsa->n, ctx))
+			goto err;
+	}
+
 	if (!(rsa->flags & RSA_FLAG_NO_BLINDING)) {
 		blinding = rsa_get_blinding(rsa, &local_blinding, ctx);
 		if (blinding == NULL) {
@@ -549,11 +557,6 @@ RSA_eay_private_decrypt(int flen, const unsigned char *from, unsigned char *to,
 
 		BN_init(&d);
 		BN_with_flags(&d, rsa->d, BN_FLG_CONSTTIME);
-
-		if (rsa->flags & RSA_FLAG_CACHE_PUBLIC)
-			if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
-			    CRYPTO_LOCK_RSA, rsa->n, ctx))
-				goto err;
 
 		if (!rsa->meth->bn_mod_exp(ret, f, &d, rsa->n, ctx,
 		    rsa->_method_mod_n)) {
@@ -654,10 +657,11 @@ RSA_eay_public_decrypt(int flen, const unsigned char *from, unsigned char *to,
 		goto err;
 	}
 
-	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC)
+	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC) {
 		if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
 		    CRYPTO_LOCK_RSA, rsa->n, ctx))
 			goto err;
+	}
 
 	if (!rsa->meth->bn_mod_exp(ret, f, rsa->e, rsa->n, ctx,
 	    rsa->_method_mod_n))
@@ -734,10 +738,11 @@ RSA_eay_mod_exp(BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx)
 		}
 	}
 
-	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC)
+	if (rsa->flags & RSA_FLAG_CACHE_PUBLIC) {
 		if (!BN_MONT_CTX_set_locked(&rsa->_method_mod_n,
 		    CRYPTO_LOCK_RSA, rsa->n, ctx))
 			goto err;
+	}
 
 	/* compute I mod q */
 	BN_init(&c);

@@ -5,6 +5,7 @@
 
 .p2align	4
 _sha256_block_data_order:
+	
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

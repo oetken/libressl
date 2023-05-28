@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_pmeth.c,v 1.35 2023/03/06 08:31:34 tb Exp $ */
+/* $OpenBSD: rsa_pmeth.c,v 1.38 2023/05/05 12:21:44 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -416,12 +416,19 @@ check_padding_md(const EVP_MD *md, int padding)
 		}
 	} else {
 		/* List of all supported RSA digests. */
+		/* RFC 8017 and NIST CSOR. */
 		switch(EVP_MD_type(md)) {
 		case NID_sha1:
 		case NID_sha224:
 		case NID_sha256:
 		case NID_sha384:
 		case NID_sha512:
+		case NID_sha512_224:
+		case NID_sha512_256:
+		case NID_sha3_224:
+		case NID_sha3_256:
+		case NID_sha3_384:
+		case NID_sha3_512:
 		case NID_md5:
 		case NID_md5_sha1:
 		case NID_md4:

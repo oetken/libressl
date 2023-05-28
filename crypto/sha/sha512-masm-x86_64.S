@@ -83,6 +83,7 @@ $L$SEH_begin_sha512_block_data_order::
 	mov	rcx,r9
 
 
+	endbr64
 	push	rbx
 	push	rbp
 	push	r12

@@ -1,4 +1,4 @@
-/* $OpenBSD: s3_lib.c,v 1.242.4.1 2023/05/26 08:49:20 tb Exp $ */
+/* $OpenBSD: s3_lib.c,v 1.243 2023/05/16 14:10:43 jcs Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *

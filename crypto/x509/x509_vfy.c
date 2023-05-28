@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_vfy.c,v 1.111 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: x509_vfy.c,v 1.123 2023/05/14 20:20:40 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -73,9 +73,10 @@
 #include <openssl/objects.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
+
 #include "asn1_local.h"
-#include "vpm_int.h"
 #include "x509_internal.h"
+#include "x509_local.h"
 
 /* CRL score values */
 
@@ -143,7 +144,7 @@ static int X509_cmp_time_internal(const ASN1_TIME *ctm, time_t *cmp_time,
     int clamp_notafter);
 
 static int internal_verify(X509_STORE_CTX *ctx);
-static int get_issuer_sk(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);
+static int get_trusted_issuer(X509 **issuer, X509_STORE_CTX *ctx, X509 *x);
 static int check_key_level(X509_STORE_CTX *ctx, X509 *cert);
 static int verify_cb_cert(X509_STORE_CTX *ctx, X509 *x, int depth, int err);
 
@@ -154,14 +155,6 @@ null_callback(int ok, X509_STORE_CTX *e)
 {
 	return ok;
 }
-
-#if 0
-static int
-x509_subject_cmp(X509 **a, X509 **b)
-{
-	return X509_subject_name_cmp(*a, *b);
-}
-#endif
 
 /* Return 1 if a certificate is self signed */
 static int
@@ -585,7 +578,7 @@ X509_verify_cert_legacy(X509_STORE_CTX *ctx)
 		goto end;
 
 	/* If we get this far evaluate policies */
-	if (!bad_chain && (ctx->param->flags & X509_V_FLAG_POLICY_CHECK))
+	if (!bad_chain)
 		ok = ctx->check_policy(ctx);
 
  end:
@@ -599,7 +592,6 @@ X509_verify_cert_legacy(X509_STORE_CTX *ctx)
 int
 X509_verify_cert(X509_STORE_CTX *ctx)
 {
-	STACK_OF(X509) *roots = NULL;
 	struct x509_verify_ctx *vctx = NULL;
 	int chain_count = 0;
 
@@ -663,8 +655,6 @@ X509_verify_cert(X509_STORE_CTX *ctx)
 	}
 	x509_verify_ctx_free(vctx);
 
-	sk_X509_pop_free(roots, X509_free);
-
 	/* if we succeed we have a chain in ctx->chain */
 	return (chain_count > 0 && ctx->chain != NULL);
 }
@@ -704,12 +694,12 @@ check_issued(X509_STORE_CTX *ctx, X509 *subject, X509 *issuer)
 	return X509_check_issued(issuer, subject) == X509_V_OK;
 }
 
-/* Alternative lookup method: look from a STACK stored in other_ctx */
+/* Alternative lookup method: look from a STACK stored in ctx->trusted */
 
 static int
-get_issuer_sk(X509 **issuer, X509_STORE_CTX *ctx, X509 *x)
+get_trusted_issuer(X509 **issuer, X509_STORE_CTX *ctx, X509 *x)
 {
-	*issuer = find_issuer(ctx, ctx->other_ctx, x, 1);
+	*issuer = find_issuer(ctx, ctx->trusted, x, 1);
 	if (*issuer) {
 		CRYPTO_add(&(*issuer)->references, 1, CRYPTO_LOCK_X509);
 		return 1;
@@ -732,7 +722,6 @@ x509_vfy_check_chain_extensions(X509_STORE_CTX *ctx)
 	int (*cb)(int xok, X509_STORE_CTX *xctx);
 	int proxy_path_length = 0;
 	int purpose;
-	int allow_proxy_certs;
 
 	cb = ctx->verify_cb;
 
@@ -747,14 +736,10 @@ x509_vfy_check_chain_extensions(X509_STORE_CTX *ctx)
 	must_be_ca = -1;
 
 	/* CRL path validation */
-	if (ctx->parent) {
-		allow_proxy_certs = 0;
+	if (ctx->parent)
 		purpose = X509_PURPOSE_CRL_SIGN;
-	} else {
-		allow_proxy_certs =
-		    !!(ctx->param->flags & X509_V_FLAG_ALLOW_PROXY_CERTS);
+	else
 		purpose = ctx->param->purpose;
-	}
 
 	/* Check all untrusted certificates */
 	for (i = 0; i < ctx->num_untrusted; i++) {
@@ -763,14 +748,6 @@ x509_vfy_check_chain_extensions(X509_STORE_CTX *ctx)
 		if (!(ctx->param->flags & X509_V_FLAG_IGNORE_CRITICAL) &&
 		    (x->ex_flags & EXFLAG_CRITICAL)) {
 			ctx->error = X509_V_ERR_UNHANDLED_CRITICAL_EXTENSION;
-			ctx->error_depth = i;
-			ctx->current_cert = x;
-			ok = cb(0, ctx);
-			if (!ok)
-				goto end;
-		}
-		if (!allow_proxy_certs && (x->ex_flags & EXFLAG_PROXY)) {
-			ctx->error = X509_V_ERR_PROXY_CERTIFICATES_NOT_ALLOWED;
 			ctx->error_depth = i;
 			ctx->current_cert = x;
 			ok = cb(0, ctx);
@@ -838,24 +815,7 @@ x509_vfy_check_chain_extensions(X509_STORE_CTX *ctx)
 		/* Increment path length if not self issued */
 		if (!(x->ex_flags & EXFLAG_SI))
 			plen++;
-		/* If this certificate is a proxy certificate, the next
-		   certificate must be another proxy certificate or a EE
-		   certificate.  If not, the next certificate must be a
-		   CA certificate.  */
-		if (x->ex_flags & EXFLAG_PROXY) {
-			if (x->ex_pcpathlen != -1 && i > x->ex_pcpathlen) {
-				ctx->error =
-				    X509_V_ERR_PROXY_PATH_LENGTH_EXCEEDED;
-				ctx->error_depth = i;
-				ctx->current_cert = x;
-				ok = cb(0, ctx);
-				if (!ok)
-					goto end;
-			}
-			proxy_path_length++;
-			must_be_ca = 0;
-		} else
-			must_be_ca = 1;
+		must_be_ca = 1;
 	}
 	ok = 1;
 
@@ -1775,48 +1735,31 @@ cert_crl(X509_STORE_CTX *ctx, X509_CRL *crl, X509 *x)
 int
 x509_vfy_check_policy(X509_STORE_CTX *ctx)
 {
+	X509 *current_cert = NULL;
 	int ret;
 
-	if (ctx->parent)
+	if (ctx->parent != NULL)
 		return 1;
 
-	/* X509_policy_check always allocates a new tree. */
-	X509_policy_tree_free(ctx->tree);
-	ctx->tree = NULL;
-
-	ret = X509_policy_check(&ctx->tree, &ctx->explicit_policy, ctx->chain,
-	    ctx->param->policies, ctx->param->flags);
-	if (ret == 0) {
-		X509error(ERR_R_MALLOC_FAILURE);
-		return 0;
-	}
-	/* Invalid or inconsistent extensions */
-	if (ret == -1) {
-		/* Locate certificates with bad extensions and notify
-		 * callback.
-		 */
-		X509 *x;
-		int i;
-		for (i = 1; i < sk_X509_num(ctx->chain); i++) {
-			x = sk_X509_value(ctx->chain, i);
-			if (!(x->ex_flags & EXFLAG_INVALID_POLICY))
-				continue;
-			ctx->current_cert = x;
-			ctx->error = X509_V_ERR_INVALID_POLICY_EXTENSION;
-			if (!ctx->verify_cb(0, ctx))
-				return 0;
-		}
-		return 1;
-	}
-	if (ret == -2) {
-		ctx->current_cert = NULL;
-		ctx->error = X509_V_ERR_NO_EXPLICIT_POLICY;
+	ret = X509_policy_check(ctx->chain, ctx->param->policies,
+	    ctx->param->flags, &current_cert);
+	if (ret != X509_V_OK) {
+		ctx->current_cert = current_cert;
+		ctx->error = ret;
+		if (ret == X509_V_ERR_OUT_OF_MEM)
+			return 0;
 		return ctx->verify_cb(0, ctx);
 	}
 
 	if (ctx->param->flags & X509_V_FLAG_NOTIFY_POLICY) {
 		ctx->current_cert = NULL;
-		ctx->error = X509_V_OK;
+		/*
+		 * Verification errors need to be "sticky", a callback may have
+		 * allowed an SSL handshake to continue despite an error, and
+		 * we must then remain in an error state.  Therefore, we MUST
+		 * NOT clear earlier verification errors by setting the error
+		 * to X509_V_OK.
+		 */
 		if (!ctx->verify_cb(2, ctx))
 			return 0;
 	}
@@ -2365,8 +2308,8 @@ X509_STORE_CTX_free(X509_STORE_CTX *ctx)
 LCRYPTO_ALIAS(X509_STORE_CTX_free);
 
 int
-X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *x509,
-    STACK_OF(X509) *chain)
+X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *leaf,
+    STACK_OF(X509) *untrusted)
 {
 	int param_ret = 1;
 
@@ -2394,8 +2337,8 @@ X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *x509,
 	 * possible even on early exits.
 	 */
 	ctx->store = store;
-	ctx->cert = x509;
-	ctx->untrusted = chain;
+	ctx->cert = leaf;
+	ctx->untrusted = untrusted;
 
 	if (store && store->verify)
 		ctx->verify = store->verify;
@@ -2442,12 +2385,12 @@ X509_STORE_CTX_init(X509_STORE_CTX *ctx, X509_STORE *store, X509 *x509,
 	if (store && store->lookup_certs)
 		ctx->lookup_certs = store->lookup_certs;
 	else
-		ctx->lookup_certs = X509_STORE_get1_certs;
+		ctx->lookup_certs = X509_STORE_CTX_get1_certs;
 
 	if (store && store->lookup_crls)
 		ctx->lookup_crls = store->lookup_crls;
 	else
-		ctx->lookup_crls = X509_STORE_get1_crls;
+		ctx->lookup_crls = X509_STORE_CTX_get1_crls;
 
 	if (store && store->cleanup)
 		ctx->cleanup = store->cleanup;
@@ -2491,17 +2434,17 @@ LCRYPTO_ALIAS(X509_STORE_CTX_init);
  */
 
 void
-X509_STORE_CTX_trusted_stack(X509_STORE_CTX *ctx, STACK_OF(X509) *sk)
+X509_STORE_CTX_trusted_stack(X509_STORE_CTX *ctx, STACK_OF(X509) *trusted)
 {
-	ctx->other_ctx = sk;
-	ctx->get_issuer = get_issuer_sk;
+	X509_STORE_CTX_set0_trusted_stack(ctx, trusted);
 }
 LCRYPTO_ALIAS(X509_STORE_CTX_trusted_stack);
 
 void
-X509_STORE_CTX_set0_trusted_stack(X509_STORE_CTX *ctx, STACK_OF(X509) *sk)
+X509_STORE_CTX_set0_trusted_stack(X509_STORE_CTX *ctx, STACK_OF(X509) *trusted)
 {
-	X509_STORE_CTX_trusted_stack(ctx, sk);
+	ctx->trusted = trusted;
+	ctx->get_issuer = get_trusted_issuer;
 }
 LCRYPTO_ALIAS(X509_STORE_CTX_set0_trusted_stack);
 
@@ -2514,10 +2457,6 @@ X509_STORE_CTX_cleanup(X509_STORE_CTX *ctx)
 		if (ctx->parent == NULL)
 			X509_VERIFY_PARAM_free(ctx->param);
 		ctx->param = NULL;
-	}
-	if (ctx->tree != NULL) {
-		X509_policy_tree_free(ctx->tree);
-		ctx->tree = NULL;
 	}
 	if (ctx->chain != NULL) {
 		sk_X509_pop_free(ctx->chain, X509_free);
@@ -2629,20 +2568,6 @@ X509_STORE_CTX_set0_verified_chain(X509_STORE_CTX *ctx, STACK_OF(X509) *sk)
 	ctx->chain = sk;
 }
 LCRYPTO_ALIAS(X509_STORE_CTX_set0_verified_chain);
-
-X509_POLICY_TREE *
-X509_STORE_CTX_get0_policy_tree(X509_STORE_CTX *ctx)
-{
-	return ctx->tree;
-}
-LCRYPTO_ALIAS(X509_STORE_CTX_get0_policy_tree);
-
-int
-X509_STORE_CTX_get_explicit_policy(X509_STORE_CTX *ctx)
-{
-	return ctx->explicit_policy;
-}
-LCRYPTO_ALIAS(X509_STORE_CTX_get_explicit_policy);
 
 int
 X509_STORE_CTX_get_num_untrusted(X509_STORE_CTX *ctx)

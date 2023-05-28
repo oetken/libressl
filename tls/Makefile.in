@@ -882,7 +882,7 @@ uninstall-am: uninstall-libLTLIBRARIES
 
 libtls_la_objects.mk: Makefile
 	@echo "libtls_la_objects= $(libtls_la_OBJECTS)" \
-	  | sed 's/  */ $$\(abs_top_builddir\)\/tls\//g' \
+	  | sed -e 's/ *$$//' -e 's/  */ $$\(abs_top_builddir\)\/tls\//g' \
 	  > libtls_la_objects.mk
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

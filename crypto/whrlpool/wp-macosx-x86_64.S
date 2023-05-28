@@ -5,6 +5,7 @@
 
 .p2align	4
 _whirlpool_block:
+	
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

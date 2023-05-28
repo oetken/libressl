@@ -1,4 +1,4 @@
-/* $OpenBSD: tlsexttest.c,v 1.79 2022/11/26 16:08:57 tb Exp $ */
+/* $OpenBSD: tlsexttest.c,v 1.81 2023/04/27 10:53:58 tb Exp $ */
 /*
  * Copyright (c) 2017 Joel Sing <jsing@openbsd.org>
  * Copyright (c) 2017 Doug Hogan <doug@openbsd.org>
@@ -33,9 +33,11 @@ struct tls_extension_funcs {
 	int (*parse)(SSL *s, uint16_t msg_type, CBS *cbs, int *alert);
 };
 
+uint16_t tls_extension_type(const struct tls_extension *);
 const struct tls_extension *tls_extension_find(uint16_t, size_t *);
 const struct tls_extension_funcs *tlsext_funcs(const struct tls_extension *,
     int);
+int tlsext_linearize_build_order(SSL *);
 
 static int
 tls_extension_funcs(int type, const struct tls_extension_funcs **client_funcs,
@@ -3228,6 +3230,11 @@ test_tlsext_clienthello_build(void)
 		goto err;
 	}
 
+	if (!tlsext_linearize_build_order(ssl)) {
+		FAIL("failed to linearize build order");
+		goto err;
+	}
+
 	if (!tls_extension_funcs(TLSEXT_TYPE_supported_versions, &client_funcs,
 	    &server_funcs))
 		errx(1, "failed to fetch supported versions funcs");
@@ -3342,6 +3349,10 @@ test_tlsext_serverhello_build(void)
 	}
 	if ((ssl = SSL_new(ssl_ctx)) == NULL) {
 		FAIL("failed to create SSL");
+		goto err;
+	}
+	if (!tlsext_linearize_build_order(ssl)) {
+		FAIL("failed to linearize build order");
 		goto err;
 	}
 	if ((ssl->session = SSL_SESSION_new()) == NULL) {
@@ -4437,6 +4448,105 @@ test_tlsext_valid_hostnames(void)
 	return failure;
 }
 
+#define N_TLSEXT_RANDOMIZATION_TESTS 1000
+
+static int
+test_tlsext_check_extension_order(SSL *ssl)
+{
+	const struct tls_extension *ext;
+	uint16_t type;
+	size_t alpn_idx, sni_idx;
+	size_t i;
+
+	if (ssl->tlsext_build_order_len == 0) {
+		FAIL("Unexpected zero build order length");
+		return 1;
+	}
+
+	ext = ssl->tlsext_build_order[ssl->tlsext_build_order_len - 1];
+	if ((type = tls_extension_type(ext)) != TLSEXT_TYPE_psk) {
+		FAIL("last extension is %u, want %u\n", type, TLSEXT_TYPE_psk);
+		return 1;
+	}
+
+	if (ssl->server)
+		return 0;
+
+	alpn_idx = sni_idx = ssl->tlsext_build_order_len;
+	for (i = 0; i < ssl->tlsext_build_order_len; i++) {
+		ext = ssl->tlsext_build_order[i];
+		if (tls_extension_type(ext) == TLSEXT_TYPE_alpn)
+			alpn_idx = i;
+		if (tls_extension_type(ext) == TLSEXT_TYPE_server_name)
+			sni_idx = i;
+	}
+
+	if (alpn_idx == ssl->tlsext_build_order_len) {
+		FAIL("could not find alpn extension\n");
+		return 1;
+	}
+
+	if (sni_idx == ssl->tlsext_build_order_len) {
+		FAIL("could not find alpn extension\n");
+		return 1;
+	}
+
+	if (sni_idx >= alpn_idx) {
+		FAIL("sni does not precede alpn: %zu >= %zu\n",
+		    sni_idx, alpn_idx);
+		return 1;
+	}
+
+	return 0;
+}
+
+static int
+test_tlsext_randomized_extensions(SSL *ssl)
+{
+	size_t i;
+	int failed = 0;
+
+	for (i = 0; i < N_TLSEXT_RANDOMIZATION_TESTS; i++) {
+		if (!tlsext_randomize_build_order(ssl))
+			errx(1, "failed to randomize extensions");
+		failed |= test_tlsext_check_extension_order(ssl);
+	}
+
+	return failed;
+}
+
+static int
+test_tlsext_extension_order(void)
+{
+	SSL_CTX *ssl_ctx = NULL;
+	SSL *ssl = NULL;
+	int failure;
+
+	failure = 0;
+
+	if ((ssl_ctx = SSL_CTX_new(TLS_client_method())) == NULL)
+		errx(1, "failed to create SSL_CTX");
+	if ((ssl = SSL_new(ssl_ctx)) == NULL)
+		errx(1, "failed to create SSL");
+
+	failure |= test_tlsext_randomized_extensions(ssl);
+
+	SSL_CTX_free(ssl_ctx);
+	SSL_free(ssl);
+
+	if ((ssl_ctx = SSL_CTX_new(TLS_server_method())) == NULL)
+		errx(1, "failed to create SSL_CTX");
+	if ((ssl = SSL_new(ssl_ctx)) == NULL)
+		errx(1, "failed to create SSL");
+
+	failure |= test_tlsext_randomized_extensions(ssl);
+
+	SSL_CTX_free(ssl_ctx);
+	SSL_free(ssl);
+
+	return failure;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -4494,6 +4604,8 @@ main(int argc, char **argv)
 
 	failed |= test_tlsext_quic_transport_parameters_client();
 	failed |= test_tlsext_quic_transport_parameters_server();
+
+	failed |= test_tlsext_extension_order();
 
 	return (failed);
 }

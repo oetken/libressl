@@ -1,4 +1,4 @@
-/*	$OpenBSD: ecdhtest.c,v 1.13 2023/03/08 16:51:42 tb Exp $	*/
+/*	$OpenBSD: ecdhtest.c,v 1.16 2023/05/20 16:00:22 tb Exp $	*/
 /* ====================================================================
  * Copyright 2002 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
  *
@@ -146,7 +146,8 @@ test_ecdh_curve(int nid, const char *text, BN_CTX *ctx, BIO *out)
 	(void)BIO_flush(out);
 
 	alen = KDF1_SHA1_len;
-	abuf = malloc(alen);
+	if ((abuf = malloc(alen)) == NULL)
+		goto err;
 	aout = ECDH_compute_key(abuf, alen, EC_KEY_get0_public_key(b),
 	    a, KDF1_SHA1);
 
@@ -154,7 +155,8 @@ test_ecdh_curve(int nid, const char *text, BN_CTX *ctx, BIO *out)
 	(void)BIO_flush(out);
 
 	blen = KDF1_SHA1_len;
-	bbuf = malloc(blen);
+	if ((bbuf = malloc(blen)) == NULL)
+		goto err;
 	bout = ECDH_compute_key(bbuf, blen, EC_KEY_get0_public_key(a),
 	    b, KDF1_SHA1);
 
@@ -344,7 +346,8 @@ ecdh_kat(BIO *out, const char *cname, int nid,
 	Ztmplen = ECDH_size(key1);
 	if (Ztmplen != Zlen)
 		goto err;
-	Ztmp = malloc(Ztmplen);
+	if ((Ztmp = malloc(Ztmplen)) == NULL)
+		goto err;
 	if (!ECDH_compute_key(Ztmp, Ztmplen,
 	    EC_KEY_get0_public_key(key2), key1, 0))
 		goto err;
@@ -407,39 +410,6 @@ main(int argc, char *argv[])
 		goto err;
 	if (!test_ecdh_curve(NID_secp521r1, "NIST Prime-Curve P-521", ctx, out))
 		goto err;
-#ifndef OPENSSL_NO_EC2M
-	/* NIST BINARY CURVES TESTS */
-	if (!test_ecdh_curve(NID_sect163k1, "NIST Binary-Curve K-163",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect163r2, "NIST Binary-Curve B-163",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect233k1, "NIST Binary-Curve K-233",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect233r1, "NIST Binary-Curve B-233",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect283k1, "NIST Binary-Curve K-283",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect283r1, "NIST Binary-Curve B-283",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect409k1, "NIST Binary-Curve K-409",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect409r1, "NIST Binary-Curve B-409",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect571k1, "NIST Binary-Curve K-571",
-	    ctx, out))
-		goto err;
-	if (!test_ecdh_curve(NID_sect571r1, "NIST Binary-Curve B-571",
-	    ctx, out))
-		goto err;
-#endif
 	if (!test_ecdh_kat(out, "Brainpool Prime-Curve brainpoolP256r1", 256))
 		goto err;
 	if (!test_ecdh_kat(out, "Brainpool Prime-Curve brainpoolP384r1", 384))

@@ -7,6 +7,7 @@
 .def	aesni_cbc_sha1_enc;	.scl 2;	.type 32;	.endef
 .p2align	4
 aesni_cbc_sha1_enc:
+	endbr64
 
 	movl	OPENSSL_ia32cap_P+0(%rip),%r10d
 	movl	OPENSSL_ia32cap_P+4(%rip),%r11d
@@ -27,6 +28,7 @@ aesni_cbc_sha1_enc_ssse3:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+	endbr64
 	movq	56(%rsp),%r10
 
 
@@ -1434,6 +1436,7 @@ K_XX_XX:
 .def	ssse3_handler;	.scl 3;	.type 32;	.endef
 .p2align	4
 ssse3_handler:
+	endbr64
 	pushq	%rsi
 	pushq	%rdi
 	pushq	%rbx

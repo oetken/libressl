@@ -1,10 +1,11 @@
 #!/bin/sh
 set -e
+set -x
 
 unset CC
+ENABLE_ASM="${ENABLE_ASM:=ON}"
 
-if type apt-get >/dev/null
-then
+if type apt-get >/dev/null 2>&1; then
 	sudo apt-get update
 	sudo apt-get install -y cmake ninja-build
 fi
@@ -27,21 +28,21 @@ if [ "x$ARCH" = "xnative" ]; then
 
 	# test cmake and ninja
 	if [ `uname` = "Darwin" ]; then
-		cmake ..
+		cmake -DENABLE_ASM=${ENABLE_ASM} ..
 		make -j 4
 		make test
 
 		cd ../build-shared
-		cmake -DBUILD_SHARED_LIBS=ON ..
+		cmake -DBUILD_SHARED_LIBS=ON -DENABLE_ASM=${ENABLE_ASM} ..
 		make -j 4
 		make test
 	else
-		cmake -GNinja ..
+		cmake -GNinja -DENABLE_ASM=${ENABLE_ASM} ..
 		ninja -j 4
 		ninja test
 
 		cd ../build-shared
-		cmake -GNinja -DBUILD_SHARED_LIBS=ON ..
+		cmake -GNinja -DBUILD_SHARED_LIBS=ON -DENABLE_ASM=${ENABLE_ASM} ..
 		ninja -j 4
 		ninja test
 	fi
@@ -52,7 +53,9 @@ elif [ "x$ARCH" = "xmingw32" -o "x$ARCH" = "xmingw64" ]; then
 		CPU=x86_64
 	fi
 
-	sudo apt-get install -y mingw-w64
+	if ! type i686-w64-mingw32-gcc > /dev/null; then
+		sudo apt-get install -y mingw-w64
+	fi
 
 	./configure --host=$CPU-w64-mingw32
 	make -j 4
@@ -61,14 +64,14 @@ elif [ "x$ARCH" = "xmingw32" -o "x$ARCH" = "xmingw64" ]; then
 	 rm -fr build-static
 	 mkdir build-static
 	 cd build-static
-	 cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../scripts/$CPU-w64-mingw32.cmake ..
+	 cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../scripts/$CPU-w64-mingw32.cmake -DENABLE_ASM=${ENABLE_ASM} ..
 	 ninja -j 4
 	)
 	(
 	 rm -fr build-shared
 	 mkdir build-shared
 	 cd build-shared
-	 cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../scripts/$CPU-w64-mingw32.cmake -DBUILD_SHARED_LIBS=ON ..
+	 cmake -GNinja -DCMAKE_TOOLCHAIN_FILE=../scripts/$CPU-w64-mingw32.cmake -DBUILD_SHARED_LIBS=ON -DENABLE_ASM=${ENABLE_ASM} ..
 	 ninja -j 4
 	)
 
@@ -140,7 +143,8 @@ elif [ "x$ARCH" = "xandroid" ]; then
 		 cmake -GNinja -DCMAKE_MAKE_PROGRAM=ninja \
 		 -DANDROID_NDK=$ANDROID_NDK_HOME \
 		 -DCMAKE_TOOLCHAIN_FILE=$TC_FILE \
-		 -DANDROID_ABI=$ABI -DANDROID_NATIVE_API_LEVEL=$NAL ..
+		 -DANDROID_ABI=$ABI -DANDROID_NATIVE_API_LEVEL=$NAL \
+		 -DENABLE_ASM=${ENABLE_ASM} ..
 
 		 ninja -j 4
 

@@ -1,4 +1,4 @@
-/* $OpenBSD: asn1.h,v 1.72 2022/11/13 13:59:46 tb Exp $ */
+/* $OpenBSD: asn1.h,v 1.76 2023/04/25 19:08:30 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -66,13 +66,11 @@
 #ifndef OPENSSL_NO_BIO
 #include <openssl/bio.h>
 #endif
+#include <openssl/bn.h>
 #include <openssl/stack.h>
 #include <openssl/safestack.h>
 
 #include <openssl/ossl_typ.h>
-#ifndef OPENSSL_NO_DEPRECATED
-#include <openssl/bn.h>
-#endif
 
 #ifdef  __cplusplus
 extern "C" {
@@ -882,7 +880,6 @@ void ASN1_item_free(ASN1_VALUE *val, const ASN1_ITEM *it);
 ASN1_VALUE *ASN1_item_d2i(ASN1_VALUE **val, const unsigned char **in,
     long len, const ASN1_ITEM *it);
 int ASN1_item_i2d(ASN1_VALUE *val, unsigned char **out, const ASN1_ITEM *it);
-int ASN1_item_ndef_i2d(ASN1_VALUE *val, unsigned char **out, const ASN1_ITEM *it);
 
 void ASN1_add_oid_module(void);
 
@@ -927,16 +924,6 @@ void ASN1_PCTX_set_str_flags(ASN1_PCTX *p, unsigned long flags);
 
 const BIO_METHOD *BIO_f_asn1(void);
 
-BIO *BIO_new_NDEF(BIO *out, ASN1_VALUE *val, const ASN1_ITEM *it);
-
-int i2d_ASN1_bio_stream(BIO *out, ASN1_VALUE *val, BIO *in, int flags,
-    const ASN1_ITEM *it);
-int PEM_write_bio_ASN1_stream(BIO *out, ASN1_VALUE *val, BIO *in, int flags,
-    const char *hdr, const ASN1_ITEM *it);
-int SMIME_write_ASN1(BIO *bio, ASN1_VALUE *val, BIO *data, int flags,
-    int ctype_nid, int econt_nid, STACK_OF(X509_ALGOR) *mdalgs,
-    const ASN1_ITEM *it);
-ASN1_VALUE *SMIME_read_ASN1(BIO *bio, BIO **bcont, const ASN1_ITEM *it);
 int SMIME_crlf_copy(BIO *in, BIO *out, int flags);
 int SMIME_text(BIO *in, BIO *out);
 

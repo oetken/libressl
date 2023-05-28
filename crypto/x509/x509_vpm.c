@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_vpm.c,v 1.33 2023/02/16 08:38:17 tb Exp $ */
+/* $OpenBSD: x509_vpm.c,v 1.39 2023/05/24 09:15:14 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2004.
  */
@@ -66,7 +66,6 @@
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
 
-#include "vpm_int.h"
 #include "x509_local.h"
 
 /* X509_VERIFY_PARAM functions */
@@ -84,9 +83,6 @@ str_free(char *s)
 {
     free(s);
 }
-
-#define string_stack_free(sk) sk_OPENSSL_STRING_pop_free(sk, str_free)
-
 
 /*
  * Post 1.0.1 sk function "deep_copy".  For the moment we simply make
@@ -140,7 +136,7 @@ x509_param_set_hosts_internal(X509_VERIFY_PARAM_ID *id, int mode,
 		return 0;
 
 	if (mode == SET_HOST && id->hosts) {
-		string_stack_free(id->hosts);
+		sk_OPENSSL_STRING_pop_free(id->hosts, str_free);
 		id->hosts = NULL;
 	}
 	if (name == NULL || namelen == 0)
@@ -187,7 +183,7 @@ x509_verify_param_zero(X509_VERIFY_PARAM *param)
 	}
 	paramid = param->id;
 	if (paramid->hosts) {
-		string_stack_free(paramid->hosts);
+		sk_OPENSSL_STRING_pop_free(paramid->hosts, str_free);
 		paramid->hosts = NULL;
 	}
 	free(paramid->peername);
@@ -335,7 +331,7 @@ X509_VERIFY_PARAM_inherit(X509_VERIFY_PARAM *dest, const X509_VERIFY_PARAM *src)
 
 	if (test_x509_verify_param_copy_id(hosts, NULL)) {
 		if (dest->id->hosts) {
-			string_stack_free(dest->id->hosts);
+			sk_OPENSSL_STRING_pop_free(dest->id->hosts, str_free);
 			dest->id->hosts = NULL;
 		}
 		if (id->hosts) {
@@ -423,8 +419,6 @@ int
 X509_VERIFY_PARAM_set_flags(X509_VERIFY_PARAM *param, unsigned long flags)
 {
 	param->flags |= flags;
-	if (flags & X509_V_FLAG_POLICY_MASK)
-		param->flags |= X509_V_FLAG_POLICY_CHECK;
 	return 1;
 }
 LCRYPTO_ALIAS(X509_VERIFY_PARAM_set_flags);
@@ -532,7 +526,6 @@ X509_VERIFY_PARAM_set1_policies(X509_VERIFY_PARAM *param,
 			return 0;
 		}
 	}
-	param->flags |= X509_V_FLAG_POLICY_CHECK;
 	return 1;
 }
 LCRYPTO_ALIAS(X509_VERIFY_PARAM_set1_policies);
@@ -558,6 +551,13 @@ X509_VERIFY_PARAM_add1_host(X509_VERIFY_PARAM *param,
 	return 0;
 }
 LCRYPTO_ALIAS(X509_VERIFY_PARAM_add1_host);
+
+/* Public API in OpenSSL - nothing seems to use this. */
+unsigned int
+X509_VERIFY_PARAM_get_hostflags(X509_VERIFY_PARAM *param)
+{
+	return param->id->hostflags;
+}
 
 void
 X509_VERIFY_PARAM_set_hostflags(X509_VERIFY_PARAM *param, unsigned int flags)

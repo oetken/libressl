@@ -2,6 +2,7 @@
 
 .private_extern	_OPENSSL_cpuid_setup
 .mod_init_func
+	
 	.p2align	3
 	.quad	_OPENSSL_cpuid_setup
 
@@ -14,6 +15,7 @@
 
 .p2align	4
 _OPENSSL_ia32_cpuid:
+	
 	movq	%rbx,%r8
 
 	xorl	%eax,%eax
@@ -51,6 +53,7 @@ _OPENSSL_ia32_cpuid:
 	movl	%eax,%r10d
 	movl	$2147483649,%eax
 	cpuid
+	orl	%ecx,%r9d
 	andl	$IA32CAP_MASK1_AMD_XOP,%r9d
 	orl	$1,%r9d
 

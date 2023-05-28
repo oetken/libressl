@@ -84,6 +84,7 @@ $L$SEH_begin_sha1_block_data_order::
 	mov	rdx,r8
 
 
+	endbr64
 	mov	r9d,DWORD PTR[((OPENSSL_ia32cap_P+0))]
 	mov	r8d,DWORD PTR[((OPENSSL_ia32cap_P+4))]
 	test	r8d,(1 SHL 9)
@@ -1383,6 +1384,7 @@ $L$SEH_begin_sha1_block_data_order_ssse3::
 
 
 _ssse3_shortcut::
+	endbr64
 	push	rbx
 	push	rbp
 	push	r12
@@ -2596,6 +2598,7 @@ EXTERN	__imp_RtlVirtualUnwind:NEAR
 
 ALIGN	16
 se_handler	PROC PRIVATE
+	endbr64
 	push	rsi
 	push	rdi
 	push	rbx

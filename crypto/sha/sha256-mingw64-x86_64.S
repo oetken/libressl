@@ -14,6 +14,7 @@ sha256_block_data_order:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

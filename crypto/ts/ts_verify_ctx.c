@@ -1,4 +1,4 @@
-/* $OpenBSD: ts_verify_ctx.c,v 1.11 2022/07/24 19:54:46 tb Exp $ */
+/* $OpenBSD: ts_verify_ctx.c,v 1.13 2023/04/25 17:52:54 tb Exp $ */
 /* Written by Zoltan Glozik (zglozik@stones.com) for the OpenSSL
  * project 2003.
  */
@@ -76,12 +76,6 @@ TS_VERIFY_CTX_new(void)
 }
 
 void
-TS_VERIFY_CTX_init(TS_VERIFY_CTX *ctx)
-{
-	memset(ctx, 0, sizeof(TS_VERIFY_CTX));
-}
-
-void
 TS_VERIFY_CTX_free(TS_VERIFY_CTX *ctx)
 {
 	if (!ctx)
@@ -111,7 +105,7 @@ TS_VERIFY_CTX_cleanup(TS_VERIFY_CTX *ctx)
 
 	GENERAL_NAME_free(ctx->tsa_name);
 
-	TS_VERIFY_CTX_init(ctx);
+	memset(ctx, 0, sizeof(*ctx));
 }
 
 /*

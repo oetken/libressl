@@ -15,6 +15,8 @@ RC4:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 	movq	%r9,%rcx
+
+	endbr64
 	orq	%rsi,%rsi
 	jne	.Lentry
 	movq	8(%rsp),%rdi
@@ -544,6 +546,7 @@ RC4_set_key:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+	endbr64
 	leaq	8(%rdi),%rdi
 	leaq	(%rdx,%rsi,1),%rdx
 	negq	%rsi
@@ -618,6 +621,7 @@ RC4_set_key:
 .def	RC4_options;	.scl 2;	.type 32;	.endef
 .p2align	4
 RC4_options:
+	endbr64
 	leaq	.Lopts(%rip),%rax
 	movl	OPENSSL_ia32cap_P(%rip),%edx
 	btl	$IA32CAP_BIT0_INTELP4,%edx

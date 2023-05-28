@@ -3,16 +3,16 @@ Git, it can be confusing following all of the changes.
 
 Most of the libssl and libcrypto source code is is here in OpenBSD CVS:
 
-	http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libssl/
+	https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libssl/
 
 Some of the libcrypto and OS-compatibility files for entropy and random number
 generation are here:
 
-	http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libcrypto/
+	https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libcrypto/
 
 A simplified TLS wrapper library is here:
 
-	http://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libtls/
+	https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/lib/libtls/
 
 The LibreSSL Portable project copies these portions of the OpenBSD tree, along
 with relevant portions of the C library, to a Git repository. This makes it
@@ -28,13 +28,72 @@ history is also available from Git.
 
 LibreSSL Portable Release Notes:
 
-3.7.3 - Bug and reliability fixes
+3.8.0 - Development release
 
-	* Bug fix
-	  - Hostflags in the verify parameters would not propagate from an
-	    SSL_CTX to newly created SSL.
-	* Reliability fix
-	  - A double free or use after free could occur after SSL_clear(3).
+	* Portable changes
+	  - Extended the endian.h compat header with hto* and *toh macros.
+	  - Adapted more tests to the portable framework.
+	* Internal improvements
+	  - Improved sieve of Eratosthenes script used for generating a table
+	    of small primes.
+	  - Started cleaning up and rewriting SHA internals.
+	  - Replace internal use of BN_copy() with bn_copy() for consistency.
+	  - Rewrote and improved BN_exp() and BN_copy().
+	  - Add branch target information (BTI) support to arm64 assembly.
+	  - Replaced BN_mod_sqrt() with a new implementation.
+	  - Removed incomplete and dangerous BN_RECURSION code.
+	  - Added endbr64 instructions to amd64 assembly.
+	  - Imported RFC 5280 policy checking code from BoringSSL and used it
+	    to replace the old exponential time code.
+	  - Converted more of libcrypto to use CBB/CBS.
+	  - Cleaned up and simplified the code dealing with builtin curves.
+	* New features
+	  - Added support for truncated SHA-2 and for SHA-3.
+	  - The BPSW primality test performs additional Miller-Rabin rounds
+	    with random bases to reduce the likelihood of composites passing.
+	  - Allow testing of ciphers and digests using badly aligned buffers
+	    in openssl speed.
+	  - Added a workaround for a poorly thought-out change in OpenSSL 3 that
+	    broke privilege separation support in libtls.
+	* Compatibility changes
+	  - Support for GF2m was removed: BIGNUM no longer supports binary extension
+	    field arithmetic and all binary elliptic builtin curves were removed.
+	  - Removed dangerous, "fast" NIST prime and elliptic curve implementations.
+	    In particular, EC_GFp_nist_method() is no longer available.
+	  - Removed most public symbols that were deprecated in OpenSSL 0.9.8.
+	  - Removed the public X9.31 API (RSA_X931_PADDING is still available).
+	  - Removed Cipher Text Stealing mode.
+	  - Removed SXNET and NETSCAPE_CERT_SEQUENCE support including the
+	    openssl(1) nseq command.
+	  - Dropped proxy certificate (RFC 3820) support.
+	  - The POLICY_TREE and its related structures and API were removed.
+	  - The explicitText user notice uses UTF8String instead of VisibleString
+	    to reduce the risk of emitting certificates with invalid DER-encoding.
+	  - Initial fixes for RSA-PSS support to make the TLSv1.3 stack more
+	    compliant with RFC 8446.
+	* Bug fixes
+	  - Correctly handle negative input to various BIGNUM functions.
+	  - Ensure ERR_load_ERR_strings() does not set errno unexpectedly.
+	  - Fix error checking of i2d_ECDSA_SIG() in ossl_ecdsa_sign().
+	  - Fixed detection of extended operations (XOP) on AMD hardware.
+	  - Ensure Montgomery exponentiation is used for the initial RSA blinding.
+	  - Policy is always checked in X509 validation. Critical policy extensions
+	    are no longer silently ignored.
+	  - Fixed error handling in tls_check_common_name().
+	  - Add missing pointer invalidation in SSL_free().
+	  - Fixed X509err() and X509V3err() and their internal versions.
+	  - Ensure that OBJ_obj2txt() always returns a C string again.
+	  - In X509_VERIFY_PARAM_inherit() copy hostflags independently of the
+	    host list.
+	* Documentation improvements
+	  - Improved documentation of BIO_ctrl(3), BIO_set_info_callback(3),
+	    BIO_get_info_callback(3), BIO_method_type(3), and BIO_method_name(3).
+	  - Marked BIO_CB_return(), BIO_cb_pre(), and BIO_cb_post() as intentionally
+	    undocumented.
+	* Testing and Proactive Security
+	  - Significantly improved test coverage of BN_mod_sqrt() and GCD.
+	  - As always, new test coverage is added as bugs are fixed and subsystems
+	    are cleaned up.
 
 3.7.2 - Stable release
 

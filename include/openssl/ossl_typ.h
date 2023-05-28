@@ -1,4 +1,4 @@
-/* $OpenBSD: ossl_typ.h,v 1.22 2022/12/26 07:18:50 jmc Exp $ */
+/* $OpenBSD: ossl_typ.h,v 1.25 2023/04/25 18:28:05 tb Exp $ */
 /* ====================================================================
  * Copyright (c) 1998-2001 The OpenSSL Project.  All rights reserved.
  *
@@ -105,7 +105,6 @@ typedef struct bignum_st BIGNUM;
 typedef struct bignum_ctx BN_CTX;
 typedef struct bn_blinding_st BN_BLINDING;
 typedef struct bn_mont_ctx_st BN_MONT_CTX;
-typedef struct bn_recp_ctx_st BN_RECP_CTX;
 typedef struct bn_gencb_st BN_GENCB;
 
 typedef struct bio_st BIO;
@@ -175,11 +174,6 @@ typedef struct st_ERR_FNS ERR_FNS;
 typedef struct engine_st ENGINE;
 typedef struct ssl_st SSL;
 typedef struct ssl_ctx_st SSL_CTX;
-
-typedef struct X509_POLICY_NODE_st X509_POLICY_NODE;
-typedef struct X509_POLICY_LEVEL_st X509_POLICY_LEVEL;
-typedef struct X509_POLICY_TREE_st X509_POLICY_TREE;
-typedef struct X509_POLICY_CACHE_st X509_POLICY_CACHE;
 
 typedef struct AUTHORITY_KEYID_st AUTHORITY_KEYID;
 typedef struct DIST_POINT_st DIST_POINT;

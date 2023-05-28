@@ -75,6 +75,7 @@ EXTERN	asm_AES_decrypt:NEAR
 
 ALIGN	64
 _bsaes_encrypt8	PROC PRIVATE
+	endbr64
 	lea	r11,QWORD PTR[$L$BS0]
 
 	movdqa	xmm8,XMMWORD PTR[rax]
@@ -547,6 +548,7 @@ _bsaes_encrypt8	ENDP
 
 ALIGN	64
 _bsaes_decrypt8	PROC PRIVATE
+	endbr64
 	lea	r11,QWORD PTR[$L$BS0]
 
 	movdqa	xmm8,XMMWORD PTR[rax]
@@ -1052,6 +1054,7 @@ _bsaes_decrypt8	ENDP
 
 ALIGN	16
 _bsaes_key_convert	PROC PRIVATE
+	endbr64
 	lea	r11,QWORD PTR[$L$masks]
 	movdqu	xmm7,XMMWORD PTR[rcx]
 	lea	rcx,QWORD PTR[16+rcx]
@@ -1136,6 +1139,7 @@ PUBLIC	bsaes_cbc_encrypt
 
 ALIGN	16
 bsaes_cbc_encrypt	PROC PUBLIC
+	endbr64
 	mov	r11d,DWORD PTR[48+rsp]
 	cmp	r11d,0
 	jne	asm_AES_cbc_encrypt
@@ -1411,6 +1415,7 @@ PUBLIC	bsaes_ctr32_encrypt_blocks
 
 ALIGN	16
 bsaes_ctr32_encrypt_blocks	PROC PUBLIC
+	endbr64
 	mov	rax,rsp
 $L$ctr_enc_prologue::
 	push	rbp
@@ -1634,6 +1639,7 @@ PUBLIC	bsaes_xts_encrypt
 
 ALIGN	16
 bsaes_xts_encrypt	PROC PUBLIC
+	endbr64
 	mov	rax,rsp
 $L$xts_enc_prologue::
 	push	rbp
@@ -2111,6 +2117,7 @@ PUBLIC	bsaes_xts_decrypt
 
 ALIGN	16
 bsaes_xts_decrypt	PROC PUBLIC
+	endbr64
 	mov	rax,rsp
 $L$xts_dec_prologue::
 	push	rbp
@@ -2671,6 +2678,7 @@ EXTERN	__imp_RtlVirtualUnwind:NEAR
 
 ALIGN	16
 se_handler	PROC PRIVATE
+	endbr64
 	push	rsi
 	push	rdi
 	push	rbx

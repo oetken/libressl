@@ -6,6 +6,7 @@
 .def	Camellia_EncryptBlock;	.scl 2;	.type 32;	.endef
 .p2align	4
 Camellia_EncryptBlock:
+	endbr64
 	movl	$128,%eax
 	subl	%edi,%eax
 	movl	$3,%edi
@@ -27,6 +28,7 @@ Camellia_EncryptBlock_Rounds:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r13
@@ -77,6 +79,7 @@ Camellia_EncryptBlock_Rounds:
 .def	_x86_64_Camellia_encrypt;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_Camellia_encrypt:
+	endbr64
 	xorl	0(%r14),%r9d
 	xorl	4(%r14),%r8d
 	xorl	8(%r14),%r11d
@@ -286,6 +289,7 @@ _x86_64_Camellia_encrypt:
 .def	Camellia_DecryptBlock;	.scl 2;	.type 32;	.endef
 .p2align	4
 Camellia_DecryptBlock:
+	endbr64
 	movl	$128,%eax
 	subl	%edi,%eax
 	movl	$3,%edi
@@ -307,6 +311,7 @@ Camellia_DecryptBlock_Rounds:
 	movq	%r8,%rdx
 	movq	%r9,%rcx
 
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r13
@@ -357,6 +362,7 @@ Camellia_DecryptBlock_Rounds:
 .def	_x86_64_Camellia_decrypt;	.scl 3;	.type 32;	.endef
 .p2align	4
 _x86_64_Camellia_decrypt:
+	endbr64
 	xorl	0(%r14),%r9d
 	xorl	4(%r14),%r8d
 	xorl	8(%r14),%r11d
@@ -573,6 +579,7 @@ Camellia_Ekeygen:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r13
@@ -1651,6 +1658,7 @@ Camellia_cbc_encrypt:
 	movq	40(%rsp),%r8
 	movq	48(%rsp),%r9
 
+	endbr64
 	cmpq	$0,%rdx
 	je	.Lcbc_abort
 	pushq	%rbx

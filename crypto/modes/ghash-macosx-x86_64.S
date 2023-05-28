@@ -659,6 +659,7 @@ L$ghash_epilogue:
 
 .p2align	4
 _gcm_init_clmul:
+	
 	movdqu	(%rsi),%xmm2
 	pshufd	$78,%xmm2,%xmm2
 
@@ -724,6 +725,7 @@ _gcm_init_clmul:
 
 .p2align	4
 _gcm_gmult_clmul:
+	
 	movdqu	(%rdi),%xmm0
 	movdqa	L$bswap_mask(%rip),%xmm5
 	movdqu	(%rsi),%xmm2
@@ -774,6 +776,7 @@ _gcm_gmult_clmul:
 
 .p2align	4
 _gcm_ghash_clmul:
+	
 	movdqa	L$bswap_mask(%rip),%xmm5
 
 	movdqu	(%rdi),%xmm0

@@ -13,6 +13,7 @@ whirlpool_block:
 	movq	%rdx,%rsi
 	movq	%r8,%rdx
 
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
