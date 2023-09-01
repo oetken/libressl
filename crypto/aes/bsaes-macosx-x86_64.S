@@ -7,7 +7,7 @@
 
 .p2align	6
 _bsaes_encrypt8:
-	
+	endbr64
 	leaq	L$BS0(%rip),%r11
 
 	movdqa	(%rax),%xmm8
@@ -480,7 +480,7 @@ L$enc_done:
 
 .p2align	6
 _bsaes_decrypt8:
-	
+	endbr64
 	leaq	L$BS0(%rip),%r11
 
 	movdqa	(%rax),%xmm8
@@ -986,7 +986,7 @@ L$dec_done:
 
 .p2align	4
 _bsaes_key_convert:
-	
+	endbr64
 	leaq	L$masks(%rip),%r11
 	movdqu	(%rcx),%xmm7
 	leaq	16(%rcx),%rcx
@@ -1071,7 +1071,7 @@ L$key_loop:
 
 .p2align	4
 _bsaes_cbc_encrypt:
-	
+	endbr64
 	cmpl	$0,%r9d
 	jne	_asm_AES_cbc_encrypt
 	cmpq	$128,%rdx
@@ -1322,7 +1322,7 @@ L$cbc_dec_epilogue:
 
 .p2align	4
 _bsaes_ctr32_encrypt_blocks:
-	
+	endbr64
 	movq	%rsp,%rax
 L$ctr_enc_prologue:
 	pushq	%rbp
@@ -1522,7 +1522,7 @@ L$ctr_enc_epilogue:
 
 .p2align	4
 _bsaes_xts_encrypt:
-	
+	endbr64
 	movq	%rsp,%rax
 L$xts_enc_prologue:
 	pushq	%rbp
@@ -1975,7 +1975,7 @@ L$xts_enc_epilogue:
 
 .p2align	4
 _bsaes_xts_decrypt:
-	
+	endbr64
 	movq	%rsp,%rax
 L$xts_dec_prologue:
 	pushq	%rbp

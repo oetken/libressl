@@ -5,7 +5,7 @@
 
 .p2align	4
 _bn_mul_mont:
-	
+	endbr64
 	testl	$3,%r9d
 	jnz	L$mul_enter
 	cmpl	$8,%r9d
@@ -213,7 +213,7 @@ L$mul_epilogue:
 .p2align	4
 bn_mul4x_mont:
 L$mul4x_enter:
-	
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12
@@ -612,7 +612,7 @@ L$mul4x_epilogue:
 .p2align	4
 bn_sqr4x_mont:
 L$sqr4x_enter:
-	
+	endbr64
 	pushq	%rbx
 	pushq	%rbp
 	pushq	%r12

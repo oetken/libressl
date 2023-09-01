@@ -1,4 +1,4 @@
-/* $OpenBSD: obj_dat.c,v 1.53 2023/05/23 11:51:12 tb Exp $ */
+/* $OpenBSD: obj_dat.c,v 1.60 2023/08/17 09:28:43 tb Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -166,7 +166,6 @@ added_obj_hash(const ADDED_OBJ *ca)
 		ret = a->nid;
 		break;
 	default:
-		/* abort(); */
 		return 0;
 	}
 	ret &= 0x3fffffffL;
@@ -178,38 +177,32 @@ static IMPLEMENT_LHASH_HASH_FN(added_obj, ADDED_OBJ)
 static int
 added_obj_cmp(const ADDED_OBJ *ca, const ADDED_OBJ *cb)
 {
-	ASN1_OBJECT *a, *b;
-	int i;
+	const ASN1_OBJECT *a, *b;
+	int cmp;
 
-	i = ca->type - cb->type;
-	if (i)
-		return (i);
+	if ((cmp = ca->type - cb->type) != 0)
+		return cmp;
+
 	a = ca->obj;
 	b = cb->obj;
 	switch (ca->type) {
 	case ADDED_DATA:
-		i = (a->length - b->length);
-		if (i)
-			return (i);
-		return (memcmp(a->data, b->data, (size_t)a->length));
+		return OBJ_cmp(a, b);
 	case ADDED_SNAME:
 		if (a->sn == NULL)
-			return (-1);
-		else if (b->sn == NULL)
-			return (1);
-		else
-			return (strcmp(a->sn, b->sn));
+			return -1;
+		if (b->sn == NULL)
+			return 1;
+		return strcmp(a->sn, b->sn);
 	case ADDED_LNAME:
 		if (a->ln == NULL)
-			return (-1);
-		else if (b->ln == NULL)
-			return (1);
-		else
-			return (strcmp(a->ln, b->ln));
+			return -1;
+		if (b->ln == NULL)
+			return 1;
+		return strcmp(a->ln, b->ln);
 	case ADDED_NID:
-		return (a->nid - b->nid);
+		return a->nid - b->nid;
 	default:
-		/* abort(); */
 		return 0;
 	}
 }
@@ -280,6 +273,7 @@ OBJ_cleanup(void)
 	lh_ADDED_OBJ_free(added);
 	added = NULL;
 }
+LCRYPTO_ALIAS(OBJ_cleanup);
 
 int
 OBJ_new_nid(int num)
@@ -290,6 +284,7 @@ OBJ_new_nid(int num)
 	new_nid += num;
 	return (i);
 }
+LCRYPTO_ALIAS(OBJ_new_nid);
 
 int
 OBJ_add_object(const ASN1_OBJECT *obj)
@@ -338,6 +333,7 @@ OBJ_add_object(const ASN1_OBJECT *obj)
 	ASN1_OBJECT_free(o);
 	return (NID_undef);
 }
+LCRYPTO_ALIAS(OBJ_add_object);
 
 ASN1_OBJECT *
 OBJ_nid2obj(int n)
@@ -366,6 +362,7 @@ OBJ_nid2obj(int n)
 		}
 	}
 }
+LCRYPTO_ALIAS(OBJ_nid2obj);
 
 const char *
 OBJ_nid2sn(int n)
@@ -394,6 +391,7 @@ OBJ_nid2sn(int n)
 		}
 	}
 }
+LCRYPTO_ALIAS(OBJ_nid2sn);
 
 const char *
 OBJ_nid2ln(int n)
@@ -422,20 +420,16 @@ OBJ_nid2ln(int n)
 		}
 	}
 }
+LCRYPTO_ALIAS(OBJ_nid2ln);
 
 static int
 obj_cmp(const ASN1_OBJECT * const *ap, const unsigned int *bp)
 {
-	int j;
-	const ASN1_OBJECT *a= *ap;
+	const ASN1_OBJECT *a = *ap;
 	const ASN1_OBJECT *b = &nid_objs[*bp];
 
-	j = (a->length - b->length);
-	if (j)
-		return (j);
-	return (memcmp(a->data, b->data, a->length));
+	return OBJ_cmp(a, b);
 }
-
 
 static int
 obj_cmp_BSEARCH_CMP_FN(const void *a_, const void *b_)
@@ -475,6 +469,7 @@ OBJ_obj2nid(const ASN1_OBJECT *a)
 		return (NID_undef);
 	return (nid_objs[*op].nid);
 }
+LCRYPTO_ALIAS(OBJ_obj2nid);
 
 /* Convert an object name into an ASN1_OBJECT
  * if "noname" is not set then search for short and long names first.
@@ -495,12 +490,14 @@ OBJ_txt2obj(const char *s, int no_name)
 
 	return t2i_ASN1_OBJECT_internal(s);
 }
+LCRYPTO_ALIAS(OBJ_txt2obj);
 
 int
 OBJ_obj2txt(char *buf, int buf_len, const ASN1_OBJECT *aobj, int no_name)
 {
 	return i2t_ASN1_OBJECT_internal(aobj, buf, buf_len, no_name);
 }
+LCRYPTO_ALIAS(OBJ_obj2txt);
 
 int
 OBJ_txt2nid(const char *s)
@@ -513,6 +510,7 @@ OBJ_txt2nid(const char *s)
 	ASN1_OBJECT_free(obj);
 	return nid;
 }
+LCRYPTO_ALIAS(OBJ_txt2nid);
 
 int
 OBJ_ln2nid(const char *s)
@@ -535,6 +533,7 @@ OBJ_ln2nid(const char *s)
 		return (NID_undef);
 	return (nid_objs[*op].nid);
 }
+LCRYPTO_ALIAS(OBJ_ln2nid);
 
 int
 OBJ_sn2nid(const char *s)
@@ -557,6 +556,7 @@ OBJ_sn2nid(const char *s)
 		return (NID_undef);
 	return (nid_objs[*op].nid);
 }
+LCRYPTO_ALIAS(OBJ_sn2nid);
 
 const void *
 OBJ_bsearch_(const void *key, const void *base, int num, int size,
@@ -564,6 +564,7 @@ OBJ_bsearch_(const void *key, const void *base, int num, int size,
 {
 	return OBJ_bsearch_ex_(key, base, num, size, cmp, 0);
 }
+LCRYPTO_ALIAS(OBJ_bsearch_);
 
 const void *
 OBJ_bsearch_ex_(const void *key, const void *base_, int num, int size,
@@ -646,6 +647,7 @@ OBJ_create_objects(BIO *in)
 	}
 	/* return(num); */
 }
+LCRYPTO_ALIAS(OBJ_create_objects);
 
 int
 OBJ_create(const char *oid, const char *sn, const char *ln)
@@ -676,6 +678,7 @@ OBJ_create(const char *oid, const char *sn, const char *ln)
 	free(buf);
 	return (ok);
 }
+LCRYPTO_ALIAS(OBJ_create);
 
 size_t
 OBJ_length(const ASN1_OBJECT *obj)
@@ -688,6 +691,7 @@ OBJ_length(const ASN1_OBJECT *obj)
 
 	return obj->length;
 }
+LCRYPTO_ALIAS(OBJ_length);
 
 const unsigned char *
 OBJ_get0_data(const ASN1_OBJECT *obj)
@@ -697,3 +701,4 @@ OBJ_get0_data(const ASN1_OBJECT *obj)
 
 	return obj->data;
 }
+LCRYPTO_ALIAS(OBJ_get0_data);

@@ -4,7 +4,7 @@
 
 .p2align	4
 _aesni_encrypt:
-	
+	endbr64
 	movups	(%rdi),%xmm2
 	movl	240(%rdx),%eax
 	movups	(%rdx),%xmm0
@@ -26,7 +26,7 @@ L$oop_enc1_1:
 
 .p2align	4
 _aesni_decrypt:
-	
+	endbr64
 	movups	(%rdi),%xmm2
 	movl	240(%rdx),%eax
 	movups	(%rdx),%xmm0
@@ -46,7 +46,7 @@ L$oop_dec1_2:
 
 .p2align	4
 _aesni_encrypt3:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -80,7 +80,7 @@ L$enc_loop3:
 
 .p2align	4
 _aesni_decrypt3:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -114,7 +114,7 @@ L$dec_loop3:
 
 .p2align	4
 _aesni_encrypt4:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -153,7 +153,7 @@ L$enc_loop4:
 
 .p2align	4
 _aesni_decrypt4:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -192,7 +192,7 @@ L$dec_loop4:
 
 .p2align	4
 _aesni_encrypt6:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -250,7 +250,7 @@ L$enc_loop6_enter:
 
 .p2align	4
 _aesni_decrypt6:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -308,7 +308,7 @@ L$dec_loop6_enter:
 
 .p2align	4
 _aesni_encrypt8:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -379,7 +379,7 @@ L$enc_loop8_enter:
 
 .p2align	4
 _aesni_decrypt8:
-	
+	endbr64
 	movups	(%rcx),%xmm0
 	shrl	$1,%eax
 	movups	16(%rcx),%xmm1
@@ -451,7 +451,7 @@ L$dec_loop8_enter:
 
 .p2align	4
 _aesni_ecb_encrypt:
-	
+	endbr64
 	andq	$-16,%rdx
 	jz	L$ecb_ret
 
@@ -754,7 +754,7 @@ L$ecb_ret:
 
 .p2align	4
 _aesni_ccm64_encrypt_blocks:
-	
+	endbr64
 	movl	240(%rcx),%eax
 	movdqu	(%r8),%xmm9
 	movdqa	L$increment64(%rip),%xmm6
@@ -2329,7 +2329,7 @@ L$cbc_ret:
 
 .p2align	4
 _aesni_set_decrypt_key:
-	
+	endbr64
 	subq	$8,%rsp
 	call	__aesni_set_encrypt_key
 	shll	$4,%esi
@@ -2368,7 +2368,7 @@ L$SEH_end_set_decrypt_key:
 
 .p2align	4
 _aesni_set_encrypt_key:
-	
+	endbr64
 __aesni_set_encrypt_key:
 	subq	$8,%rsp
 	movq	$-1,%rax
