@@ -1,4 +1,4 @@
-/* $OpenBSD: tls13_handshake_msg.c,v 1.7 2024/02/04 20:50:23 tb Exp $ */
+/* $OpenBSD: tls13_handshake_msg.c,v 1.6 2022/07/22 19:33:53 jsing Exp $ */
 /*
  * Copyright (c) 2018, 2019 Joel Sing <jsing@openbsd.org>
  *
@@ -34,7 +34,7 @@ struct tls13_handshake_msg {
 };
 
 struct tls13_handshake_msg *
-tls13_handshake_msg_new(void)
+tls13_handshake_msg_new()
 {
 	struct tls13_handshake_msg *msg = NULL;
 

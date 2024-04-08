@@ -20,9 +20,7 @@
 
 #ifndef HAVE_ASPRINTF
 #include <stdarg.h>
-#define vasprintf libressl_vasprintf
 int vasprintf(char **str, const char *fmt, va_list ap);
-#define asprintf libressl_asprintf
 int asprintf(char **str, const char *fmt, ...);
 #endif
 

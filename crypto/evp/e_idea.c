@@ -1,4 +1,4 @@
-/* $OpenBSD: e_idea.c,v 1.21 2024/01/04 17:38:36 tb Exp $ */
+/* $OpenBSD: e_idea.c,v 1.20 2023/07/07 19:37:53 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -189,6 +189,7 @@ static const EVP_CIPHER idea_cbc = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -210,6 +211,7 @@ static const EVP_CIPHER idea_cfb64 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -231,6 +233,7 @@ static const EVP_CIPHER idea_ofb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -252,6 +255,7 @@ static const EVP_CIPHER idea_ecb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *

@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_key.c,v 1.39 2023/11/29 21:35:57 tb Exp $ */
+/* $OpenBSD: ec_key.c,v 1.37 2023/08/03 18:53:56 tb Exp $ */
 /*
  * Written by Nils Larsch for the OpenSSL project.
  */
@@ -65,6 +65,9 @@
 
 #include <openssl/opensslconf.h>
 
+#ifndef OPENSSL_NO_ENGINE
+#include <openssl/engine.h>
+#endif
 #include <openssl/err.h>
 
 #include "bn_local.h"
@@ -112,6 +115,9 @@ EC_KEY_free(EC_KEY *r)
 	if (r->meth != NULL && r->meth->finish != NULL)
 		r->meth->finish(r);
 
+#ifndef OPENSSL_NO_ENGINE
+	ENGINE_finish(r->engine);
+#endif
 	CRYPTO_free_ex_data(CRYPTO_EX_INDEX_EC_KEY, r, &r->ex_data);
 
 	EC_GROUP_free(r->group);
@@ -132,6 +138,11 @@ EC_KEY_copy(EC_KEY *dest, const EC_KEY *src)
 	if (src->meth != dest->meth) {
 		if (dest->meth != NULL && dest->meth->finish != NULL)
 			dest->meth->finish(dest);
+#ifndef OPENSSL_NO_ENGINE
+		if (ENGINE_finish(dest->engine) == 0)
+			return 0;
+		dest->engine = NULL;
+#endif
 	}
 	/* copy the parameters */
 	if (src->group) {
@@ -175,6 +186,11 @@ EC_KEY_copy(EC_KEY *dest, const EC_KEY *src)
 		return NULL;
 
 	if (src->meth != dest->meth) {
+#ifndef OPENSSL_NO_ENGINE
+		if (src->engine != NULL && ENGINE_init(src->engine) == 0)
+			return 0;
+		dest->engine = src->engine;
+#endif
 		dest->meth = src->meth;
 	}
 
@@ -191,7 +207,7 @@ EC_KEY_dup(const EC_KEY *ec_key)
 {
 	EC_KEY *ret;
 
-	if ((ret = EC_KEY_new_method(NULL)) == NULL)
+	if ((ret = EC_KEY_new_method(ec_key->engine)) == NULL)
 		return NULL;
 	if (EC_KEY_copy(ret, ec_key) == NULL) {
 		EC_KEY_free(ret);

@@ -1,4 +1,4 @@
-/* $OpenBSD: rsa_pmeth.c,v 1.40 2023/12/28 21:59:07 tb Exp $ */
+/* $OpenBSD: rsa_pmeth.c,v 1.39 2023/07/08 12:26:45 beck Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -756,36 +756,32 @@ pkey_rsa_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
 	RSA *rsa = NULL;
 	RSA_PKEY_CTX *rctx = ctx->data;
-	BN_GENCB *pcb = NULL;
-	BN_GENCB cb = {0};
-	int ret = 0;
+	BN_GENCB *pcb, cb;
+	int ret;
 
 	if (rctx->pub_exp == NULL) {
 		if ((rctx->pub_exp = BN_new()) == NULL)
-			goto err;
+			return 0;
 		if (!BN_set_word(rctx->pub_exp, RSA_F4))
-			goto err;
+			return 0;
 	}
-
 	if ((rsa = RSA_new()) == NULL)
-		goto err;
+		return 0;
 	if (ctx->pkey_gencb != NULL) {
 		pcb = &cb;
 		evp_pkey_set_cb_translate(pcb, ctx);
+	} else {
+		pcb = NULL;
 	}
-	if (!RSA_generate_key_ex(rsa, rctx->nbits, rctx->pub_exp, pcb))
-		goto err;
-	if (!rsa_set_pss_param(rsa, ctx))
-		goto err;
-	if (!EVP_PKEY_assign(pkey, ctx->pmeth->pkey_id, rsa))
-		goto err;
-	rsa = NULL;
-
-	ret = 1;
-
- err:
-	RSA_free(rsa);
-
+	ret = RSA_generate_key_ex(rsa, rctx->nbits, rctx->pub_exp, pcb);
+	if (ret > 0 && !rsa_set_pss_param(rsa, ctx)) {
+		RSA_free(rsa);
+		return 0;
+	}
+	if (ret > 0)
+		EVP_PKEY_assign(pkey, ctx->pmeth->pkey_id, rsa);
+	else
+		RSA_free(rsa);
 	return ret;
 }
 

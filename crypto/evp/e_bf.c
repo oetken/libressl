@@ -1,4 +1,4 @@
-/* $OpenBSD: e_bf.c,v 1.18 2024/01/04 17:38:36 tb Exp $ */
+/* $OpenBSD: e_bf.c,v 1.17 2023/07/07 19:37:53 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -170,6 +170,7 @@ static const EVP_CIPHER bf_cbc = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -191,6 +192,7 @@ static const EVP_CIPHER bf_cfb64 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -212,6 +214,7 @@ static const EVP_CIPHER bf_ofb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -233,6 +236,7 @@ static const EVP_CIPHER bf_ecb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *

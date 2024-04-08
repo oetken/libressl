@@ -75,7 +75,7 @@ target_include_directories(openssl
 	PUBLIC
 		../../include
 		${CMAKE_BINARY_DIR}/include)
-target_link_libraries(openssl ${OPENSSL_LIBS} compat_obj)
+target_link_libraries(openssl ${OPENSSL_LIBS})
 
 if(ENABLE_LIBRESSL_INSTALL)
 	install(TARGETS openssl DESTINATION ${CMAKE_INSTALL_BINDIR})

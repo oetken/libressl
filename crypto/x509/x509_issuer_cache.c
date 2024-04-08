@@ -1,4 +1,4 @@
-/* $OpenBSD: x509_issuer_cache.c,v 1.7 2023/12/30 18:26:13 tb Exp $ */
+/* $OpenBSD: x509_issuer_cache.c,v 1.4 2022/12/26 07:18:53 jmc Exp $ */
 /*
  * Copyright (c) 2020 Bob Beck <beck@openbsd.org>
  *
@@ -78,8 +78,8 @@ x509_issuer_cache_set_max(size_t max)
  * if an entry was successfully freed, 0 otherwise. Must
  * be called with x509_issuer_tree_mutex held.
  */
-static void
-x509_issuer_cache_free_oldest(void)
+void
+x509_issuer_cache_free_oldest()
 {
 	struct x509_issuer *old;
 
@@ -98,7 +98,7 @@ x509_issuer_cache_free_oldest(void)
  * Free the entire issuer cache, discarding all entries.
  */
 void
-x509_issuer_cache_free(void)
+x509_issuer_cache_free()
 {
 	if (pthread_mutex_lock(&x509_issuer_tree_mutex) != 0)
 		return;

@@ -40,7 +40,7 @@ target_include_directories(nc
 	PUBLIC
 		../../include
 		${CMAKE_BINARY_DIR}/include)
-target_link_libraries(nc ${LIBTLS_LIBS} compat_obj)
+target_link_libraries(nc ${LIBTLS_LIBS})
 
 if(ENABLE_NC)
 	if(ENABLE_LIBRESSL_INSTALL)

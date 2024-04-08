@@ -1,4 +1,4 @@
-/* $OpenBSD: cms_sd.c,v 1.30 2024/02/02 14:13:11 tb Exp $ */
+/* $OpenBSD: cms_sd.c,v 1.28 2023/09/11 09:29:30 tb Exp $ */
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -52,22 +52,18 @@
  * ====================================================================
  */
 
-#include <stdlib.h>
 #include <string.h>
 
-#include <openssl/asn1.h>
-#include <openssl/bio.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/cms.h>
-#include <openssl/objects.h>
+#include "cryptlib.h"
+#include <openssl/asn1t.h>
+#include <openssl/pem.h>
 #include <openssl/x509.h>
 #include <openssl/x509v3.h>
-
-#include "asn1_local.h"
+#include <openssl/err.h>
+#include <openssl/cms.h>
 #include "cms_local.h"
-#include "evp_local.h"
-#include "x509_local.h"
+#include "asn1/asn1_local.h"
+#include "evp/evp_local.h"
 
 /* CMS SignedData Utilities */
 
@@ -283,7 +279,7 @@ CMS_add1_signer(CMS_ContentInfo *cms, X509 *signer, EVP_PKEY *pk,
 {
 	CMS_SignedData *sd;
 	CMS_SignerInfo *si = NULL;
-	X509_ALGOR *alg = NULL;
+	X509_ALGOR *alg;
 	int i, type;
 
 	if (!X509_check_private_key(signer, pk)) {
@@ -341,29 +337,26 @@ CMS_add1_signer(CMS_ContentInfo *cms, X509 *signer, EVP_PKEY *pk,
 		goto err;
 	}
 
-	if (!X509_ALGOR_set_evp_md(si->digestAlgorithm, md))
-		goto err;
+	X509_ALGOR_set_md(si->digestAlgorithm, md);
 
 	/* See if digest is present in digestAlgorithms */
 	for (i = 0; i < sk_X509_ALGOR_num(sd->digestAlgorithms); i++) {
-		const X509_ALGOR *x509_alg;
 		const ASN1_OBJECT *aoid;
-
-		x509_alg = sk_X509_ALGOR_value(sd->digestAlgorithms, i);
-		X509_ALGOR_get0(&aoid, NULL, NULL, x509_alg);
+		alg = sk_X509_ALGOR_value(sd->digestAlgorithms, i);
+		X509_ALGOR_get0(&aoid, NULL, NULL, alg);
 		if (OBJ_obj2nid(aoid) == EVP_MD_type(md))
 			break;
 	}
 
 	if (i == sk_X509_ALGOR_num(sd->digestAlgorithms)) {
-		if ((alg = X509_ALGOR_new()) == NULL)
+		alg = X509_ALGOR_new();
+		if (alg == NULL)
 			goto merr;
-		if (!X509_ALGOR_set_evp_md(alg, md))
-			goto merr;
+		X509_ALGOR_set_md(alg, md);
 		if (!sk_X509_ALGOR_push(sd->digestAlgorithms, alg)) {
+			X509_ALGOR_free(alg);
 			goto merr;
 		}
-		alg = NULL;
 	}
 
 	if (!(flags & CMS_KEY_PARAM) && !cms_sd_asn1_ctrl(si, 0))
@@ -429,7 +422,6 @@ CMS_add1_signer(CMS_ContentInfo *cms, X509 *signer, EVP_PKEY *pk,
 	CMSerror(ERR_R_MALLOC_FAILURE);
  err:
 	ASN1_item_free((ASN1_VALUE *)si, &CMS_SignerInfo_it);
-	X509_ALGOR_free(alg);
 
 	return NULL;
 }
@@ -744,7 +736,7 @@ CMS_SignerInfo_sign(CMS_SignerInfo *si)
 	}
 
 	if (si->pctx == NULL) {
-		(void)EVP_MD_CTX_reset(si->mctx);
+		EVP_MD_CTX_reset(si->mctx);
 		if (!EVP_DigestSignInit(si->mctx, &si->pctx, md, NULL, si->pkey))
 			goto err;
 	}
@@ -779,7 +771,8 @@ CMS_SignerInfo_sign(CMS_SignerInfo *si)
 	ret = 1;
 
  err:
-	(void)EVP_MD_CTX_reset(si->mctx);
+	if (si->mctx != NULL)
+		EVP_MD_CTX_reset(si->mctx);
 	freezero(buf, buf_len);
 	freezero(sig, sig_len);
 
@@ -830,7 +823,8 @@ CMS_SignerInfo_verify(CMS_SignerInfo *si)
 	}
 
  err:
-	(void)EVP_MD_CTX_reset(si->mctx);
+	if (si->mctx != NULL)
+		EVP_MD_CTX_reset(si->mctx);
 	freezero(buf, buf_len);
 
 	return ret;

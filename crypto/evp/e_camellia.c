@@ -1,4 +1,4 @@
-/* $OpenBSD: e_camellia.c,v 1.19 2024/01/04 17:38:36 tb Exp $ */
+/* $OpenBSD: e_camellia.c,v 1.18 2023/07/07 19:37:53 beck Exp $ */
 /* ====================================================================
  * Copyright (c) 2006 The OpenSSL Project.  All rights reserved.
  *
@@ -171,6 +171,7 @@ static const EVP_CIPHER camellia_128_cbc = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -192,6 +193,7 @@ static const EVP_CIPHER camellia_128_cfb128 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -213,6 +215,7 @@ static const EVP_CIPHER camellia_128_ofb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -234,6 +237,7 @@ static const EVP_CIPHER camellia_128_ecb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -325,6 +329,7 @@ static const EVP_CIPHER camellia_192_cbc = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -346,6 +351,7 @@ static const EVP_CIPHER camellia_192_cfb128 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -367,6 +373,7 @@ static const EVP_CIPHER camellia_192_ofb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -388,6 +395,7 @@ static const EVP_CIPHER camellia_192_ecb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -479,6 +487,7 @@ static const EVP_CIPHER camellia_256_cbc = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -500,6 +509,7 @@ static const EVP_CIPHER camellia_256_cfb128 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -521,6 +531,7 @@ static const EVP_CIPHER camellia_256_ofb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -542,6 +553,7 @@ static const EVP_CIPHER camellia_256_ecb = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -585,6 +597,7 @@ static const EVP_CIPHER camellia_128_cfb1 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -628,6 +641,7 @@ static const EVP_CIPHER camellia_192_cfb1 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -671,6 +685,7 @@ static const EVP_CIPHER camellia_256_cfb1 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -713,6 +728,7 @@ static const EVP_CIPHER camellia_128_cfb8 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -754,6 +770,7 @@ static const EVP_CIPHER camellia_192_cfb8 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *
@@ -795,6 +812,7 @@ static const EVP_CIPHER camellia_256_cfb8 = {
 	.set_asn1_parameters = EVP_CIPHER_set_asn1_iv,
 	.get_asn1_parameters = EVP_CIPHER_get_asn1_iv,
 	.ctrl = NULL,
+	.app_data = NULL,
 };
 
 const EVP_CIPHER *

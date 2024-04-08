@@ -1,4 +1,4 @@
-/* $OpenBSD: lhash.c,v 1.22 2024/03/02 11:11:11 tb Exp $ */
+/* $OpenBSD: lhash.c,v 1.20 2023/07/07 13:40:44 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -103,8 +103,6 @@
 #include <openssl/crypto.h>
 #include <openssl/lhash.h>
 
-#include "lhash_local.h"
-
 #undef MIN_NODES
 #define MIN_NODES	16
 #define UP_LOAD		(2*LH_LOAD_MULT) /* load times 256  (default 2) */
@@ -158,13 +156,6 @@ lh_free(_LHASH *lh)
 	free(lh);
 }
 LCRYPTO_ALIAS(lh_free);
-
-int
-lh_error(_LHASH *lh)
-{
-	return lh->error;
-}
-LCRYPTO_ALIAS(lh_error);
 
 void *
 lh_insert(_LHASH *lh, void *data)
@@ -259,20 +250,11 @@ static void
 doall_util_fn(_LHASH *lh, int use_arg, LHASH_DOALL_FN_TYPE func,
     LHASH_DOALL_ARG_FN_TYPE func_arg, void *arg)
 {
-	LHASH_NODE *a, *n;
-	int down_load;
 	int i;
+	LHASH_NODE *a, *n;
 
 	if (lh == NULL)
 		return;
-
-	/*
-	 * Disable contraction of the hash while walking, as some consumers use
-	 * it to delete hash entries. A better option would be to snapshot the
-	 * hash, making it insert safe as well.
-	 */
-	down_load = lh->down_load;
-	lh->down_load = 0;
 
 	/* reverse the order so we search from 'top to bottom'
 	 * We were having memory leaks otherwise */
@@ -291,10 +273,6 @@ doall_util_fn(_LHASH *lh, int use_arg, LHASH_DOALL_FN_TYPE func,
 			a = n;
 		}
 	}
-
-	/* Restore down load factor and trigger contraction. */
-	lh->down_load = down_load;
-	contract(lh);
 }
 
 void

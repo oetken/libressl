@@ -1,4 +1,4 @@
-/* $OpenBSD: pem_lib.c,v 1.56 2024/02/18 15:44:10 tb Exp $ */
+/* $OpenBSD: pem_lib.c,v 1.53 2023/07/07 13:40:44 beck Exp $ */
 /* Copyright (C) 1995-1998 Eric Young (eay@cryptsoft.com)
  * All rights reserved.
  *
@@ -73,6 +73,9 @@
 
 #ifndef OPENSSL_NO_DES
 #include <openssl/des.h>
+#endif
+#ifndef OPENSSL_NO_ENGINE
+#include <openssl/engine.h>
 #endif
 
 #include "asn1_local.h"
@@ -220,13 +223,17 @@ check_pem(const char *nm, const char *name)
 		const EVP_PKEY_ASN1_METHOD *ameth;
 		slen = pem_check_suffix(nm, "PARAMETERS");
 		if (slen > 0) {
-			ameth = EVP_PKEY_asn1_find_str(NULL, nm, slen);
+			ENGINE *e;
+			ameth = EVP_PKEY_asn1_find_str(&e, nm, slen);
 			if (ameth) {
 				int r;
 				if (ameth->param_decode)
 					r = 1;
 				else
 					r = 0;
+#ifndef OPENSSL_NO_ENGINE
+				ENGINE_finish(e);
+#endif
 				return r;
 			}
 		}
@@ -412,7 +419,7 @@ PEM_ASN1_write_bio(i2d_of_void *i2d, const char *name, BIO *bp, void *x,
 		PEM_dek_info(buf, objstr, enc->iv_len, (char *)iv);
 		/* k=strlen(buf); */
 
-		EVP_CIPHER_CTX_legacy_clear(&ctx);
+		EVP_CIPHER_CTX_init(&ctx);
 		ret = 1;
 		if (!EVP_EncryptInit_ex(&ctx, enc, NULL, key, iv) ||
 		    !EVP_EncryptUpdate(&ctx, data, &j, data, i) ||
@@ -466,7 +473,7 @@ PEM_do_header(EVP_CIPHER_INFO *cipher, unsigned char *data, long *plen,
 		return 0;
 
 	j = (int)len;
-	EVP_CIPHER_CTX_legacy_clear(&ctx);
+	EVP_CIPHER_CTX_init(&ctx);
 	o = EVP_DecryptInit_ex(&ctx, cipher->cipher, NULL, key,
 	    &(cipher->iv[0]));
 	if (o)

@@ -1,4 +1,4 @@
-/* $OpenBSD: ec_pmeth.c,v 1.21 2023/12/28 22:12:37 tb Exp $ */
+/* $OpenBSD: ec_pmeth.c,v 1.19 2023/07/28 15:50:33 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2006.
  */
@@ -458,25 +458,18 @@ pkey_ec_paramgen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 	EC_KEY *ec = NULL;
 	EC_PKEY_CTX *dctx = ctx->data;
 	int ret = 0;
-
 	if (dctx->gen_group == NULL) {
 		ECerror(EC_R_NO_PARAMETERS_SET);
-		goto err;
+		return 0;
 	}
-
-	if ((ec = EC_KEY_new()) == NULL)
-		goto err;
-	if (!EC_KEY_set_group(ec, dctx->gen_group))
-		goto err;
-	if (!EVP_PKEY_assign_EC_KEY(pkey, ec))
-		goto err;
-	ec = NULL;
-
-	ret = 1;
-
- err:
-	EC_KEY_free(ec);
-
+	ec = EC_KEY_new();
+	if (!ec)
+		return 0;
+	ret = EC_KEY_set_group(ec, dctx->gen_group);
+	if (ret)
+		EVP_PKEY_assign_EC_KEY(pkey, ec);
+	else
+		EC_KEY_free(ec);
 	return ret;
 }
 
@@ -485,35 +478,28 @@ pkey_ec_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
 	EC_KEY *ec = NULL;
 	EC_PKEY_CTX *dctx = ctx->data;
-	int ret = 0;
 
 	if (ctx->pkey == NULL && dctx->gen_group == NULL) {
 		ECerror(EC_R_NO_PARAMETERS_SET);
-		goto err;
+		return 0;
 	}
-
-	if ((ec = EC_KEY_new()) == NULL)
-		goto err;
-	if (!EVP_PKEY_set1_EC_KEY(pkey, ec))
-		goto err;
-
+	ec = EC_KEY_new();
+	if (ec == NULL)
+		return 0;
+	if (!EVP_PKEY_assign_EC_KEY(pkey, ec)) {
+		EC_KEY_free(ec);
+		return 0;
+	}
+	/* Note: if error is returned, we count on caller to free pkey->pkey.ec */
 	if (ctx->pkey != NULL) {
 		if (!EVP_PKEY_copy_parameters(pkey, ctx->pkey))
-			goto err;
+			return 0;
 	} else {
 		if (!EC_KEY_set_group(ec, dctx->gen_group))
-			goto err;
+			return 0;
 	}
 
-	if (!EC_KEY_generate_key(ec))
-		goto err;
-
-	ret = 1;
-
- err:
-	EC_KEY_free(ec);
-
-	return ret;
+	return EC_KEY_generate_key(ec);
 }
 
 const EVP_PKEY_METHOD ec_pkey_meth = {

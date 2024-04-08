@@ -30,7 +30,7 @@
         .text
 
 S2N_BN_SYMBOL(word_clz):
-	_CET_ENDBR
+	endbr64
 
 #if WINDOWS_ABI
         push    rdi

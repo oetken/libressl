@@ -1,4 +1,4 @@
-/* $OpenBSD: cms_smime.c,v 1.28 2023/12/22 10:23:11 tb Exp $ */
+/* $OpenBSD: cms_smime.c,v 1.27 2023/07/08 08:26:26 beck Exp $ */
 /*
  * Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project.
@@ -52,21 +52,14 @@
  * ====================================================================
  */
 
-#include <sys/types.h>
-
-#include <stddef.h>
-
-#include <openssl/asn1.h>
-#include <openssl/bio.h>
-#include <openssl/cms.h>
-#include <openssl/err.h>
-#include <openssl/evp.h>
-#include <openssl/objects.h>
-#include <openssl/pkcs7.h>
+#include "cryptlib.h"
+#include <openssl/asn1t.h>
 #include <openssl/x509.h>
-#include <openssl/x509_vfy.h>
-
+#include <openssl/x509v3.h>
+#include <openssl/err.h>
+#include <openssl/cms.h>
 #include "cms_local.h"
+#include "asn1/asn1_local.h"
 
 static BIO *
 cms_get_text_bio(BIO *out, unsigned int flags)

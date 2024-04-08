@@ -1,4 +1,4 @@
-/* $OpenBSD: hm_pmeth.c,v 1.17 2023/12/28 22:00:56 tb Exp $ */
+/* $OpenBSD: hm_pmeth.c,v 1.15 2022/11/26 16:08:53 tb Exp $ */
 /* Written by Dr Stephen N Henson (steve@openssl.org) for the OpenSSL
  * project 2007.
  */
@@ -131,22 +131,15 @@ pkey_hmac_keygen(EVP_PKEY_CTX *ctx, EVP_PKEY *pkey)
 {
 	ASN1_OCTET_STRING *hkey = NULL;
 	HMAC_PKEY_CTX *hctx = ctx->data;
-	int ret = 0;
 
-	if (hctx->ktmp.data == NULL)
-		goto err;
-	if ((hkey = ASN1_OCTET_STRING_dup(&hctx->ktmp)) == NULL)
-		goto err;
-	if (!EVP_PKEY_assign(pkey, EVP_PKEY_HMAC, hkey))
-		goto err;
-	hkey = NULL;
+	if (!hctx->ktmp.data)
+		return 0;
+	hkey = ASN1_OCTET_STRING_dup(&hctx->ktmp);
+	if (!hkey)
+		return 0;
+	EVP_PKEY_assign(pkey, EVP_PKEY_HMAC, hkey);
 
-	ret = 1;
-
- err:
-	ASN1_OCTET_STRING_free(hkey);
-
-	return ret;
+	return 1;
 }
 
 static int
@@ -211,7 +204,7 @@ pkey_hmac_ctrl(EVP_PKEY_CTX *ctx, int type, int p1, void *p2)
 	case EVP_PKEY_CTRL_DIGESTINIT:
 		key = ctx->pkey->pkey.ptr;
 		if (!HMAC_Init_ex(&hctx->ctx, key->data, key->length, hctx->md,
-		    NULL))
+		    ctx->engine))
 			return 0;
 		break;
 

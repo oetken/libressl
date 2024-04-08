@@ -62,8 +62,13 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	  STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-# Enable asserts regardless of build type
-add_definitions(-UNDEBUG)
+# Do not disable assertions based on CMAKE_BUILD_TYPE
+foreach(_build_type "Release" "MinSizeRel" "RelWithDebInfo")
+	foreach(_lang C CXX)
+		string(TOUPPER "CMAKE_${_lang}_FLAGS_${_build_type}" _var)
+		string(REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " " ${_var} "${${_var}}")
+	endforeach()
+endforeach()
 
 set(BUILD_NC true)
 
@@ -427,11 +432,11 @@ set(LIBTLS_LIBS tls ${PLATFORM_LIBS})
 
 # libraries for regression test
 if(BUILD_SHARED_LIBS)
-	set(OPENSSL_TEST_LIBS ssl-static crypto-static ${PLATFORM_LIBS} compat_obj)
-	set(LIBTLS_TEST_LIBS tls-static ${OPENSSL_TEST_LIBS} tls_compat_obj)
+	set(OPENSSL_TEST_LIBS ssl-static crypto-static ${PLATFORM_LIBS})
+	set(LIBTLS_TEST_LIBS tls-static ${OPENSSL_TEST_LIBS})
 else()
-	set(OPENSSL_TEST_LIBS ssl crypto ${PLATFORM_LIBS} compat_obj)
-	set(LIBTLS_TEST_LIBS tls ${PLATFORM_LIBS} compat_obj tls_compat_obj)
+	set(OPENSSL_TEST_LIBS ssl crypto ${PLATFORM_LIBS})
+	set(LIBTLS_TEST_LIBS tls ${PLATFORM_LIBS})
 endif()
 
 if(OPENSSLDIR STREQUAL "")
